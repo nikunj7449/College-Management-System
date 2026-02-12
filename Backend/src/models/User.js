@@ -14,22 +14,13 @@ const userSchema = new mongoose.Schema({
       'Please add a valid email',
     ],
   },
-  enrollmentId: {
-    type: String,
-    required: [true, 'Please add an enrollment ID'],
-    unique: true,
-  },
-  department: {
-    type: String,
-    required: [true, 'Please add a department'],
-  },
   password: {
     type: String,
     required: [true, 'Please add a password'],
   },
   role: {
     type: String,
-    enum: ['ADMIN', 'TEACHER', 'STUDENT'],
+    enum: ['ADMIN', 'FACULTY', 'STUDENT'],
     default: 'STUDENT',
   },
   status: {

@@ -1,10 +1,18 @@
 const express = require('express');
 const router = express.Router();
-const { register, login, logout } = require('../controllers/authController');
-const { protect } = require('../middlewares/authMiddleware');
+const { 
+  registerUser, 
+  loginUser, 
+  getProfile 
+} = require('../controllers/authController');
+const { protect } = require('../middleware/authMiddleware');
 
-router.post('/register', register);
-router.post('/login', login);
-router.get('/logout', protect, logout);
+// Public Routes
+router.post('/register', registerUser); // Open for initial setup, later protect this
+//router.post('/register', protect, authorize('Admin'), registerUser); // 2. Register is now Protected (Only Admin can create new users)
+router.post('/login', loginUser);
+
+// Private Routes
+router.get('/me', protect, getProfile);
 
 module.exports = router;

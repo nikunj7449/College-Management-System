@@ -20,23 +20,6 @@ export const AuthProvider = ({ children }) => {
   const clearError = () => setError(null);
   const clearMessage = () => setMessage(null);
 
-  // Register Action
-  const register = async (userData) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await authService.registerUser(userData);
-      setLoading(false);
-      setMessage('Registration Successful! Please Login.');
-      return { success: true, message: data.message };
-    } catch (err) {
-      const message = err.response?.data?.message || err.message || 'Registration failed';
-      setError(message);
-      setLoading(false);
-      return { success: false, message };
-    }
-  };
-
   // Login Action
   const login = async (credentials) => {
     setLoading(true);
@@ -50,10 +33,10 @@ export const AuthProvider = ({ children }) => {
       setMessage('Login Successful!');
       return { success: true, user: data.user };
     } catch (err) {
-      const message = err.response?.data?.message || err.message || 'Invalid Credentials';
-      setError(message);
+      let errorMsg = err.response?.data?.message || err.message || 'Invalid Credentials';
+      setError(errorMsg);
       setLoading(false);
-      return { success: false, message };
+      return { success: false, message: errorMsg };
     }
   };
 
@@ -74,7 +57,6 @@ export const AuthProvider = ({ children }) => {
         loading,
         error,
         message,
-        register,
         login,
         logout,
         clearError,

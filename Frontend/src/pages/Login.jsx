@@ -1,12 +1,13 @@
 import { useState, useContext, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { AuthContext } from '../context/AuthContext';
 import { validateEmail } from '../utils/validation';
 
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, loading, isAuthenticated, user} = useContext(AuthContext);
+  const { login, loading, isAuthenticated, user, error, clearError } = useContext(AuthContext);
 
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [formErrors, setFormErrors] = useState({});
@@ -65,6 +66,7 @@ const Login = () => {
 
   const onSubmit = async (e) => {
     e.preventDefault();
+    console.log("Form submitted");
     if (!validateForm()) return;
 
     const res = await login({ email, password });
@@ -107,15 +109,6 @@ const Login = () => {
             <button type="submit" disabled={loading} className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white transition-colors duration-200 ${loading ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'}`}>
               {loading ? 'Signing in...' : 'Sign in'}
             </button>
-          </div>
-          
-          <div className="text-sm text-center">
-            <p className="text-gray-600">
-                Don't have an account?{' '}
-                <Link to="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
-                Register here
-                </Link>
-            </p>
           </div>
         </form>
       </div>

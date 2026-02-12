@@ -1,42 +1,42 @@
 const User = require('../models/User');
-const { hashPassword, comparePassword } = require('../utils/passwordUtils');
 const { generateToken } = require('../utils/jwtUtils');
+const bcrypt = require('bcryptjs');
 
 // @desc    Register new user
 // @route   POST /api/v1/auth/register
-// @access  Public
-const register = async (req, res, next) => {
+// @access  Public (or Admin only based on middleware)
+exports.registerUser = async (req, res, next) => {
   try {
-    const { fullName, email, password, role, enrollmentId, department } = req.body;
+    const { name, email, password, role } = req.body;
 
-    if (!fullName || !email || !password || !role || !enrollmentId || !department) {
+    if (!name || !email || !password) {
       res.status(400);
-      throw new Error('Please add all fields');
+      throw new Error('Please fill in all fields');
     }
 
     // Check if user exists
-    const userExists = await User.findOne({ $or: [{ email }, { enrollmentId }] });
+    const userExists = await User.findOne({ email });
     if (userExists) {
       res.status(400);
-      throw new Error('User already exists with this email or ID');
+      throw new Error('User already exists');
     }
 
     // Hash password
-    const hashedPassword = await hashPassword(password);
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
     // Create user
     const user = await User.create({
-      name: fullName,
+      name,
       email,
-      enrollmentId,
-      department,
       password: hashedPassword,
-      role: role.toUpperCase(),
+      role: role.toUpperCase() || 'STUDENT', // Default to Student if not specified
     });
 
     if (user) {
       res.status(201).json({
         success: true,
+        message: 'User registered successfully',
         user: {
           _id: user.id,
           name: user.name,
@@ -49,6 +49,7 @@ const register = async (req, res, next) => {
       throw new Error('Invalid user data');
     }
   } catch (error) {
+    console.log(error);
     next(error);
   }
 };
@@ -56,7 +57,7 @@ const register = async (req, res, next) => {
 // @desc    Authenticate a user
 // @route   POST /api/v1/auth/login
 // @access  Public
-const login = async (req, res, next) => {
+exports.loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
@@ -79,8 +80,9 @@ const login = async (req, res, next) => {
       throw new Error('Account is inactive. Please contact admin.');
     }
 
+    const comparePassword = await bcrypt.compare(password, user.password);
     // Check password
-    if (await comparePassword(password, user.password)) {
+    if (comparePassword) {
       res.status(200).json({
         success: true,
         user: {
@@ -100,15 +102,24 @@ const login = async (req, res, next) => {
   }
 };
 
-// @desc    Logout user
-// @route   GET /api/v1/auth/logout
-// @access  Private
-const logout = (req, res) => {
-  res.status(200).json({ success: true, message: 'Logged out successfully' });
+
+// @desc    Get Current User Profile
+// @route   GET /api/v1/auth/me
+exports.getProfile = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    
+    if (!user) {
+      res.status(404);
+      throw new Error('User not found');
+    }
+
+    res.status(200).json({
+      success: true,
+      user: user,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
-module.exports = {
-  register,
-  login,
-  logout
-};

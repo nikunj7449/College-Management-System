@@ -1,10 +1,5 @@
 import api from './api';
 
-const registerUser = async (userData) => {
-  const response = await api.post('/auth/register', userData);
-  return response.data;
-};
-
 const login = async (credentials) => {
   const response = await api.post('/auth/login', credentials);
   if (response.data.token) {
@@ -27,6 +22,6 @@ const getCurrentUser = () => {
   }
 };
 
-const authService = { registerUser, login, logout, getCurrentUser };
+const authService = { login, logout, getCurrentUser };
 
 export default authService;
