@@ -1,106 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { Search, Plus, Mail, Phone, X, Loader, Edit, Trash2, AlertTriangle, BookOpen, GraduationCap, Briefcase, User, GitBranch, Layers, Eye, LayoutGrid, List, Filter, UploadCloud, ChevronDown, Check, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Search, Plus, Mail, Phone, X, Loader, Edit, Trash2, AlertTriangle, BookOpen, GraduationCap, Briefcase, User, GitBranch, Layers, Eye, LayoutGrid, List, Filter, UploadCloud, ChevronDown, Check, ChevronLeft, ChevronRight, MoreVertical } from 'lucide-react';
 import api from '../../services/api';
 import { toast } from 'react-toastify';
+import CustomDropdown from "../custom/CustomDropdown"
+import MultiSelectDropdown from "../custom/MultiSelectDropdown"
+import {
+  getCourseOptions,
+  getBranchOptions,
+  getSemOptions,
+  getFilterBranchOptions,
+  getFilterSemOptions,
+} from '../../utils/adminUtils/courseUtils';
+import FacultyCardSkeleton from '../common/StudentCardSkeleton';
+import Pagination from '../common/Pagination';
+import FacultyCard from '../common/FacultyCard';
 
-const CustomDropdown = ({ options, value, onChange, name, placeholder, disabled }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = React.useRef(null);
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  return (
-    <div className="relative" ref={dropdownRef}>
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={() => setIsOpen(!isOpen)}
-        className={`w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-left flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 ${disabled ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
-      >
-        <span className={`block truncate ${value ? 'text-slate-900' : 'text-slate-500'}`}>
-          {value || placeholder}
-        </span>
-        <ChevronDown size={20} className="text-slate-400 shrink-0" />
-      </button>
-      {isOpen && !disabled && (
-        <div className="absolute z-20 mt-1 w-full bg-white border border-slate-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
-          {options.map((opt) => (
-            <div
-              key={opt}
-              onClick={() => {
-                onChange({ target: { name, value: opt } });
-                setIsOpen(false);
-              }}
-              className="px-4 py-2.5 hover:bg-indigo-50 text-slate-700 cursor-pointer text-sm transition-colors border-b border-slate-50 last:border-0"
-            >
-              {opt}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
-const MultiSelectDropdown = ({ options, value = [], onChange, name, placeholder, disabled }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = React.useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const toggleOption = (option) => {
-    const newValue = value.includes(option)
-      ? value.filter(item => item !== option)
-      : [...value, option];
-    onChange({ target: { name, value: newValue } });
-  };
-
-  return (
-    <div className="relative" ref={dropdownRef}>
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={() => setIsOpen(!isOpen)}
-        className={`w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-left flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 ${disabled ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
-      >
-        <span className={`block truncate ${value.length > 0 ? 'text-slate-900' : 'text-slate-500'}`}>
-          {value.length > 0 ? `${value.length} selected` : placeholder}
-        </span>
-        <ChevronDown size={20} className="text-slate-400 shrink-0" />
-      </button>
-      {isOpen && !disabled && (
-        <div className="absolute z-20 mt-1 w-full bg-white border border-slate-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
-          {options.map((opt) => (
-            <div
-              key={opt}
-              onClick={() => toggleOption(opt)}
-              className="px-4 py-2.5 hover:bg-indigo-50 text-slate-700 cursor-pointer text-sm transition-colors border-b border-slate-50 last:border-0 flex items-center justify-between"
-            >
-              <span>{opt}</span>
-              {value.includes(opt) && <Check size={16} className="text-indigo-600" />}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
 
 const FacultyList = () => {
   const [facultyList, setFacultyList] = useState([]);
@@ -373,21 +288,6 @@ const FacultyList = () => {
       .toUpperCase();
   };
 
-  // Derived Options for Dropdowns
-  const getCourseOptions = () => coursesData.map(c => c.name);
-  
-  const getBranchOptions = () => {
-    const selectedCourse = coursesData.find(c => c.name === formData.course);
-    return selectedCourse ? selectedCourse.branches.map(b => b.name) : [];
-  };
-
-  const getSemOptions = () => {
-    const selectedCourse = coursesData.find(c => c.name === formData.course);
-    if (!selectedCourse) return [];
-    const totalSems = (selectedCourse.duration || 4) * 2;
-    return Array.from({ length: totalSems }, (_, i) => (i + 1).toString());
-  };
-
   const getSubjectOptions = () => {
     const selectedCourse = coursesData.find(c => c.name === formData.course);
     if (!selectedCourse) return [];
@@ -460,17 +360,6 @@ const FacultyList = () => {
   const currentItems = facultyList.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(facultyList.length / itemsPerPage);
 
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
-
-  const handlePageSearch = (e) => {
-    e.preventDefault();
-    const page = parseInt(pageInput);
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-      setPageInput('');
-    }
-  };
-
   return (
     <div className="p-6 max-w-7xl mx-auto">
       {/* Header */}
@@ -535,7 +424,7 @@ const FacultyList = () => {
                       name="course"
                       value={filters.course} 
                       onChange={handleFilterChange}
-                      options={getCourseOptions()}
+                      options={getCourseOptions(coursesData)}
                       placeholder="Select Courses"
                     />
                   </div>
@@ -597,81 +486,31 @@ const FacultyList = () => {
 
       {/* Loading State */}
       {loading && (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-        </div>
+        viewType === 'grid' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {[...Array(8)].map((_, index) => (
+              <FacultyCardSkeleton key={index} />
+            ))}
+          </div>
+        ) : (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+          </div>
+        )
       )}
 
       {/* Grid Layout */}
       {!loading && viewType === 'grid' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {currentItems.map((faculty) => (
-            <div key={faculty._id} className="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-lg transition-shadow duration-300 group relative">
-              
-              {/* Actions */}
-              <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-2">
-                <div className="flex space-x-2">
-                  <button onClick={() => handleEdit(faculty)} className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors" title="Edit">
-                    <Edit size={16} />
-                  </button>
-                  <button onClick={() => handleDelete(faculty._id)} className="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors" title="Delete">
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-                <div className="flex space-x-2">
-                  <button onClick={() => handleView(faculty)} className="p-2 text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors" title="View Details">
-                    <Eye size={16} />
-                  </button>
-                </div>
-              </div>
-
-              {/* Profile Info */}
-              <div className="flex flex-col items-center text-center mb-4">
-                <div className="relative mb-3">
-                  <img 
-                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(faculty.name)}&background=random&size=128`} 
-                    alt={faculty.name}
-                    className="w-20 h-20 rounded-full object-cover border-4 border-slate-50 shadow-sm"
-                  />
-                </div>
-                <h3 className="text-lg font-bold text-slate-800 mb-1">{faculty.name}</h3>
-                <span className="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-600 text-xs font-medium border border-indigo-100">
-                  {faculty.designation}
-                </span>
-              </div>
-
-              {/* Details Grid */}
-              <div className="space-y-3 mb-4 text-sm">
-                <div className="flex items-center text-slate-600">
-                  <GraduationCap size={16} className="mr-2 text-slate-400" />
-                  <span className="truncate">{faculty.course}</span>
-                </div>
-                <div className="flex items-center text-slate-600">
-                  <GitBranch size={16} className="mr-2 text-slate-400" />
-                  <span className="truncate" title={faculty.branch}>{getShortBranch(faculty.branch)}</span>
-                </div>
-                <div className="flex items-center text-slate-600">
-                  <Layers size={16} className="mr-2 text-slate-400" />
-                  <span className="truncate">Sem: {faculty.sem?.join(', ')}</span>
-                </div>
-                <div className="flex items-center text-slate-600">
-                  <BookOpen size={16} className="mr-2 text-slate-400" />
-                  <span className="truncate" title={faculty.subject?.join(', ')}>{faculty.subject?.join(', ')}</span>
-                </div>
-              </div>
-
-              {/* Contact Info */}
-              <div className="space-y-2 border-t border-slate-100 pt-4">
-                <div className="flex items-center text-sm text-slate-600">
-                  <Mail size={14} className="mr-2 text-slate-400" />
-                  <span className="truncate">{faculty.personalEmail}</span>
-                </div>
-                <div className="flex items-center text-sm text-slate-600">
-                  <Phone size={14} className="mr-2 text-slate-400" />
-                  <span className="truncate">{faculty.phone}</span>
-                </div>
-              </div>
-            </div>
+            <FacultyCard
+              key={faculty._id}
+              faculty={faculty}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onView={handleView}
+              getShortBranch={getShortBranch}
+            />
           ))}
         </div>
       )}
@@ -753,94 +592,13 @@ const FacultyList = () => {
       
       {/* Pagination */}
       {!loading && facultyList.length > 0 && (
-        <div className="flex items-center justify-between border-t border-slate-200 bg-white px-4 py-3 sm:px-6 mt-6 rounded-xl shadow-sm">
-          <div className="flex flex-1 justify-between sm:hidden">
-            <button
-              onClick={() => paginate(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
-              className="relative inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-            >
-              Previous
-            </button>
-            <button
-              onClick={() => paginate(Math.min(totalPages, currentPage + 1))}
-              disabled={currentPage === totalPages}
-              className="relative ml-3 inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-            >
-              Next
-            </button>
-          </div>
-          <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm text-slate-700">
-                Showing <span className="font-medium">{indexOfFirstItem + 1}</span> to <span className="font-medium">{Math.min(indexOfLastItem, facultyList.length)}</span> of{' '}
-                <span className="font-medium">{facultyList.length}</span> results
-              </p>
-            </div>
-            <form onSubmit={handlePageSearch} className="flex items-center gap-2">
-              <span className="text-sm text-slate-600">Go to page:</span>
-              <input
-                type="number"
-                min="1"
-                max={totalPages}
-                value={pageInput}
-                onChange={(e) => setPageInput(e.target.value)}
-                className="w-16 px-2 py-1 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                placeholder="#"
-              />
-            </form>
-            <div>
-              <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-                <button
-                  onClick={() => paginate(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="relative inline-flex items-center rounded-l-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <span className="sr-only">Previous</span>
-                  <ChevronLeft className="h-5 w-5" aria-hidden="true" />
-                </button>
-                
-                {(() => {
-                  const pages = [];
-                  if (totalPages <= 7) {
-                     for (let i = 1; i <= totalPages; i++) pages.push(i);
-                  } else {
-                     if (currentPage <= 4) {
-                        pages.push(1, 2, 3, 4, 5, '...', totalPages);
-                     } else if (currentPage >= totalPages - 3) {
-                        pages.push(1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
-                     } else {
-                        pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
-                     }
-                  }
-                  return pages.map((page, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => typeof page === 'number' ? paginate(page) : null}
-                      disabled={page === '...'}
-                      className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
-                        page === currentPage
-                          ? 'z-10 bg-indigo-600 text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-                          : 'text-slate-900 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0'
-                      } ${page === '...' ? 'cursor-default' : 'cursor-pointer'}`}
-                    >
-                      {page}
-                    </button>
-                  ));
-                })()}
-
-                <button
-                  onClick={() => paginate(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className="relative inline-flex items-center rounded-r-md px-2 py-2 text-slate-400 ring-1 ring-inset ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <span className="sr-only">Next</span>
-                  <ChevronRight className="h-5 w-5" aria-hidden="true" />
-                </button>
-              </nav>
-            </div>
-          </div>
-        </div>
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={facultyList.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+        />
       )}
 
       {!loading && facultyList.length === 0 && (
@@ -915,7 +673,7 @@ const FacultyList = () => {
                                 name="course"
                                 value={formData.course}
                                 onChange={handleChange}
-                                options={getCourseOptions()}
+                                options={getCourseOptions(coursesData)}
                                 placeholder="Select Course"
                                 disabled={isViewMode}
                             />
@@ -926,7 +684,7 @@ const FacultyList = () => {
                                 name="branch"
                                 value={formData.branch}
                                 onChange={handleChange}
-                                options={getBranchOptions()}
+                                options={getBranchOptions(coursesData,formData.course)}
                                 placeholder="Select Branch"
                                 disabled={isViewMode || !formData.course}
                             />
@@ -950,7 +708,7 @@ const FacultyList = () => {
                                     name="sem"
                                     value={formData.sem}
                                     onChange={handleChange}
-                                    options={getSemOptions()}
+                                    options={getSemOptions(coursesData, formData.course)}
                                     placeholder="Select Semesters"
                                     disabled={!formData.branch}
                                 />

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../../services/api';
-import { formatTimeAgo } from '../../utils/adminUtils/dashboradUtils/adminDashboardUtils';
+import { formatTimeAgo } from '../../utils/adminUtils/dashboardUtils';
 
 export const useDashboard = (filter) => {
   const [data, setData] = useState(null);

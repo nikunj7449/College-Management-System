@@ -6,6 +6,8 @@ import {
 } from 'lucide-react';
 import api from '../../services/api';
 import { toast } from 'react-toastify';
+import CourseCardSkeleton from '../common/CourseCardSkeleton';
+import CourseViewModal from '../modals/CourseViewModal';
 
 const CourseList = () => {
   const [courses, setCourses] = useState([]);
@@ -359,9 +361,17 @@ const CourseList = () => {
 
       {/* Loading State */}
       {loading && (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-        </div>
+        viewType === 'grid' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {[...Array(8)].map((_, index) => (
+              <CourseCardSkeleton key={index} />
+            ))}
+          </div>
+        ) : (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+          </div>
+        )
       )}
 
       {/* Grid Layout */}
@@ -474,8 +484,15 @@ const CourseList = () => {
         </div>
       )}
 
+      {/* View Modal */}
+      <CourseViewModal 
+        isOpen={isModalOpen && isViewMode}
+        onClose={() => setIsModalOpen(false)}
+        courseForm={formData}
+      />
+
       {/* Add/Edit Modal */}
-      {isModalOpen && (
+      {isModalOpen && !isViewMode && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-10">
@@ -486,79 +503,7 @@ const CourseList = () => {
             </div>
             
             <div className="p-6 space-y-6">
-              {isViewMode && (
-                <div className="space-y-6">
-                  <div className="bg-slate-50 p-5 rounded-xl border border-slate-100 flex justify-between items-center">
-                    <div>
-                      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Course Name</h3>
-                      <p className="text-xl font-bold text-slate-800">{formData.name}</p>
-                    </div>
-                    <div className="text-right">
-                      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Duration</h3>
-                      <div className="flex items-center justify-end text-slate-700 font-semibold">
-                        <Clock size={16} className="mr-1.5 text-indigo-500" />
-                        {formData.duration} Years
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="text-sm font-bold text-slate-800 mb-3 flex items-center">
-                      <GitBranch size={18} className="mr-2 text-indigo-600"/>
-                      Branches & Subjects
-                    </h3>
-                    
-                    <div className="space-y-3">
-                      {formData.branches && formData.branches.length > 0 ? (
-                        formData.branches.map((branch, index) => (
-                          <div key={index} className="border border-slate-200 rounded-xl overflow-hidden">
-                            <div className="bg-slate-50/80 px-4 py-3 border-b border-slate-100 flex justify-between items-center">
-                              <span className="font-semibold text-slate-700 text-sm">{branch.name}</span>
-                              <span className="text-[10px] font-bold uppercase tracking-wider bg-white px-2 py-1 rounded border border-slate-200 text-slate-500">
-                                {branch.subjects?.length || 0} Subjects
-                              </span>
-                            </div>
-                            
-                            {branch.subjects && branch.subjects.length > 0 ? (
-                              <div className="divide-y divide-slate-50">
-                                {branch.subjects.map((subject, sIdx) => (
-                                  <div key={sIdx} className="px-4 py-2.5 flex items-center justify-between hover:bg-slate-50 transition-colors">
-                                    <div className="flex items-center gap-3">
-                                      <div className="p-1.5 bg-indigo-50 rounded text-indigo-600">
-                                        <Book size={14} />
-                                      </div>
-                                      <div>
-                                        <p className="text-sm font-medium text-slate-700">{subject.name}</p>
-                                        <div className="flex items-center gap-2">
-                                          <span className="text-[10px] font-mono text-slate-500 bg-slate-100 px-1 rounded border border-slate-200">{subject.code}</span>
-                                          <span className="text-[10px] text-slate-400">Sem {subject.semester}</span>
-                                        </div>
-                                      </div>
-                                    </div>
-                                    <div className="text-xs font-medium text-slate-500">
-                                      {subject.credits} Cr
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <div className="p-3 text-center text-xs text-slate-400 italic bg-white">
-                                No subjects added.
-                              </div>
-                            )}
-                          </div>
-                        ))
-                      ) : (
-                        <div className="text-center py-6 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                          <p className="text-sm text-slate-500">No branches defined for this course.</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {!isManageMode && !isViewMode && (
+              {!isManageMode && (
               <form id="courseForm" onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -781,9 +726,9 @@ const CourseList = () => {
                 onClick={() => setIsModalOpen(false)} 
                 className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 transition-colors"
               >
-                {isManageMode || isViewMode ? 'Close' : 'Cancel'}
+                {isManageMode ? 'Close' : 'Cancel'}
               </button>
-              {!isManageMode && !isViewMode && (
+              {!isManageMode && (
               <button 
                 type="submit" 
                 form="courseForm"

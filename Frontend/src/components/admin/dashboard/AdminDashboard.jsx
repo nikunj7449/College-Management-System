@@ -13,9 +13,9 @@ import {
 //custom hook
 import { useDashboard } from '../../../hooks/admin/useAdminDashboard';
 //sub-component for statcard
-import {StatCard} from './components/StatCard';
-import AttendanceChart from './components/Attendancechart';
-import RecentRemarks from './components/RecentRemarks';
+import {StatCard} from './sub-components/StatCard';
+import AttendanceChart from './sub-components/Attendancechart';
+import RecentRemarks from './sub-components/RecentRemarks';
 
 
 const AdminDashboard = () => {

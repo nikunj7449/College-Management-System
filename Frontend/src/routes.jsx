@@ -2,10 +2,18 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import Navbar from './components/common/Navbar';
+
 import AdminDashboard from './components/admin/dashboard/AdminDashboard';
-import StudentList from './components/admin/StduentCardList';
+
+import StudentCardList from './components/admin/StduentCardList';
+import AdminStudent from './components/admin/student/AdminStudent';
+
 import FacultyList from './components/admin/FacultyList';
+import AdminFaculty from './components/admin/faculty/AdminFaculty';
+
 import CourseList from './components/admin/CourseList';
+import AdminCourse from './components/admin/course/AdminCourse';
+
 
 
 // Placeholder components
@@ -29,13 +37,13 @@ const AppRoutes = () => {
               <ProtectedRoute roles={['ADMIN']}><AdminDashboard /></ProtectedRoute>
           }/>
           <Route path="/students" element={
-              <ProtectedRoute roles={['ADMIN', 'FACULTY']}><StudentList /></ProtectedRoute>
+              <ProtectedRoute roles={['ADMIN', 'FACULTY']}><AdminStudent /></ProtectedRoute>
           }/>
           <Route path="/courses" element={
-              <ProtectedRoute roles={['ADMIN']}><CourseList /></ProtectedRoute>
+              <ProtectedRoute roles={['ADMIN']}><AdminCourse /></ProtectedRoute>
           }/>
           <Route path="/facultys" element={
-              <ProtectedRoute roles={['ADMIN']}><FacultyList /></ProtectedRoute>
+              <ProtectedRoute roles={['ADMIN']}><AdminFaculty /></ProtectedRoute>
           }/>
           <Route path="/faculty/dashboard" element={
               <ProtectedRoute roles={['FACULTY']}><FacultyDashboard /></ProtectedRoute>
