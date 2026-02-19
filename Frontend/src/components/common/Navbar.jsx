@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import { AuthContext } from '../../context/AuthContext';
 import { 
   Bell, Search, LogOut, Menu, User,
-  LayoutDashboard, Users, GraduationCap, BookOpen, Award, Calendar, Settings 
+  LayoutDashboard, Users, GraduationCap, BookOpen, Award, Calendar, Settings, Shield
 } from 'lucide-react';
 
 const SidebarItem = ({ icon: Icon, label, to, active, badge, onClick }) => (
@@ -35,6 +35,8 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
+    if (location.pathname === '/login') return false;
+
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('sidebarOpen');
       if (saved !== null) {
@@ -93,13 +95,21 @@ const Navbar = () => {
     const links = [];
     
     if (role) {
-      links.push({ icon: LayoutDashboard, label: "Dashboard", path: `/${role === 'ADMIN' ? 'admin' : role === 'FACULTY' ? 'faculty' : 'student'}/dashboard` });
+      const dashboardRole = (role === 'ADMIN' || role === 'SUPERADMIN') ? 'admin' : (role === 'FACULTY' ? 'faculty' : 'student');
+      links.push({ icon: LayoutDashboard, label: "Dashboard", path: `/${dashboardRole}/dashboard` });
     }
 
-    if (role === 'ADMIN') {
+    if (role === 'ADMIN' || role === 'SUPERADMIN') {
       links.push(
         { icon: Users, label: "Students", path: "/students" },
         { icon: GraduationCap, label: "Faculty", path: "/facultys" },
+      );
+
+      if (role === 'SUPERADMIN') {
+        links.push({ icon: Shield, label: "Admins", path: "/admins" });
+      }
+
+      links.push(
         { icon: BookOpen, label: "Courses", path: "/courses" },
         { icon: Award, label: "Performance", path: "/performance" },
         { icon: Calendar, label: "Events", path: "/events", badge: "3" },

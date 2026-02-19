@@ -249,6 +249,7 @@ const StudentList = () => {
           isOpen={true}
           onClose={closeModal}
           onConfirm={confirmDelete}
+          deleteRole={"Student"}
         />
       )}
 

@@ -269,6 +269,7 @@ const AdminFaculty = () => {
           isOpen={true}
           onClose={closeModal}
           onConfirm={confirmDelete}
+          deleteRole={"Faculty"}
         />
       )}
     </div>

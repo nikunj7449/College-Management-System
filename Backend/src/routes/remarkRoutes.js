@@ -17,6 +17,6 @@ router.post('/', authorize('FACULTY'), addRemark);
 router.get('/student/:studentId', getStudentRemarks);
 
 // Admin Module: View Faculty Daily Work Log
-router.get('/faculty-log/:facultyId', authorize('ADMIN'), getFacultyWorkLog);
+router.get('/faculty-log/:facultyId', authorize('ADMIN', 'SUPERADMIN'), getFacultyWorkLog);
 
 module.exports = router;

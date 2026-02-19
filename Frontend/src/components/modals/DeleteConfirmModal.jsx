@@ -1,7 +1,7 @@
 import React from 'react';
 import { AlertTriangle } from 'lucide-react';
 
-const DeleteConfirmModal = ({ isOpen, onClose, onConfirm }) => {
+const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, deleteRole }) => {
   if (!isOpen) return null;
 
   return (
@@ -14,7 +14,7 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm }) => {
           Confirm Delete
         </h3>
         <p className="text-slate-500 text-center mb-6">
-          Are you sure you want to delete this student? This action cannot be undone and will remove all associated data.
+          {`Are you sure you want to delete this ${deleteRole}? This action cannot be undone and will remove all associated data.`}
         </p>
         <div className="flex space-x-3">
           <button 
@@ -27,7 +27,7 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm }) => {
             onClick={onConfirm}
             className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors shadow-lg shadow-red-200"
           >
-            Delete Student
+            {`Delete ${deleteRole}`}
           </button>
         </div>
       </div>

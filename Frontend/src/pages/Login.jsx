@@ -15,6 +15,11 @@ const Login = () => {
 
   const { email, password } = formData;
 
+  useEffect(() => {
+    localStorage.clear();
+  });
+  
+
 
  //below code automatically redirecting users who are already logged in.
   // useEffect(() => {
@@ -49,6 +54,7 @@ const Login = () => {
 
     // 2. Otherwise, go to the default dashboard based on role
     switch (role) {
+      case 'SUPERADMIN':
       case 'ADMIN':
         navigate('/admin/dashboard');
         break;

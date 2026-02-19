@@ -12,6 +12,7 @@ const performanceRoutes = require('./routes/performanceRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const facultyRoutes = require('./routes/facultyRoutes');
 const courseRoutes = require('./routes/courseRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 const app = express();
 
 // Body parser
@@ -33,6 +34,7 @@ app.use('/api/v1/attendance', attendanceRoutes);
 app.use('/api/v1/remarks', remarkRoutes);
 app.use('/api/v1/performance', performanceRoutes);
 app.use('/api/v1/dashboard', dashboardRoutes);
+app.use('/api/v1/admins', adminRoutes);
 
 // Error Handler (Must be last)
 app.use(errorHandler);

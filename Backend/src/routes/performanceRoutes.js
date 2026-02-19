@@ -10,7 +10,7 @@ const { authorize } = require('../middleware/roleMiddleware');
 router.use(protect);
 
 // Add Marks
-router.post('/', authorize('ADMIN', 'FACULTY'), addPerformance);
+router.post('/', authorize('ADMIN', 'SUPERADMIN', 'FACULTY'), addPerformance);
 
 // View Marks
 router.get('/student/:studentId', getStudentPerformance);

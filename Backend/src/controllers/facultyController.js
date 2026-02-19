@@ -2,6 +2,7 @@ const Faculty = require('../models/faculty');
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const Remark = require('../models/Remark');
+const cloudinary = require('cloudinary').v2;
 
 // @desc    Add a new Faculty
 // @route   POST /api/v1/faculty
@@ -11,7 +12,6 @@ exports.addFaculty = async (req, res, next) => {
     const { 
       name, facultyId, personalEmail, phone, subject, qualification, designation, salary, dob, course, branch, sem, joiningDate
     } = req.body;
-    console.log("req.body:", req.body);
     // 1. Validation
     if (!name || !facultyId || !personalEmail || !phone || !subject || !qualification || !dob || !course || !branch || !sem) {
       res.status(400);
@@ -34,7 +34,7 @@ exports.addFaculty = async (req, res, next) => {
     const userExists = await User.findOne({ email: loginEmail });
     if (userExists) {
       res.status(400);
-      throw new Error('User login for this Faculty ID already exists');
+      throw new Error('User login email for this Faculty ID already exists');
     }
 
     // --- PASSWORD FORMATTING LOGIC ---
@@ -57,8 +57,9 @@ exports.addFaculty = async (req, res, next) => {
     if (req.files && req.files.length > 0) {
       documentsArray = req.files.map(file => ({
         name: file.originalname,
-        url: `/uploads/${file.filename}`, 
-        type: file.mimetype
+        url: file.path, 
+        type: file.mimetype,
+        publicId: file.filename
       }));  
     }
 
@@ -275,18 +276,42 @@ exports.updateFaculty = async (req, res, next) => {
       await User.findByIdAndUpdate(faculty.user, { name: req.body.name });
     }
 
-    // Handle File Uploads (Append new files)
+    // Handle Documents (Add New & Delete Removed)
+    let updatedDocuments = faculty.documents;
+
+    // 1. Handle Existing Documents (Delete removed ones from Cloudinary)
+    if (req.body.existingDocuments) {
+      try {
+        const keptDocuments = JSON.parse(req.body.existingDocuments);
+        const keptPublicIds = keptDocuments.map(doc => doc.publicId).filter(id => id);
+
+        // Identify documents to delete
+        const docsToDelete = faculty.documents.filter(doc => 
+          doc.publicId && !keptPublicIds.includes(doc.publicId)
+        );
+
+        // Delete from Cloudinary
+        for (const doc of docsToDelete) {
+          await cloudinary.uploader.destroy(doc.publicId);
+        }
+        updatedDocuments = keptDocuments;
+      } catch (error) {
+        console.error('Error parsing existingDocuments:', error);
+      }
+    }
+
+    // 2. Handle New Files
     if (req.files && req.files.length > 0) {
       const newDocuments = req.files.map(file => ({
         name: file.originalname,
-        url: `/uploads/${file.filename}`,
-        type: file.mimetype
+        url: file.path,
+        type: file.mimetype,
+        publicId: file.filename
       }));
-      
-      await Faculty.findByIdAndUpdate(req.params.id, { 
-        $push: { documents: { $each: newDocuments } } 
-      });
+      updatedDocuments = [...updatedDocuments, ...newDocuments];
     }
+
+    req.body.documents = updatedDocuments;
 
     const updatedFaculty = await Faculty.findByIdAndUpdate(req.params.id, req.body, {
       new: true,

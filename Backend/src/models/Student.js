@@ -71,7 +71,8 @@ const studentSchema = new mongoose.Schema({
   documents: [{
     name: { type: String, trim: true },
     url: { type: String, trim: true },
-    type: { type: String, trim: true }
+    type: { type: String, trim: true },
+    publicId: { type: String, trim: true }
   }]
 }, {
   timestamps: true,

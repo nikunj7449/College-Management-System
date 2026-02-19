@@ -291,15 +291,7 @@ const CourseList = () => {
           isOpen={true}
           onClose={closeModal}
           onConfirm={handleDelete}
-          message={
-            <>
-              Are you sure you want to delete <strong>{deleteConfig.name}</strong>?
-              {deleteConfig.type === DELETE_TYPE.COURSE &&
-                ' This will also delete all associated branches and subjects.'}
-              <br />
-              This action cannot be undone.
-            </>
-          }
+          deleteRole={"Course"}
         />
       )}
     </div>

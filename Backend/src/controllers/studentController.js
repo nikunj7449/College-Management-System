@@ -4,6 +4,13 @@ const bcrypt = require('bcryptjs');
 const Attendance = require('../models/Attendance');
 const Remark = require('../models/Remark');
 const Performance = require('../models/Performance');
+const cloudinary = require('cloudinary').v2;
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 // @desc    Add a new student
 // @route   POST /api/v1/students
@@ -71,8 +78,9 @@ exports.addStudent = async (req, res, next) => {
     if (req.files && req.files.length > 0) {
       documentsArray = req.files.map(file => ({
         name: file.originalname,
-        url: `/uploads/${file.filename}`, 
-        type: file.mimetype
+        url: file.path, 
+        type: file.mimetype,
+        publicId: file.filename // Store publicId for deletion
       }));
     }
 
@@ -310,20 +318,41 @@ exports.updateStudent = async (req, res, next) => {
     }
     // -------------------------------------
 
-    // Handle File Uploads (Append new files to existing ones)
+    // Handle Documents (Add New & Delete Removed)
+    let updatedDocuments = student.documents;
+
+    // 1. Handle Existing Documents (Delete removed ones from Cloudinary)
+    if (req.body.existingDocuments) {
+      const keptDocuments = JSON.parse(req.body.existingDocuments);
+      const keptPublicIds = keptDocuments.map(doc => doc.publicId).filter(id => id);
+
+      // Identify documents to delete
+      const docsToDelete = student.documents.filter(doc => 
+        doc.publicId && !keptPublicIds.includes(doc.publicId)
+      );
+
+      // Delete from Cloudinary
+      for (const doc of docsToDelete) {
+        await cloudinary.uploader.destroy(doc.publicId);
+      }
+
+      updatedDocuments = keptDocuments;
+      delete req.body.existingDocuments;
+    }
+
+    // 2. Handle New Files
     if (req.files && req.files.length > 0) {
       const newDocuments = req.files.map(file => ({
         name: file.originalname,
-        url: `/uploads/${file.filename}`,
-        type: file.mimetype
+        url: file.path,
+        type: file.mimetype,
+        publicId: file.filename
       }));
       
-      // Add new files to the update list
-      // $push is a MongoDB operator to append to array
-      await Student.findByIdAndUpdate(req.params.id, { 
-        $push: { documents: { $each: newDocuments } } 
-      });
+      updatedDocuments = [...updatedDocuments, ...newDocuments];
     }
+
+    req.body.documents = updatedDocuments;
 
     // Update the rest of the text fields
     const updatedStudent = await Student.findByIdAndUpdate(
@@ -348,7 +377,6 @@ exports.updateStudent = async (req, res, next) => {
 exports.deleteStudent = async (req, res, next) => {
   try {
     const student = await Student.findById(req.params.id);
-
     if (!student) {
       res.status(404);
       throw new Error('Student not found');
@@ -356,6 +384,19 @@ exports.deleteStudent = async (req, res, next) => {
 
     // Delete linked User account
     await User.findByIdAndDelete(student.user);
+
+    // Delete images from Cloudinary
+    if (student.documents && student.documents.length > 0) {
+      try {
+        const deletePromises = student.documents
+          .filter(doc => doc.publicId)
+          .map(doc => cloudinary.uploader.destroy(doc.publicId));
+        await Promise.all(deletePromises);
+      } catch (err) {
+        console.error('Error deleting images from Cloudinary:', err);
+        // Continue deleting student even if image deletion fails
+      }
+    }
 
     // Delete associated data (Attendance, Remarks, Performance)
     await Attendance.deleteMany({ student: student._id });

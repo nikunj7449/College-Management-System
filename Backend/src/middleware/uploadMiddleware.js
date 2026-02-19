@@ -1,26 +1,25 @@
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-// 1. Configure where to store files (Disk Storage)
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadPath = path.join(__dirname, '../../uploads');
-
-    // Create directory if it doesn't exist
-    if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath, { recursive: true });
-    }
-    cb(null, uploadPath); 
-  },
-  filename: (req, file, cb) => {
-    // Create a unique filename: fieldname-timestamp.extension
-    // Example: documents-1674567890.pdf
-    cb(null, `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`);
-  }
+// 1. Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// 2. Check File Type (Security: Only allow Images and PDFs)
+// 2. Configure Cloudinary Storage
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'user_documents',
+    resource_type: 'auto',
+  },
+});
+
+// 3. Check File Type (Security: Only allow Images and PDFs)
 const checkFileType = (file, cb) => {
   // Allowed extensions
   const filetypes = /jpeg|jpg|png|pdf/;

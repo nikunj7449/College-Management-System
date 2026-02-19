@@ -9,7 +9,7 @@ const { authorize } = require('../middleware/roleMiddleware');
 
 router.use(protect);
 
-router.get('/admin/stats', authorize('ADMIN'), getAdminStats);
+router.get('/admin/stats', authorize('ADMIN', 'SUPERADMIN'), getAdminStats);
 router.get('/faculty/stats', authorize('FACULTY'), getFacultyStats);
 
 module.exports = router;

@@ -194,7 +194,7 @@ export const formatStudentForForm = (student) => {
     studentPhone: student.studentPhone || '',
     personalEmail: student.personalEmail || '',
     dob: student.dob ? new Date(student.dob).toISOString().split('T')[0] : '',
-    documents: null
+    documents: student.documents || ''
   };
 };
 

@@ -144,6 +144,7 @@ export const useFacultyOperations = () => {
 
     try {
       const dataToSend = new FormData();
+      const existingDocuments = [];
 
       // Append all simple key-value pairs
       for (const key in formData) {
@@ -171,11 +172,17 @@ export const useFacultyOperations = () => {
       }
 
       // Append files
-      if (formData.documents) {
+      if (formData.documents && formData.documents.length > 0) {
         Array.from(formData.documents).forEach(file => {
-          dataToSend.append('documents', file);
+          if (file instanceof File) {
+            dataToSend.append('documents', file);
+          } else {
+            existingDocuments.push(file);
+          }
         });
       }
+
+      dataToSend.append('existingDocuments', JSON.stringify(existingDocuments));
 
       const isEditing = modal.type === MODAL_TYPE.EDIT;
 
@@ -205,12 +212,14 @@ export const useFacultyOperations = () => {
 
   // CRUD Operations
   const handleEdit = (faculty) => {
-    setFormData(formatFacultyForForm(faculty));
+    const formatted = formatFacultyForForm(faculty);
+    setFormData({ ...formatted, documents: faculty.documents || [] });
     setModal({ type: MODAL_TYPE.EDIT, faculty });
   };
 
   const handleView = (faculty) => {
-    setFormData(formatFacultyForForm(faculty));
+    const formatted = formatFacultyForForm(faculty);
+    setFormData({ ...formatted, documents: faculty.documents || [] });
     setModal({ type: MODAL_TYPE.VIEW, faculty });
   };
 

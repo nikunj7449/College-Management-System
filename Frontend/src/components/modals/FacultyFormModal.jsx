@@ -1,5 +1,6 @@
-import React from 'react';
-import { X, Loader, UploadCloud } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Loader, UploadCloud, FileText } from 'lucide-react';
+import { toast } from 'react-toastify';
 import CustomDropdown from '../custom/CustomDropdown';
 import MultiSelectDropdown from '../custom/MultiSelectDropdown';
 
@@ -18,7 +19,35 @@ const FacultyFormModal = ({
   semOptions,
   subjectOptions
 }) => {
+  const [previewImage, setPreviewImage] = useState(null);
+
   if (!isOpen) return null;
+
+  const handleRemoveFile = (indexToRemove) => {
+    const currentDocs = Array.from(formData.documents || []);
+    const updatedDocs = currentDocs.filter((_, index) => index !== indexToRemove);
+    
+    onChange({
+      target: {
+        name: 'documents',
+        files: updatedDocs
+      }
+    });
+  };
+
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const newFiles = Array.from(e.target.files);
+      const existingFiles = Array.from(formData.documents || []);
+      
+      onChange({
+        target: {
+          name: 'documents',
+          files: [...existingFiles, ...newFiles]
+        }
+      });
+    }
+  };
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
@@ -28,7 +57,7 @@ const FacultyFormModal = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-10">
+        <div className="p-6 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-60">
           <h2 className="text-xl font-bold text-slate-800">
             {isViewMode ? 'Faculty Details' : (isEditMode ? 'Edit Faculty' : 'Add New Faculty')}
           </h2>
@@ -138,7 +167,7 @@ const FacultyFormModal = ({
             </div>
 
             {/* Designation */}
-            <div>
+            <div className="relative z-50">
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Designation *
               </label>
@@ -189,7 +218,7 @@ const FacultyFormModal = ({
             </div>
 
             {/* Course */}
-            <div>
+            <div className="relative z-40">
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Course *
               </label>
@@ -209,7 +238,7 @@ const FacultyFormModal = ({
             </div>
 
             {/* Branch */}
-            <div>
+            <div className="relative z-40">
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Branch *
               </label>
@@ -230,7 +259,7 @@ const FacultyFormModal = ({
             </div>
 
             {/* Semesters */}
-            <div>
+            <div className="relative z-30">
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Semesters *
               </label>
@@ -262,7 +291,7 @@ const FacultyFormModal = ({
             </div>
 
             {/* Subjects */}
-            <div>
+            <div className="relative z-30">
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Subjects *
               </label>
@@ -296,38 +325,122 @@ const FacultyFormModal = ({
             {/* Document Upload */}
             <div className="col-span-2">
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Upload Documents
+                {isViewMode ? 'Documents' : 'Upload Documents'}
               </label>
-              <div className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-300 border-dashed rounded-xl ${
-                !isViewMode ? 'hover:bg-slate-50' : 'bg-slate-50 opacity-60'
-              } transition-colors relative`}>
-                <input 
-                  disabled={isViewMode}
-                  type="file" 
-                  name="documents" 
-                  multiple 
-                  onChange={onChange} 
-                  className={`absolute inset-0 w-full h-full opacity-0 ${
-                    !isViewMode ? 'cursor-pointer' : 'cursor-not-allowed'
-                  }`}
-                  accept=".pdf,.jpg,.jpeg,.png"
-                />
-                <div className="space-y-1 text-center">
-                  <UploadCloud className="mx-auto h-12 w-12 text-slate-400" />
-                  <div className="flex text-sm text-slate-600 justify-center">
-                    <span className="font-medium text-indigo-600 hover:text-indigo-500">
-                      Upload files
-                    </span>
-                    <p className="pl-1">or drag and drop</p>
+              {!isViewMode && (
+                <div className="mt-1 flex flex-col justify-center px-6 pt-5 pb-6 border-2 border-slate-300 border-dashed rounded-xl hover:bg-slate-50 hover:border-indigo-400 transition-all duration-300 relative group">
+                  <input 
+                    type="file" 
+                    name="documents" 
+                    multiple 
+                    onChange={handleFileChange} 
+                    className="absolute inset-0 w-full h-full opacity-0 z-20 cursor-pointer"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                  />
+                  <div className="space-y-2 text-center relative z-10">
+                    <div className="w-16 h-16 mx-auto bg-indigo-50 rounded-full flex items-center justify-center mb-2 group-hover:scale-110 group-hover:bg-indigo-100 transition-all duration-300">
+                      <UploadCloud className="h-8 w-8 text-indigo-600 transition-colors" />
+                    </div>
+                    <div className="flex flex-col text-sm text-slate-600 justify-center">
+                      <span className="font-semibold text-indigo-600 hover:text-indigo-500 text-base">
+                        Click to upload documents
+                      </span>
+                      <p className="text-slate-400 mt-1">or drag and drop files here</p>
+                    </div>
+                    <p className="text-xs text-slate-400">Supported formats: PNG, JPG, PDF (Max 5MB)</p>
                   </div>
-                  <p className="text-xs text-slate-500">PNG, JPG, PDF up to 5MB</p>
-                  {formData.documents && formData.documents.length > 0 && (
-                    <p className="text-sm text-green-600 font-medium mt-2">
-                      {formData.documents.length} file(s) selected
-                    </p>
-                  )}
                 </div>
-              </div>
+              )}
+
+              {/* File Previews */}
+              {formData.documents && formData.documents.length > 0 ? (
+                <div className="mt-6">
+                  <h4 className="text-sm font-medium text-slate-700 mb-3">Selected Files ({formData.documents.length})</h4>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    {Array.from(formData.documents).map((file, index) => {
+                      const isFileObject = file instanceof File;
+                      let fileName = 'Document';
+                      let previewUrl = '';
+                      let isImage = false;
+                      let fileSize = '';
+
+                      if (isFileObject) {
+                        fileName = file.name;
+                        previewUrl = URL.createObjectURL(file);
+                        isImage = file.type.startsWith('image/');
+                        fileSize = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+                      } else {
+                        const urlString = typeof file === 'string' ? file : (file?.url || '');
+                        previewUrl = urlString;
+                        if (urlString) {
+                          const cleanUrl = urlString.split('?')[0].toLowerCase();
+                          fileName = decodeURIComponent(urlString.split('/').pop().split('?')[0]) || 'Document';
+                          isImage = /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(cleanUrl);
+                          if (!isImage && !cleanUrl.endsWith('.pdf')) isImage = true;
+                        }
+                      }
+
+                      return (
+                        <div 
+                          key={index} 
+                          className="group relative bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-all duration-300 hover:-translate-y-1"
+                        >
+                          <div 
+                            className="aspect-4/3 w-full overflow-hidden bg-slate-100 relative cursor-pointer"
+                            onClick={() => isImage ? setPreviewImage(previewUrl) : window.open(previewUrl, '_blank')}
+                          >
+                            {!isViewMode && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRemoveFile(index);
+                                }}
+                                className="absolute top-2 right-2 z-20 p-1.5 bg-white/90 text-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-red-50"
+                                title="Remove file"
+                              >
+                                <X size={14} />
+                              </button>
+                            )}
+
+                            {isImage ? (
+                              <img 
+                                src={previewUrl} 
+                                alt={fileName} 
+                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                              />
+                            ) : (
+                              <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-slate-50 text-slate-400 group-hover:bg-slate-100 transition-colors">
+                                <FileText size={32} strokeWidth={1.5} />
+                                <span className="text-[10px] font-medium mt-2 uppercase tracking-wider text-slate-500">
+                                  {fileName.split('.').pop()}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="p-3 bg-white">
+                            <p className="text-xs font-medium text-slate-700 truncate" title={fileName}>
+                              {fileName}
+                            </p>
+                            {fileSize && (
+                              <p className="text-[10px] text-slate-400 mt-0.5">
+                                {fileSize}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                isViewMode && (
+                  <div className="mt-2 p-4 bg-slate-50 rounded-xl border border-slate-200 text-center text-slate-500 text-sm italic">
+                    No documents uploaded
+                  </div>
+                )
+              )}
             </div>
           </div>
 
@@ -358,6 +471,27 @@ const FacultyFormModal = ({
             )}
           </div>
         </form>
+
+        {/* Image Preview Modal */}
+        {previewImage && (
+          <div 
+            className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm"
+            onClick={() => setPreviewImage(null)}
+          >
+            <button 
+              className="absolute top-4 right-4 p-2 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+              onClick={() => setPreviewImage(null)}
+            >
+              <X size={24} />
+            </button>
+            <img 
+              src={previewImage} 
+              alt="Preview" 
+              className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+              onClick={(e) => e.stopPropagation()} 
+            />
+          </div>
+        )}
       </div>
     </div>
   );

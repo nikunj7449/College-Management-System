@@ -17,13 +17,13 @@ router.use(protect);
 
 router.route('/')
   .get(getAllFaculty) // Accessible to any logged-in user
-  .post(authorize('ADMIN'), upload.array('documents', 3),cleanBody, addFaculty); // Admin only
+  .post(authorize('ADMIN', 'SUPERADMIN'), upload.array('documents', 3),cleanBody, addFaculty); // Admin only
 
 router.route('/bulk')
-  .post(authorize('ADMIN'), addBulkFaculty);
+  .post(authorize('ADMIN', 'SUPERADMIN'), addBulkFaculty);
 
 router.route('/:id')
-  .put(authorize('ADMIN'), upload.array('documents', 3), updateFaculty) // Admin only
-  .delete(authorize('ADMIN'), deleteFaculty); // Admin only
+  .put(authorize('ADMIN', 'SUPERADMIN'), upload.array('documents', 3), updateFaculty) // Admin only
+  .delete(authorize('ADMIN', 'SUPERADMIN'), deleteFaculty); // Admin only
 
 module.exports = router;

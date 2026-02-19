@@ -18,7 +18,7 @@ const INITIAL_FORM_STATE = {
   studentPhone: '',
   personalEmail: '',
   dob: '',
-  documents: null
+  documents: ''
 };
 
 const INITIAL_FILTERS = {
@@ -124,18 +124,23 @@ export const useStudentOperations = () => {
     
     try {
       const dataToSend = new FormData();
+      const existingDocuments = [];
       Object.keys(formData).forEach(key => {
         if (key === 'documents') {
           if (formData[key]) {
-            Array.from(formData[key]).forEach(file => 
-              dataToSend.append('documents', file)
-            );
+            Array.from(formData[key]).forEach(file => {
+              if (file instanceof File) {
+                dataToSend.append('documents', file);
+              } else {
+                existingDocuments.push(file);
+              }
+            });
           }
         } else {
           dataToSend.append(key, formData[key]);
         }
       });
-
+      dataToSend.append('existingDocuments', JSON.stringify(existingDocuments));
       const isEditing = modal.type === MODAL_TYPE.EDIT;
 
       if (isEditing) {
@@ -179,7 +184,7 @@ export const useStudentOperations = () => {
 
   const confirmDelete = async () => {
     try {
-      await api.delete(`/students/${modal.student._id}`);
+      await api.delete(`/students/${modal.student}`);
       toast.success('Student deleted successfully');
       fetchStudents();
       closeModal();

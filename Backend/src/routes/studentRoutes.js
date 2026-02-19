@@ -17,19 +17,19 @@ router.use(protect);
 
 // Routes
 router.route('/')
-  .get(authorize('ADMIN', 'FACULTY'), getAllStudents) // View all (Admin/Faculty)
+  .get(authorize('ADMIN', 'SUPERADMIN', 'FACULTY'), getAllStudents) // View all (Admin/Faculty)
   .post(
-    authorize('ADMIN', 'FACULTY'), 
+    authorize('ADMIN', 'SUPERADMIN', 'FACULTY'), 
     upload.array('documents', 3), // Expects field name 'documents'
     addStudent
   ); // Add new (Admin/Faculty)
 
 router.route('/bulk')
-  .post(authorize('ADMIN'), addBulkStudents);
+  .post(authorize('ADMIN', 'SUPERADMIN'), addBulkStudents);
 
 router.route('/:id')
-  .get(authorize('ADMIN'),getStudentById)
-  .put(authorize('ADMIN', 'FACULTY'), upload.array('documents', 3), updateStudent) // Only Admin can edit details
-  .delete(authorize('ADMIN', 'FACULTY'), deleteStudent);
+  .get(authorize('ADMIN', 'SUPERADMIN'),getStudentById)
+  .put(authorize('ADMIN', 'SUPERADMIN', 'FACULTY'), upload.array('documents', 3), updateStudent) // Only Admin can edit details
+  .delete(authorize('ADMIN', 'SUPERADMIN', 'FACULTY'), deleteStudent);
 
 module.exports = router;
