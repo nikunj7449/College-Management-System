@@ -4,14 +4,14 @@ import { toast } from 'react-toastify';
 import CustomDropdown from '../custom/CustomDropdown';
 import MultiSelectDropdown from '../custom/MultiSelectDropdown';
 
-const FacultyFormModal = ({ 
-  isOpen, 
-  onClose, 
-  formData, 
-  onChange, 
-  onSubmit, 
-  isEditMode, 
-  isViewMode, 
+const FacultyFormModal = ({
+  isOpen,
+  onClose,
+  formData,
+  onChange,
+  onSubmit,
+  isEditMode,
+  isViewMode,
   submitLoading,
   designationOptions,
   courseOptions,
@@ -26,7 +26,7 @@ const FacultyFormModal = ({
   const handleRemoveFile = (indexToRemove) => {
     const currentDocs = Array.from(formData.documents || []);
     const updatedDocs = currentDocs.filter((_, index) => index !== indexToRemove);
-    
+
     onChange({
       target: {
         name: 'documents',
@@ -39,7 +39,7 @@ const FacultyFormModal = ({
     if (e.target.files && e.target.files.length > 0) {
       const newFiles = Array.from(e.target.files);
       const existingFiles = Array.from(formData.documents || []);
-      
+
       onChange({
         target: {
           name: 'documents',
@@ -61,14 +61,14 @@ const FacultyFormModal = ({
           <h2 className="text-xl font-bold text-slate-800">
             {isViewMode ? 'Faculty Details' : (isEditMode ? 'Edit Faculty' : 'Add New Faculty')}
           </h2>
-          <button 
-            onClick={onClose} 
+          <button
+            onClick={onClose}
             className="p-2 hover:bg-slate-100 rounded-full transition-colors"
           >
             <X size={20} className="text-slate-500" />
           </button>
         </div>
-        
+
         <form onSubmit={handleFormSubmit} className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Full Name */}
@@ -76,14 +76,14 @@ const FacultyFormModal = ({
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Full Name *
               </label>
-              <input 
-                disabled={isViewMode} 
-                required 
-                name="name" 
-                value={formData.name} 
-                onChange={onChange} 
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed" 
-                placeholder="e.g. Dr. Sarah Smith" 
+              <input
+                disabled={isViewMode}
+                required
+                name="name"
+                value={formData.name}
+                onChange={onChange}
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed"
+                placeholder="e.g. Dr. Sarah Smith"
               />
             </div>
 
@@ -92,14 +92,14 @@ const FacultyFormModal = ({
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Faculty ID *
               </label>
-              <input 
-                disabled={isViewMode} 
-                required 
-                name="facultyId" 
-                value={formData.facultyId} 
-                onChange={onChange} 
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed" 
-                placeholder="e.g. FAC001" 
+              <input
+                disabled={isViewMode}
+                required
+                name="facultyId"
+                value={formData.facultyId}
+                onChange={onChange}
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed"
+                placeholder="e.g. FAC001"
               />
             </div>
 
@@ -108,14 +108,14 @@ const FacultyFormModal = ({
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Personal Email *
               </label>
-              <input 
-                disabled={isViewMode} 
-                required 
-                type="email" 
-                name="personalEmail" 
-                value={formData.personalEmail} 
-                onChange={onChange} 
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed" 
+              <input
+                disabled={isViewMode}
+                required
+                type="email"
+                name="personalEmail"
+                value={formData.personalEmail}
+                onChange={onChange}
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed"
               />
             </div>
 
@@ -124,13 +124,13 @@ const FacultyFormModal = ({
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Phone *
               </label>
-              <input 
-                disabled={isViewMode} 
-                required 
-                name="phone" 
-                value={formData.phone} 
-                onChange={onChange} 
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed" 
+              <input
+                disabled={isViewMode}
+                required
+                name="phone"
+                value={formData.phone}
+                onChange={onChange}
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed"
               />
             </div>
 
@@ -139,14 +139,14 @@ const FacultyFormModal = ({
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Date of Birth *
               </label>
-              <input 
-                disabled={isViewMode} 
-                required 
-                type="date" 
-                name="dob" 
-                value={formData.dob} 
-                onChange={onChange} 
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed" 
+              <input
+                disabled={isViewMode}
+                required
+                type="date"
+                name="dob"
+                value={formData.dob}
+                onChange={onChange}
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed"
               />
             </div>
 
@@ -155,14 +155,14 @@ const FacultyFormModal = ({
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Qualification *
               </label>
-              <input 
-                disabled={isViewMode} 
-                required 
-                name="qualification" 
-                value={formData.qualification} 
-                onChange={onChange} 
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed" 
-                placeholder="e.g. M.Sc, PhD" 
+              <input
+                disabled={isViewMode}
+                required
+                name="qualification"
+                value={formData.qualification}
+                onChange={onChange}
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed"
+                placeholder="e.g. M.Sc, PhD"
               />
             </div>
 
@@ -191,14 +191,14 @@ const FacultyFormModal = ({
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Salary
               </label>
-              <input 
-                disabled={isViewMode} 
-                type="number" 
-                name="salary" 
-                value={formData.salary} 
-                onChange={onChange} 
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed" 
-                placeholder="e.g. 50000" 
+              <input
+                disabled={isViewMode}
+                type="number"
+                name="salary"
+                value={formData.salary}
+                onChange={onChange}
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed"
+                placeholder="e.g. 50000"
               />
             </div>
 
@@ -207,13 +207,13 @@ const FacultyFormModal = ({
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Joining Date
               </label>
-              <input 
-                disabled={isViewMode} 
-                type="date" 
-                name="joiningDate" 
-                value={formData.joiningDate} 
-                onChange={onChange} 
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed" 
+              <input
+                disabled={isViewMode}
+                type="date"
+                name="joiningDate"
+                value={formData.joiningDate}
+                onChange={onChange}
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed"
               />
             </div>
 
@@ -267,8 +267,8 @@ const FacultyFormModal = ({
                 <div className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl min-h-11.5 flex flex-wrap gap-2">
                   {formData.sem?.length > 0 ? (
                     formData.sem.map((s, idx) => (
-                      <span 
-                        key={idx} 
+                      <span
+                        key={idx}
                         className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-100"
                       >
                         Sem {s}
@@ -299,8 +299,8 @@ const FacultyFormModal = ({
                 <div className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl min-h-11.5 flex flex-wrap gap-2">
                   {formData.subject?.length > 0 ? (
                     formData.subject.map((s, idx) => (
-                      <span 
-                        key={idx} 
+                      <span
+                        key={idx}
                         className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200"
                       >
                         {s}
@@ -329,11 +329,11 @@ const FacultyFormModal = ({
               </label>
               {!isViewMode && (
                 <div className="mt-1 flex flex-col justify-center px-6 pt-5 pb-6 border-2 border-slate-300 border-dashed rounded-xl hover:bg-slate-50 hover:border-indigo-400 transition-all duration-300 relative group">
-                  <input 
-                    type="file" 
-                    name="documents" 
-                    multiple 
-                    onChange={handleFileChange} 
+                  <input
+                    type="file"
+                    name="documents"
+                    multiple
+                    onChange={handleFileChange}
                     className="absolute inset-0 w-full h-full opacity-0 z-20 cursor-pointer"
                     accept=".pdf,.jpg,.jpeg,.png"
                   />
@@ -374,18 +374,24 @@ const FacultyFormModal = ({
                         previewUrl = urlString;
                         if (urlString) {
                           const cleanUrl = urlString.split('?')[0].toLowerCase();
-                          fileName = decodeURIComponent(urlString.split('/').pop().split('?')[0]) || 'Document';
+                          fileName = file?.name || decodeURIComponent(urlString.split('/').pop().split('?')[0]) || 'Document';
                           isImage = /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(cleanUrl);
                           if (!isImage && !cleanUrl.endsWith('.pdf')) isImage = true;
+                        }
+
+                        // Mask Cloudinary Hashes that appear with or without extensions
+                        const namePart = fileName.split('.')[0];
+                        if (namePart.length >= 15 && /^[a-zA-Z0-9]+$/.test(namePart)) {
+                          fileName = `Document ${index + 1}`;
                         }
                       }
 
                       return (
-                        <div 
-                          key={index} 
+                        <div
+                          key={index}
                           className="group relative bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-all duration-300 hover:-translate-y-1"
                         >
-                          <div 
+                          <div
                             className="aspect-4/3 w-full overflow-hidden bg-slate-100 relative cursor-pointer"
                             onClick={() => isImage ? setPreviewImage(previewUrl) : window.open(previewUrl, '_blank')}
                           >
@@ -404,10 +410,10 @@ const FacultyFormModal = ({
                             )}
 
                             {isImage ? (
-                              <img 
-                                src={previewUrl} 
-                                alt={fileName} 
-                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                              <img
+                                src={previewUrl}
+                                alt={fileName}
+                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                               />
                             ) : (
                               <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-slate-50 text-slate-400 group-hover:bg-slate-100 transition-colors">
@@ -446,22 +452,22 @@ const FacultyFormModal = ({
 
           {/* Form Actions */}
           <div className="flex justify-end space-x-3 pt-6 border-t border-slate-100">
-            <button 
-              type="button" 
-              onClick={onClose} 
+            <button
+              type="button"
+              onClick={onClose}
               className="px-6 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 transition-colors"
             >
               {isViewMode ? 'Close' : 'Cancel'}
             </button>
             {!isViewMode && (
-              <button 
-                type="submit" 
-                disabled={submitLoading} 
+              <button
+                type="submit"
+                disabled={submitLoading}
                 className="px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 disabled:opacity-70 disabled:cursor-not-allowed flex items-center"
               >
                 {submitLoading ? (
                   <>
-                    <Loader size={18} className="animate-spin mr-2" /> 
+                    <Loader size={18} className="animate-spin mr-2" />
                     Saving...
                   </>
                 ) : (
@@ -474,21 +480,21 @@ const FacultyFormModal = ({
 
         {/* Image Preview Modal */}
         {previewImage && (
-          <div 
+          <div
             className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm"
             onClick={() => setPreviewImage(null)}
           >
-            <button 
+            <button
               className="absolute top-4 right-4 p-2 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-colors"
               onClick={() => setPreviewImage(null)}
             >
               <X size={24} />
             </button>
-            <img 
-              src={previewImage} 
-              alt="Preview" 
+            <img
+              src={previewImage}
+              alt="Preview"
               className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
-              onClick={(e) => e.stopPropagation()} 
+              onClick={(e) => e.stopPropagation()}
             />
           </div>
         )}

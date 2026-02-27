@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { toast } from 'react-toastify';
-import { 
-  buildQueryParams, 
+import {
+  buildQueryParams,
   formatStudentForForm,
-  validateFileUpload 
+  validateFileUpload
 } from '../../utils/adminUtils/courseUtils';
 
 const INITIAL_FORM_STATE = {
@@ -46,13 +46,13 @@ export const useStudentOperations = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState(INITIAL_FILTERS);
   const [currentPage, setCurrentPage] = useState(1);
-  
+
   // Consolidated modal state - replaces 5 separate states
   const [modal, setModal] = useState({
     type: MODAL_TYPE.CLOSED,
     student: null
   });
-  
+
   // Form State
   const [formData, setFormData] = useState(INITIAL_FORM_STATE);
 
@@ -98,7 +98,6 @@ export const useStudentOperations = () => {
       if (!validation.isValid) {
         toast.error(validation.error);
         e.target.value = '';
-        setFormData(prev => ({ ...prev, documents: null }));
         return;
       }
       setFormData(prev => ({ ...prev, documents: e.target.files }));
@@ -121,7 +120,7 @@ export const useStudentOperations = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitLoading(true);
-    
+
     try {
       const dataToSend = new FormData();
       const existingDocuments = [];
@@ -159,7 +158,7 @@ export const useStudentOperations = () => {
       fetchStudents();
     } catch (error) {
       toast.error(
-        error.response?.data?.message || 
+        error.response?.data?.message ||
         `Failed to ${isEditing ? 'update' : 'add'} student`
       );
     } finally {
@@ -234,15 +233,15 @@ export const useStudentOperations = () => {
     filters,
     currentPage,
     formData,
-    
+
     // Modal state (single object instead of 5 separate booleans)
     modal,
-    
+
     // Setters
     setSearchTerm,
     setFilters,
     setCurrentPage,
-    
+
     // Handlers
     handleChange,
     handleSubmit,
@@ -252,7 +251,7 @@ export const useStudentOperations = () => {
     handleToggleStatus,
     confirmDelete,
     confirmToggleStatus,
-    
+
     // Modal Controls
     openAddModal,
     closeModal,

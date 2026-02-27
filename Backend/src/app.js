@@ -1,5 +1,4 @@
 const express = require('express');
-const cors = require('cors');
 const path = require('path'); // Required to serve uploaded files
 const { errorHandler } = require('./middleware/errorMiddleware'); // Ensure folder name matches (middleware vs middlewares)
 
@@ -13,13 +12,20 @@ const dashboardRoutes = require('./routes/dashboardRoutes');
 const facultyRoutes = require('./routes/facultyRoutes');
 const courseRoutes = require('./routes/courseRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const eventRoutes = require('./routes/eventRoutes');
+const userRoutes = require('./routes/userRoutes');
 const app = express();
+
+const cors = require('cors');
 
 // Body parser
 app.use(express.json());
 
 // Enable CORS
-app.use(cors());
+app.use(cors({
+    origin: process.env.CLIENT_URL || '*',
+    credentials: true
+}));
 
 // 2. Make the 'uploads' folder static
 // This allows you to access files via URL like: http://localhost:5000/uploads/filename.jpg
@@ -35,6 +41,8 @@ app.use('/api/v1/remarks', remarkRoutes);
 app.use('/api/v1/performance', performanceRoutes);
 app.use('/api/v1/dashboard', dashboardRoutes);
 app.use('/api/v1/admins', adminRoutes);
+app.use('/api/v1/events', eventRoutes);
+app.use('/api/v1/users', userRoutes);
 
 // Error Handler (Must be last)
 app.use(errorHandler);

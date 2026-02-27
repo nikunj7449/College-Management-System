@@ -26,47 +26,51 @@ const CourseCard = ({ course, onEdit, onDelete, onView, onManage }) => {
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-lg hover:z-30 transition-all duration-300 group relative flex flex-col h-full">
-      
+
       {/* Card Header / Actions */}
-      <div 
-        className={`absolute top-4 right-4 z-10 ${showActions ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity duration-200`} 
+      <div
+        className={`absolute top-3 right-3 z-10 ${showActions ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity duration-200`}
         onMouseLeave={handleMouseLeave}
         onMouseEnter={handleMouseEnter}
       >
-        <button 
+        <button
           onClick={() => setShowActions(!showActions)}
-          className="p-2 text-slate-400 hover:bg-slate-50 rounded-full transition-colors"
+          className="p-1.5 text-slate-600 bg-white/40 hover:bg-white/60 backdrop-blur-xl border border-white/80 shadow-[0_2px_10px_rgba(0,0,0,0.05)] rounded-full transition-all duration-300"
         >
-          <MoreVertical size={20} />
+          <MoreVertical size={18} />
         </button>
-        
-        <div className={`absolute right-0 top-0 bg-white rounded-xl shadow-xl border border-slate-100 p-3 flex flex-col gap-2 z-20 min-w-25 transition-all duration-200 origin-top-right ${showActions ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'}`}>
-            <div className="flex justify-center space-x-2">
-              <button 
-                onClick={() => onEdit(course)} 
-                className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors" 
+
+        <div className={`absolute right-0 top-0 bg-white/40 backdrop-blur-2xl rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] border border-white/80 p-2 flex flex-col gap-1.5 z-20 min-w-[100px] transition-all duration-300 ${showActions ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'}`}>
+          <div className="flex justify-center space-x-1.5">
+            {onEdit && (
+              <button
+                onClick={() => onEdit(course)}
+                className="p-2 text-blue-600 bg-white/50 hover:bg-blue-50/80 backdrop-blur-sm shadow-sm border border-white/60 rounded-xl transition-all"
                 title="Edit"
               >
                 <Edit size={16} />
               </button>
-              <button 
-                onClick={() => onDelete(course)} 
-                className="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors" 
+            )}
+            {onDelete && (
+              <button
+                onClick={() => onDelete(course)}
+                className="p-2 text-red-600 bg-white/50 hover:bg-red-50/80 backdrop-blur-sm shadow-sm border border-white/60 rounded-xl transition-all"
                 title="Delete"
               >
                 <Trash2 size={16} />
               </button>
-            </div>
-            <div className="flex justify-center space-x-2">
-              <button 
-                onClick={() => onView(course)} 
-                className="p-2 text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors" 
-                title="View Details"
-              >
-                <Eye size={16} />
-              </button>
-            </div>
+            )}
           </div>
+          <div className="flex justify-center space-x-1.5">
+            <button
+              onClick={() => onView(course)}
+              className="p-2 text-slate-600 bg-white/50 hover:bg-slate-50/80 backdrop-blur-sm shadow-sm border border-white/60 rounded-xl transition-all w-full flex justify-center"
+              title="View Details"
+            >
+              <Eye size={16} />
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className="flex justify-between items-start mb-4">
@@ -87,12 +91,14 @@ const CourseCard = ({ course, onEdit, onDelete, onView, onManage }) => {
             <GitBranch size={16} className="mr-2 text-slate-400" />
             <span>{course.branches?.length || 0} Branches</span>
           </div>
-          <button 
-            onClick={() => onManage(course)} 
-            className="text-indigo-600 font-medium hover:text-indigo-700 text-xs"
-          >
-            Manage
-          </button>
+          {onManage && (
+            <button
+              onClick={() => onManage(course)}
+              className="text-indigo-600 font-medium hover:text-indigo-700 text-xs"
+            >
+              Manage
+            </button>
+          )}
         </div>
       </div>
     </div>

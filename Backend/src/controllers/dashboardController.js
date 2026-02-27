@@ -3,6 +3,7 @@ const User = require('../models/User');
 const Attendance = require('../models/Attendance');
 const Remark = require('../models/Remark');
 const Course = require('../models/Course');
+const Faculty = require('../models/faculty');
 
 // @desc    Get Admin Dashboard Stats
 // @route   GET /api/v1/dashboard/admin/stats
@@ -12,20 +13,20 @@ exports.getAdminStats = async (req, res, next) => {
     const totalStudents = await Student.countDocuments();
     const totalFaculty = await User.countDocuments({ role: 'FACULTY' });
     const totalCourses = await Course.countDocuments();
-    
+
     // Get today's attendance count (System-wide)
     const todayStart = new Date();
-    todayStart.setHours(0,0,0,0);
-    
-    const presentToday = await Attendance.countDocuments({ 
-      date: { $gte: todayStart }, 
-      status: { $regex: /^Present$/i } 
+    todayStart.setHours(0, 0, 0, 0);
+
+    const presentToday = await Attendance.countDocuments({
+      date: { $gte: todayStart },
+      status: { $regex: /^Present$/i }
     });
 
     // Get Attendance Data for Graph
     let startDate = new Date();
     let endDate = new Date();
-    
+
     // Helper to get Monday of the current week
     const getMonday = (d) => {
       const date = new Date(d);
@@ -88,13 +89,13 @@ exports.getAdminStats = async (req, res, next) => {
       const dayName = days[currentDate.getDay()];
 
       const stat = attendanceStats.find(s => s._id === dateStr);
-      
+
       attendanceData.push({
         name: dayName,
         present: stat ? stat.present : 0,
         absent: stat ? stat.absent : 0
       });
-      
+
       currentDate.setDate(currentDate.getDate() + 1);
     }
 
@@ -134,34 +135,56 @@ exports.getAdminStats = async (req, res, next) => {
 // @access  Private (Faculty)
 exports.getFacultyStats = async (req, res, next) => {
   try {
-    const facultyId = req.user.id;
+    const facultyUser = req.user.id;
 
-    // 1. Total Students (System wide or filter by course/sem if passed in query)
-    // If your frontend sends ?course=BTech&sem=1, we can filter here.
-    const studentCount = await Student.countDocuments(); 
+    // 0. Find the exact Faculty Profile to base our metrics off of
+    const facultyProfile = await Faculty.findOne({ user: facultyUser });
+    if (!facultyProfile) {
+      return res.status(404).json({ success: false, message: 'Faculty profile not found' });
+    }
 
-    // 2. Attendance Status (Today's activity for this faculty)
+    // 1. Calculate the exact number of students this faculty manages (Same Course/Branch/Sems)
+    const studentCount = await Student.countDocuments({
+      course: facultyProfile.course,
+      branch: facultyProfile.branch,
+      sem: { $in: facultyProfile.sem } // Match any of the semesters they teach
+    });
+
+    // 2. Compute assigned courses/subjects length
+    const totalSubjects = facultyProfile.subject ? facultyProfile.subject.length : 0;
+
+    // 3. Attendance Status (Today's activity for this faculty)
     const todayStart = new Date();
-    todayStart.setHours(0,0,0,0);
+    todayStart.setHours(0, 0, 0, 0);
 
     const attendanceToday = await Attendance.find({
-      markedBy: facultyId,
+      markedBy: facultyUser,
       date: { $gte: todayStart }
     });
 
     const presentCount = attendanceToday.filter(a => /^Present$/i.test(a.status)).length;
     const absentCount = attendanceToday.filter(a => /^Absent$/i.test(a.status)).length;
 
-    // 3. Recent Remarks Added (By this faculty)
-    const recentRemarks = await Remark.find({ faculty: facultyId })
+    // 4. Low Attendance Alerts (Students below 75% that this faculty teaches)
+    // For simplicity right now we'll just return a placeholder or do a quick aggregation later.
+    // Right now, sending the total attendance records can simulate a 'Total Classes Conducted' metric
+    const totalClassesConducted = await Attendance.countDocuments({ markedBy: facultyUser });
+
+    // 5. Recent Remarks Added (By this faculty)
+    const recentRemarks = await Remark.find({ faculty: facultyUser })
       .sort({ date: -1 })
       .limit(5)
       .populate('student', 'name rollNum'); // Show student name in the card
+
+    const totalRemarks = await Remark.countDocuments({ faculty: facultyUser });
 
     res.status(200).json({
       success: true,
       data: {
         studentCount,
+        totalSubjects,
+        totalClassesConducted,
+        totalRemarks,
         attendanceToday: {
           totalMarked: attendanceToday.length,
           present: presentCount,

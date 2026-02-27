@@ -1,22 +1,22 @@
 import React from 'react';
-import { 
-  X, Loader, Plus, Trash2, Edit, Check, Book, 
-  GitBranch, ChevronDown, ChevronRight 
+import {
+  X, Loader, Plus, Trash2, Edit, Check, Book,
+  GitBranch, ChevronDown, ChevronRight
 } from 'lucide-react';
 
-const SubjectFormModal = ({ 
-  isOpen, 
-  onClose, 
-  subjectForm, 
-  onChange, 
-  onSubmit, 
+const SubjectFormModal = ({
+  isOpen,
+  onClose,
+  subjectForm,
+  onChange,
+  onSubmit,
   submitLoading,
-  isEditMode 
+  isEditMode
 }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/20 backdrop-blur-[1px]">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/20 backdrop-blur-[1px]">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-slate-100">
         <div className="p-5 border-b border-slate-100 flex justify-between items-center">
           <h3 className="text-lg font-bold text-slate-800">
@@ -145,7 +145,7 @@ const BranchManageModal = ({
   isEditingSubject
 }) => {
   if (!isOpen) return null;
-
+  
   const getSemesterStyle = (sem) => {
     const styles = {
       1: { dot: 'bg-blue-400', text: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100' },
@@ -314,51 +314,51 @@ const BranchManageModal = ({
                               .map(([sem, subjects]) => {
                                 const style = getSemesterStyle(sem);
                                 return (
-                                <div key={sem} className="mt-3 first:mt-1">
-                                  <div className="flex items-center mb-2">
-                                    <span className={`w-1.5 h-1.5 rounded-full ${style.dot} mr-2`}></span>
-                                    <p className={`text-xs font-semibold uppercase tracking-wider ${style.text}`}>
-                                      {sem === 'General' ? 'General Subjects' : `Semester ${sem}`}
-                                    </p>
-                                  </div>
-                                  <div className={`grid grid-cols-1 gap-1.5 pl-3.5 border-l ml-0.75 ${style.border.replace('border-', 'border-l-')}`}>
-                                    {subjects.map((subject, sIdx) => (
-                                      <div
-                                        key={sIdx}
-                                        className={`flex items-center text-xs text-slate-600 p-2 rounded border ${style.bg} ${style.border}`}
-                                      >
-                                        <Book size={12} className={`mr-2 shrink-0 ${style.text}`} />
-                                        <span className="font-medium mr-auto truncate">
-                                          {subject.name}
-                                        </span>
-                                        <div className="flex items-center gap-2">
-                                          <span className="text-slate-400 font-mono text-[10px] bg-white px-1 rounded border border-slate-100">
-                                            {subject.code}
+                                  <div key={sem} className="mt-3 first:mt-1">
+                                    <div className="flex items-center mb-2">
+                                      <span className={`w-1.5 h-1.5 rounded-full ${style.dot} mr-2`}></span>
+                                      <p className={`text-xs font-semibold uppercase tracking-wider ${style.text}`}>
+                                        {sem === 'General' ? 'General Subjects' : `Semester ${sem}`}
+                                      </p>
+                                    </div>
+                                    <div className={`grid grid-cols-1 gap-1.5 pl-3.5 border-l ml-0.75 ${style.border.replace('border-', 'border-l-')}`}>
+                                      {subjects.map((subject, sIdx) => (
+                                        <div
+                                          key={sIdx}
+                                          className={`flex items-center text-xs text-slate-600 p-2 rounded border ${style.bg} ${style.border}`}
+                                        >
+                                          <Book size={12} className={`mr-2 shrink-0 ${style.text}`} />
+                                          <span className="font-medium mr-auto truncate">
+                                            {subject.name}
                                           </span>
-                                          {subject.credits && (
-                                            <span className="text-[10px] text-slate-400 hidden sm:inline">
-                                              {subject.credits} Cr
+                                          <div className="flex items-center gap-2">
+                                            <span className="text-slate-400 font-mono text-[10px] bg-white px-1 rounded border border-slate-100">
+                                              {subject.code}
                                             </span>
-                                          )}
-                                          <button
-                                            onClick={() => onEditSubject(subject, branch._id)}
-                                            className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                                            title="Edit Subject"
-                                          >
-                                            <Edit size={12} />
-                                          </button>
-                                          <button
-                                            onClick={() => onDeleteSubject(subject, branch._id)}
-                                            className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                                            title="Delete Subject"
-                                          >
-                                            <Trash2 size={12} />
-                                          </button>
+                                            {subject.credits && (
+                                              <span className="text-[10px] text-slate-400 hidden sm:inline">
+                                                {subject.credits} Cr
+                                              </span>
+                                            )}
+                                            <button
+                                              onClick={() => onEditSubject(subject, branch._id)}
+                                              className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                              title="Edit Subject"
+                                            >
+                                              <Edit size={12} />
+                                            </button>
+                                            <button
+                                              onClick={() => onDeleteSubject(subject, branch._id)}
+                                              className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                              title="Delete Subject"
+                                            >
+                                              <Trash2 size={12} />
+                                            </button>
+                                          </div>
                                         </div>
-                                      </div>
-                                    ))}
+                                      ))}
+                                    </div>
                                   </div>
-                                </div>
                                 );
                               })}
                           </div>

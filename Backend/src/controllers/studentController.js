@@ -1,30 +1,24 @@
 const Student = require('../models/Student');
-const User = require('../models/User'); 
-const bcrypt = require('bcryptjs');     
+const User = require('../models/User');
+const bcrypt = require('bcryptjs');
 const Attendance = require('../models/Attendance');
 const Remark = require('../models/Remark');
 const Performance = require('../models/Performance');
 const cloudinary = require('cloudinary').v2;
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
 
 // @desc    Add a new student
 // @route   POST /api/v1/students
 // @access  Private (Admin/Faculty)
 exports.addStudent = async (req, res, next) => {
   try {
-    let { 
-      name, 
-      studentId, 
-      rollNum, 
-      course, 
+    let {
+      name,
+      studentId,
+      rollNum,
+      course,
       branch,
-      sem, 
-      parentContact, 
+      sem,
+      parentContact,
       studentPhone,
       personalEmail,
       dob // Expected format from frontend: "YYYY-MM-DD" (e.g., "2006-05-15")
@@ -32,8 +26,8 @@ exports.addStudent = async (req, res, next) => {
 
     // 1. Validation
     if (!name || !studentId || !studentPhone || !personalEmail || !rollNum || !course || !branch || !sem || !parentContact || !dob) {
-        res.status(400);
-        throw new Error('Please fill all required fields');
+      res.status(400);
+      throw new Error('Please fill all required fields');
     }
 
     studentId = studentId.toUpperCase();
@@ -48,9 +42,9 @@ exports.addStudent = async (req, res, next) => {
     // --- PASSWORD FORMATTING LOGIC ---
     // Convert "2006-05-15" -> "15/05/2006"
     // We split by '-' to avoid timezone issues with new Date()
-    const dateParts = dob.split('-'); 
+    const dateParts = dob.split('-');
     // parts[0] is Year, parts[1] is Month, parts[2] is Day
-    const formattedPassword = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`; 
+    const formattedPassword = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
     // Result: "15/05/2006"
 
     // 3. User Login Creation
@@ -64,7 +58,7 @@ exports.addStudent = async (req, res, next) => {
 
     // Hash the FORMATTED password
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(formattedPassword, salt); 
+    const hashedPassword = await bcrypt.hash(formattedPassword, salt);
 
     const newUser = await User.create({
       name: name,
@@ -78,7 +72,7 @@ exports.addStudent = async (req, res, next) => {
     if (req.files && req.files.length > 0) {
       documentsArray = req.files.map(file => ({
         name: file.originalname,
-        url: file.path, 
+        url: file.path,
         type: file.mimetype,
         publicId: file.filename // Store publicId for deletion
       }));
@@ -86,7 +80,7 @@ exports.addStudent = async (req, res, next) => {
 
     // 5. Create Student Profile
     const student = await Student.create({
-      user: newUser._id, 
+      user: newUser._id,
       name,
       email: studentEmail,
       studentId,
@@ -97,8 +91,8 @@ exports.addStudent = async (req, res, next) => {
       parentContact,
       studentPhone,
       personalEmail,
-      dob, 
-      documents: documentsArray 
+      dob,
+      documents: documentsArray
     });
 
     res.status(201).json({
@@ -107,7 +101,7 @@ exports.addStudent = async (req, res, next) => {
       data: student,
       credentials: {
         email: studentEmail,
-        password: formattedPassword 
+        password: formattedPassword
       }
     });
   } catch (error) {
@@ -133,9 +127,9 @@ exports.addBulkStudents = async (req, res, next) => {
 
     for (const studentData of studentsData) {
       // Destructure and basic validation
-      let { 
-        name, studentId, rollNum, course, branch, sem, 
-        parentContact, studentPhone, personalEmail, dob 
+      let {
+        name, studentId, rollNum, course, branch, sem,
+        parentContact, studentPhone, personalEmail, dob
       } = studentData;
 
       if (!name || !studentId || !dob) {
@@ -166,12 +160,12 @@ exports.addBulkStudents = async (req, res, next) => {
         // Password generation
         const dateParts = dob.split('-');
         if (dateParts.length !== 3) {
-             skippedCount++;
-             errors.push(`Skipped '${studentId}' - Invalid DOB format (Use YYYY-MM-DD)`);
-             continue;
+          skippedCount++;
+          errors.push(`Skipped '${studentId}' - Invalid DOB format (Use YYYY-MM-DD)`);
+          continue;
         }
         const formattedPassword = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
-        
+
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(formattedPassword, salt);
 
@@ -276,7 +270,7 @@ exports.getAllStudents = async (req, res, next) => {
 exports.getStudentById = async (req, res, next) => {
   try {
     const student = await Student.findById(req.params.id);
-    
+
     if (!student) {
       res.status(404);
       throw new Error('Student not found');
@@ -307,11 +301,11 @@ exports.updateStudent = async (req, res, next) => {
     if (req.body.name || req.body.studentId) {
       const updateFields = {};
       if (req.body.name) updateFields.name = req.body.name;
-      
+
       // If Student ID changes, update Email too (e.g., S-101@school.com)
       if (req.body.studentId) {
-         req.body.studentId = req.body.studentId.toUpperCase();
-         updateFields.email = `${req.body.studentId}@school.com`;
+        req.body.studentId = req.body.studentId.toUpperCase();
+        updateFields.email = `${req.body.studentId}@school.com`;
       }
 
       await User.findByIdAndUpdate(student.user, updateFields);
@@ -327,7 +321,7 @@ exports.updateStudent = async (req, res, next) => {
       const keptPublicIds = keptDocuments.map(doc => doc.publicId).filter(id => id);
 
       // Identify documents to delete
-      const docsToDelete = student.documents.filter(doc => 
+      const docsToDelete = student.documents.filter(doc =>
         doc.publicId && !keptPublicIds.includes(doc.publicId)
       );
 
@@ -348,7 +342,7 @@ exports.updateStudent = async (req, res, next) => {
         type: file.mimetype,
         publicId: file.filename
       }));
-      
+
       updatedDocuments = [...updatedDocuments, ...newDocuments];
     }
 
@@ -356,8 +350,8 @@ exports.updateStudent = async (req, res, next) => {
 
     // Update the rest of the text fields
     const updatedStudent = await Student.findByIdAndUpdate(
-      req.params.id, 
-      req.body, 
+      req.params.id,
+      req.body,
       { new: true, runValidators: true }
     );
 
@@ -410,6 +404,95 @@ exports.deleteStudent = async (req, res, next) => {
       success: true,
       message: 'Student deleted successfully',
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Generate dummy students for testing
+// @route   POST /api/v1/students/generate
+// @access  Private (Admin/SuperAdmin)
+exports.generateDummyStudents = async (req, res, next) => {
+  try {
+    const count = parseInt(req.body.count) || 100;
+
+    // For extreme counts like 5,000,000, we send an immediate processing response
+    // and run the heavy insertion in the background to prevent HTTP timeouts.
+    const BATCH_SIZE = 5000;
+
+    res.status(202).json({
+      success: true,
+      message: `Accepted request to generate ${count} dummy students. This is running in the background. Check database metrics to monitor progress.`,
+    });
+
+    const timestamp = Date.now().toString().slice(-4);
+
+    // Pre-hash password since it's the same for all (01/01/2000)
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash('01/01/2000', salt);
+
+    let processedCount = 0;
+
+    // Asynchronous self-executing background function
+    (async () => {
+      try {
+        while (processedCount < count) {
+          const currentBatchSize = Math.min(BATCH_SIZE, count - processedCount);
+          const userBatch = [];
+          const studentBatch = [];
+
+          for (let i = 1; i <= currentBatchSize; i++) {
+            const globalIndex = processedCount + i;
+            const studentId = `DUMMY-${timestamp}-${globalIndex}`;
+            const studentEmail = `${studentId}@school.com`.toLowerCase();
+
+            // Structure User doc
+            userBatch.push({
+              name: `Dummy Student ${globalIndex}`,
+              email: studentEmail,
+              password: hashedPassword,
+              role: 'STUDENT'
+            });
+          }
+
+          // 1. Bulk Insert Users
+          const insertedUsers = await User.insertMany(userBatch, { ordered: false });
+
+          // Structure Student doc linked to the newly inserted users
+          for (let i = 0; i < insertedUsers.length; i++) {
+            const user = insertedUsers[i];
+            const globalIndex = processedCount + i + 1;
+            const studentId = `DUMMY-${timestamp}-${globalIndex}`;
+
+            studentBatch.push({
+              user: user._id,
+              name: user.name,
+              email: user.email,
+              studentId: studentId,
+              rollNum: `D-ROLL-${timestamp}-${globalIndex}`,
+              course: 'BTech',
+              branch: 'CSE',
+              sem: '1',
+              parentContact: '9999999999',
+              studentPhone: '8888888888',
+              personalEmail: `dummy.personal${globalIndex}@school.com`,
+              dob: '2000-01-01',
+              documents: []
+            });
+          }
+
+          // 2. Bulk Insert Students
+          await Student.insertMany(studentBatch, { ordered: false });
+
+          processedCount += currentBatchSize;
+          console.log(`[Seeder] Inserted ${processedCount} / ${count} dummy students...`);
+        }
+        console.log(`[Seeder] Successfully finished generating all ${count} students.`);
+      } catch (err) {
+        console.error('[Seeder] Fatal error during background generation:', err);
+      }
+    })();
+
   } catch (error) {
     next(error);
   }

@@ -1,12 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const { 
-  addStudent, 
-  getAllStudents, 
-  getStudentById, 
-  updateStudent ,
+const {
+  addStudent,
+  getAllStudents,
+  getStudentById,
+  updateStudent,
   deleteStudent,
-  addBulkStudents
+  addBulkStudents,
+  generateDummyStudents
 } = require('../controllers/studentController');
 const { protect } = require('../middleware/authMiddleware');
 const { authorize } = require('../middleware/roleMiddleware');
@@ -19,7 +20,7 @@ router.use(protect);
 router.route('/')
   .get(authorize('ADMIN', 'SUPERADMIN', 'FACULTY'), getAllStudents) // View all (Admin/Faculty)
   .post(
-    authorize('ADMIN', 'SUPERADMIN', 'FACULTY'), 
+    authorize('ADMIN', 'SUPERADMIN', 'FACULTY'),
     upload.array('documents', 3), // Expects field name 'documents'
     addStudent
   ); // Add new (Admin/Faculty)
@@ -27,9 +28,12 @@ router.route('/')
 router.route('/bulk')
   .post(authorize('ADMIN', 'SUPERADMIN'), addBulkStudents);
 
+router.route('/generate')
+  .post(authorize('ADMIN', 'SUPERADMIN'), generateDummyStudents);
+
 router.route('/:id')
-  .get(authorize('ADMIN', 'SUPERADMIN'),getStudentById)
+  .get(authorize('ADMIN', 'SUPERADMIN', 'FACULTY'), getStudentById)
   .put(authorize('ADMIN', 'SUPERADMIN', 'FACULTY'), upload.array('documents', 3), updateStudent) // Only Admin can edit details
-  .delete(authorize('ADMIN', 'SUPERADMIN', 'FACULTY'), deleteStudent);
+  .delete(authorize('ADMIN', 'SUPERADMIN'), deleteStudent);
 
 module.exports = router;

@@ -18,10 +18,10 @@ const Login = () => {
   useEffect(() => {
     localStorage.clear();
   });
-  
 
 
- //below code automatically redirecting users who are already logged in.
+
+  //below code automatically redirecting users who are already logged in.
   // useEffect(() => {
   //   if (isAuthenticated && user) {
   //     const userRole = user.role ? user.role.toUpperCase() : '';
@@ -39,28 +39,21 @@ const Login = () => {
     if (!email.trim()) errors.email = 'Email is required';
     else if (!validateEmail(email)) errors.email = 'Invalid Email Address';
     if (!password) errors.password = 'Password is required';
-    
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const handleRedirect = (role) => {
-    // 1. Check if there is a saved location (where the user wanted to go)
-    const from = location.state?.from?.pathname;
-    if (from) {
-      navigate(from, { replace: true });
-      return;
-    }
 
-    // 2. Otherwise, go to the default dashboard based on role
+    // 1. Otherwise, go to the default dashboard based on role
     switch (role) {
       case 'SUPERADMIN':
       case 'ADMIN':
         navigate('/admin/dashboard');
         break;
-      case 'TEACHER':
       case 'FACULTY':
-        navigate('/teacher/dashboard');
+        navigate('/faculty/dashboard');
         break;
       case 'STUDENT':
         navigate('/student/dashboard');
@@ -72,7 +65,6 @@ const Login = () => {
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form submitted");
     if (!validateForm()) return;
 
     const res = await login({ email, password });
@@ -83,7 +75,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="flex items-center justify-center min-h-[calc(100vh-16rem)] px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-2xl">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">

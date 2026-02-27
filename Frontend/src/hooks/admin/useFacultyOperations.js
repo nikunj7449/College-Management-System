@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { toast } from 'react-toastify';
-import { 
-  buildQueryParams, 
+import {
+  buildQueryParams,
   formatFacultyForForm,
   validateFileUpload
 } from '../../utils/adminUtils/courseUtils';
@@ -19,7 +19,7 @@ const INITIAL_FORM_STATE = {
   course: '',
   joiningDate: '',
   subject: [],
-  branch: '', 
+  branch: '',
   sem: [],
   documents: null
 };
@@ -41,7 +41,7 @@ const MODAL_TYPE = {
   DELETE: 'delete'
 };
 
-export const useFacultyOperations = () => {
+export const useFacultyOperations = (skipFetchList = false) => {
   const [facultyList, setFacultyList] = useState([]);
   const [coursesData, setCoursesData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -49,13 +49,13 @@ export const useFacultyOperations = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState(INITIAL_FILTERS);
   const [currentPage, setCurrentPage] = useState(1);
-  
+
   // Consolidated modal state
   const [modal, setModal] = useState({
     type: MODAL_TYPE.CLOSED,
     faculty: null
   });
-  
+
   // Form State
   const [formData, setFormData] = useState(INITIAL_FORM_STATE);
 
@@ -85,10 +85,12 @@ export const useFacultyOperations = () => {
 
   // Effects
   useEffect(() => {
-    setCurrentPage(1);
-    const timer = setTimeout(fetchFaculty, 500);
-    return () => clearTimeout(timer);
-  }, [searchTerm, filters]);
+    if (!skipFetchList) {
+      setCurrentPage(1);
+      const timer = setTimeout(fetchFaculty, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [searchTerm, filters, skipFetchList]);
 
   useEffect(() => {
     fetchCourses();
@@ -101,17 +103,16 @@ export const useFacultyOperations = () => {
       if (!validation.isValid) {
         toast.error(validation.error);
         e.target.value = '';
-        setFormData(prev => ({ ...prev, documents: null }));
         return;
       }
       setFormData(prev => ({ ...prev, documents: e.target.files }));
     } else {
       const { name, value } = e.target;
-      
+
       setFormData(prev => {
-        const updatedData = { 
-          ...prev, 
-          [name]: name === 'facultyId' ? value.toUpperCase() : value 
+        const updatedData = {
+          ...prev,
+          [name]: name === 'facultyId' ? value.toUpperCase() : value
         };
 
         // Reset dependent fields based on hierarchy
@@ -202,7 +203,7 @@ export const useFacultyOperations = () => {
       fetchFaculty();
     } catch (error) {
       toast.error(
-        error.response?.data?.message || 
+        error.response?.data?.message ||
         `Failed to ${isEditing ? 'update' : 'add'} faculty`
       );
     } finally {
@@ -259,15 +260,15 @@ export const useFacultyOperations = () => {
     filters,
     currentPage,
     formData,
-    
+
     // Modal state
     modal,
-    
+
     // Setters
     setSearchTerm,
     setFilters,
     setCurrentPage,
-    
+
     // Handlers
     handleChange,
     handleSubmit,
@@ -275,7 +276,7 @@ export const useFacultyOperations = () => {
     handleView,
     handleDelete,
     confirmDelete,
-    
+
     // Modal Controls
     openAddModal,
     closeModal,

@@ -3,14 +3,14 @@ import { X, Loader, UploadCloud, FileText } from 'lucide-react';
 import { toast } from 'react-toastify';
 import CustomDropdown from '../custom/CustomDropdown';
 
-const StudentFormModal = ({ 
-  isOpen, 
-  onClose, 
-  formData, 
-  onChange, 
-  onSubmit, 
-  isEditMode, 
-  isViewMode, 
+const StudentFormModal = ({
+  isOpen,
+  onClose,
+  formData,
+  onChange,
+  onSubmit,
+  isEditMode,
+  isViewMode,
   submitLoading,
   courseOptions,
   branchOptions,
@@ -23,7 +23,7 @@ const StudentFormModal = ({
   const handleRemoveFile = (indexToRemove) => {
     const currentDocs = Array.from(formData.documents || []);
     const updatedDocs = currentDocs.filter((_, index) => index !== indexToRemove);
-    
+
     onChange({
       target: {
         name: 'documents',
@@ -36,7 +36,7 @@ const StudentFormModal = ({
     if (e.target.files && e.target.files.length > 0) {
       const newFiles = Array.from(e.target.files);
       const existingFiles = Array.from(formData.documents || []);
-      
+
       if (existingFiles.length + newFiles.length > 3) {
         toast.error('You can only upload a maximum of 3 documents');
         e.target.value = '';
@@ -65,14 +65,14 @@ const StudentFormModal = ({
           <h2 className="text-xl font-bold text-slate-800">
             {isViewMode ? 'Student Details' : (isEditMode ? 'Edit Student' : 'Add New Student')}
           </h2>
-          <button 
-            onClick={onClose} 
+          <button
+            onClick={onClose}
             className="p-2 hover:bg-slate-100 rounded-full transition-colors"
           >
             <X size={20} className="text-slate-500" />
           </button>
         </div>
-        
+
         <form onSubmit={handleFormSubmit} className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Full Name */}
@@ -80,14 +80,14 @@ const StudentFormModal = ({
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Full Name *
               </label>
-              <input 
-                disabled={isViewMode} 
-                required 
-                name="name" 
-                value={formData.name} 
-                onChange={onChange} 
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed" 
-                placeholder="e.g. John Doe" 
+              <input
+                disabled={isViewMode}
+                required
+                name="name"
+                value={formData.name}
+                onChange={onChange}
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed"
+                placeholder="e.g. John Doe"
               />
             </div>
 
@@ -96,14 +96,14 @@ const StudentFormModal = ({
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Student ID *
               </label>
-              <input 
-                disabled={isViewMode} 
-                required 
-                name="studentId" 
-                value={formData.studentId} 
-                onChange={onChange} 
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed" 
-                placeholder="e.g. S-101" 
+              <input
+                disabled={isViewMode}
+                required
+                name="studentId"
+                value={formData.studentId}
+                onChange={onChange}
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed"
+                placeholder="e.g. S-101"
               />
             </div>
 
@@ -112,14 +112,14 @@ const StudentFormModal = ({
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Date of Birth *
               </label>
-              <input 
-                disabled={isViewMode} 
-                required 
-                type="date" 
-                name="dob" 
-                value={formData.dob} 
-                onChange={onChange} 
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed" 
+              <input
+                disabled={isViewMode}
+                required
+                type="date"
+                name="dob"
+                value={formData.dob}
+                onChange={onChange}
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed"
               />
             </div>
 
@@ -192,14 +192,14 @@ const StudentFormModal = ({
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Roll Number *
               </label>
-              <input 
-                disabled={isViewMode} 
-                required 
-                name="rollNum" 
-                value={formData.rollNum} 
-                onChange={onChange} 
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed" 
-                placeholder="e.g. 15" 
+              <input
+                disabled={isViewMode}
+                required
+                name="rollNum"
+                value={formData.rollNum}
+                onChange={onChange}
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed"
+                placeholder="e.g. 15"
               />
             </div>
 
@@ -208,14 +208,14 @@ const StudentFormModal = ({
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Parent Contact *
               </label>
-              <input 
-                disabled={isViewMode} 
-                required 
-                name="parentContact" 
-                value={formData.parentContact} 
-                onChange={onChange} 
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed" 
-                placeholder="Parent Phone" 
+              <input
+                disabled={isViewMode}
+                required
+                name="parentContact"
+                value={formData.parentContact}
+                onChange={onChange}
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed"
+                placeholder="Parent Phone"
               />
             </div>
 
@@ -224,13 +224,13 @@ const StudentFormModal = ({
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Student Phone
               </label>
-              <input 
-                disabled={isViewMode} 
-                name="studentPhone" 
-                value={formData.studentPhone} 
-                onChange={onChange} 
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed" 
-                placeholder="Student Phone" 
+              <input
+                disabled={isViewMode}
+                name="studentPhone"
+                value={formData.studentPhone}
+                onChange={onChange}
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed"
+                placeholder="Student Phone"
               />
             </div>
 
@@ -239,14 +239,14 @@ const StudentFormModal = ({
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Personal Email
               </label>
-              <input 
-                disabled={isViewMode} 
-                type="email" 
-                name="personalEmail" 
-                value={formData.personalEmail} 
-                onChange={onChange} 
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed" 
-                placeholder="student@gmail.com" 
+              <input
+                disabled={isViewMode}
+                type="email"
+                name="personalEmail"
+                value={formData.personalEmail}
+                onChange={onChange}
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed"
+                placeholder="student@gmail.com"
               />
             </div>
 
@@ -257,11 +257,11 @@ const StudentFormModal = ({
               </label>
               {!isViewMode && (
                 <div className="mt-1 flex flex-col justify-center px-6 pt-5 pb-6 border-2 border-slate-300 border-dashed rounded-xl hover:bg-slate-50 hover:border-indigo-400 transition-all duration-300 relative group">
-                  <input 
-                    type="file" 
-                    name="documents" 
-                    multiple 
-                    onChange={handleFileChange} 
+                  <input
+                    type="file"
+                    name="documents"
+                    multiple
+                    onChange={handleFileChange}
                     className="absolute inset-0 w-full h-full opacity-0 z-20 cursor-pointer"
                     accept=".pdf,.jpg,.jpeg,.png"
                   />
@@ -302,15 +302,23 @@ const StudentFormModal = ({
                         previewUrl = urlString;
                         if (urlString) {
                           const cleanUrl = urlString.split('?')[0].toLowerCase();
-                          fileName = decodeURIComponent(urlString.split('/').pop().split('?')[0]) || 'Document';
+                          fileName = file?.name || decodeURIComponent(urlString.split('/').pop().split('?')[0]) || 'Document';
                           isImage = /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(cleanUrl);
                           if (!isImage && !cleanUrl.endsWith('.pdf')) isImage = true;
+                        } else if (file?.name) {
+                          fileName = file.name;
+                        }
+
+                        // Mask Cloudinary Hashes that appear with or without extensions
+                        const namePart = fileName.split('.')[0];
+                        if (namePart.length >= 15 && /^[a-zA-Z0-9]+$/.test(namePart)) {
+                          fileName = `Document ${index + 1}`;
                         }
                       }
 
                       return (
-                        <div 
-                          key={index} 
+                        <div
+                          key={index}
                           className="group relative bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-all duration-300 hover:-translate-y-1"
                           style={{
                             animation: `fadeInUp 0.4s ease-out forwards`,
@@ -318,7 +326,7 @@ const StudentFormModal = ({
                             opacity: 0
                           }}
                         >
-                          <div 
+                          <div
                             className="aspect-4/3 w-full overflow-hidden bg-slate-100 relative cursor-pointer"
                             onClick={() => isImage ? setPreviewImage(previewUrl) : window.open(previewUrl, '_blank')}
                           >
@@ -337,10 +345,10 @@ const StudentFormModal = ({
                             )}
 
                             {isImage ? (
-                              <img 
-                                src={previewUrl} 
-                                alt={fileName} 
-                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                              <img
+                                src={previewUrl}
+                                alt={fileName}
+                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                               />
                             ) : (
                               <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-slate-50 text-slate-400 group-hover:bg-slate-100 transition-colors">
@@ -374,7 +382,7 @@ const StudentFormModal = ({
                   </div>
                 )
               )}
-              
+
               <style>{`
                 @keyframes fadeInUp {
                   from { opacity: 0; transform: translateY(10px); }
@@ -386,22 +394,22 @@ const StudentFormModal = ({
 
           {/* Form Actions */}
           <div className="flex justify-end space-x-3 pt-6 border-t border-slate-100">
-            <button 
-              type="button" 
-              onClick={onClose} 
+            <button
+              type="button"
+              onClick={onClose}
               className="px-6 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 transition-colors"
             >
               {isViewMode ? 'Close' : 'Cancel'}
             </button>
             {!isViewMode && (
-              <button 
-                type="submit" 
-                disabled={submitLoading} 
+              <button
+                type="submit"
+                disabled={submitLoading}
                 className="px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 disabled:opacity-70 disabled:cursor-not-allowed flex items-center"
               >
                 {submitLoading ? (
                   <>
-                    <Loader size={18} className="animate-spin mr-2" /> 
+                    <Loader size={18} className="animate-spin mr-2" />
                     Saving...
                   </>
                 ) : (
@@ -414,21 +422,21 @@ const StudentFormModal = ({
 
         {/* Image Preview Modal */}
         {previewImage && (
-          <div 
+          <div
             className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm"
             onClick={() => setPreviewImage(null)}
           >
-            <button 
+            <button
               className="absolute top-4 right-4 p-2 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-colors"
               onClick={() => setPreviewImage(null)}
             >
               <X size={24} />
             </button>
-            <img 
-              src={previewImage} 
-              alt="Preview" 
+            <img
+              src={previewImage}
+              alt="Preview"
               className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
-              onClick={(e) => e.stopPropagation()} 
+              onClick={(e) => e.stopPropagation()}
             />
           </div>
         )}

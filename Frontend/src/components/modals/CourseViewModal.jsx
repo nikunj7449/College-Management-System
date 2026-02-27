@@ -1,7 +1,9 @@
-import React from 'react';
-import { X, Clock, GitBranch, Book } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Clock, GitBranch, Book, ChevronDown, ChevronRight } from 'lucide-react';
 
 const CourseViewModal = ({ isOpen, onClose, courseForm }) => {
+  const [expandedBranch, setExpandedBranch] = useState(null);
+
   if (!isOpen) return null;
 
   const getSemesterStyle = (sem) => {
@@ -16,6 +18,10 @@ const CourseViewModal = ({ isOpen, onClose, courseForm }) => {
       8: { bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200', badge: 'bg-indigo-100 text-indigo-700' },
     };
     return styles[sem] || { bg: 'bg-slate-50', text: 'text-slate-700', border: 'border-slate-200', badge: 'bg-slate-100 text-slate-700' };
+  };
+
+  const toggleBranch = (idx) => {
+    setExpandedBranch(expandedBranch === idx ? null : idx);
   };
 
   return (
@@ -65,53 +71,65 @@ const CourseViewModal = ({ isOpen, onClose, courseForm }) => {
                     key={index}
                     className="border border-slate-200 rounded-xl overflow-hidden"
                   >
-                    <div className="bg-slate-50/80 px-4 py-3 border-b border-slate-100 flex justify-between items-center">
-                      <span className="font-semibold text-slate-700 text-sm">
-                        {branch.name}
-                      </span>
+                    <div
+                      className="bg-slate-50/80 px-4 py-3 border-b border-slate-100 flex justify-between items-center cursor-pointer hover:bg-slate-100 transition-colors"
+                      onClick={() => toggleBranch(index)}
+                    >
+                      <div className="flex items-center gap-2">
+                        {expandedBranch === index ? (
+                          <ChevronDown size={16} className="text-slate-400" />
+                        ) : (
+                          <ChevronRight size={16} className="text-slate-400" />
+                        )}
+                        <span className="font-semibold text-slate-700 text-sm">
+                          {branch.name}
+                        </span>
+                      </div>
                       <span className="text-[10px] font-bold uppercase tracking-wider bg-white px-2 py-1 rounded border border-slate-200 text-slate-500">
                         {branch.subjects?.length || 0} Subjects
                       </span>
                     </div>
 
-                    {branch.subjects && branch.subjects.length > 0 ? (
-                      <div className="divide-y divide-slate-50">
-                        {branch.subjects.map((subject, sIdx) => {
-                          const style = getSemesterStyle(subject.semester);
-                          return (
-                          <div
-                            key={sIdx}
-                            className={`px-4 py-2.5 flex items-center justify-between hover:bg-slate-50 transition-colors border-l-2 ${style.border}`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className={`p-1.5 rounded ${style.bg} ${style.text}`}>
-                                <Book size={14} />
-                              </div>
-                              <div>
-                                <p className="text-sm font-medium text-slate-700">
-                                  {subject.name}
-                                </p>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-[10px] font-mono text-slate-500 bg-slate-100 px-1 rounded border border-slate-200">
-                                    {subject.code}
-                                  </span>
-                                  <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${style.badge}`}>
-                                    Sem {subject.semester}
-                                  </span>
+                    {expandedBranch === index && (
+                      branch.subjects && branch.subjects.length > 0 ? (
+                        <div className="divide-y divide-slate-50">
+                          {branch.subjects.map((subject, sIdx) => {
+                            const style = getSemesterStyle(subject.semester);
+                            return (
+                              <div
+                                key={sIdx}
+                                className={`px-4 py-2.5 flex items-center justify-between hover:bg-slate-50 transition-colors border-l-2 ${style.border}`}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className={`p-1.5 rounded ${style.bg} ${style.text}`}>
+                                    <Book size={14} />
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-medium text-slate-700">
+                                      {subject.name}
+                                    </p>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[10px] font-mono text-slate-500 bg-slate-100 px-1 rounded border border-slate-200">
+                                        {subject.code}
+                                      </span>
+                                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${style.badge}`}>
+                                        Sem {subject.semester}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="text-xs font-medium text-slate-500">
+                                  {subject.credits} Cr
                                 </div>
                               </div>
-                            </div>
-                            <div className="text-xs font-medium text-slate-500">
-                              {subject.credits} Cr
-                            </div>
-                          </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <div className="p-3 text-center text-xs text-slate-400 italic bg-white">
-                        No subjects added.
-                      </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="p-3 text-center text-xs text-slate-400 italic bg-white">
+                          No subjects added.
+                        </div>
+                      )
                     )}
                   </div>
                 ))

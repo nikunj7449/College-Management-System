@@ -1,4 +1,5 @@
 const Attendance = require('../models/Attendance');
+const Student = require('../models/Student');
 
 // @desc    Mark Attendance
 // @route   POST /api/v1/attendance
@@ -6,10 +7,10 @@ const Attendance = require('../models/Attendance');
 exports.markAttendance = async (req, res, next) => {
   try {
     const { studentId, date, status } = req.body;
-    
+
     if (!studentId || !date || !status) {
-        res.status(400);
-        throw new Error('Please provide student ID, date, and status');
+      res.status(400);
+      throw new Error('Please provide student ID, date, and status');
     }
 
     // Normalize status to Title Case (e.g., "present" -> "Present")
@@ -17,12 +18,12 @@ exports.markAttendance = async (req, res, next) => {
 
     // Normalize date to ignore time (YYYY-MM-DD)
     const attendanceDate = new Date(date);
-    attendanceDate.setHours(0,0,0,0);
+    attendanceDate.setUTCHours(0, 0, 0, 0);
 
     // Check if attendance already marked
-    const existingAttendance = await Attendance.findOne({ 
-      student: studentId, 
-      date: attendanceDate 
+    const existingAttendance = await Attendance.findOne({
+      student: studentId,
+      date: attendanceDate
     });
 
     if (existingAttendance) {
@@ -30,7 +31,7 @@ exports.markAttendance = async (req, res, next) => {
       existingAttendance.status = normalizedStatus;
       existingAttendance.markedBy = req.user.id;
       await existingAttendance.save();
-      
+
       res.status(200).json({
         success: true,
         message: 'Attendance updated successfully',
@@ -85,14 +86,14 @@ exports.markBulkAttendance = async (req, res, next) => {
 
         // Normalize date
         const attendanceDate = new Date(date);
-        attendanceDate.setHours(0, 0, 0, 0);
+        attendanceDate.setUTCHours(0, 0, 0, 0);
 
         // Upsert (Update if exists, Insert if new)
         await Attendance.findOneAndUpdate(
           { student: studentId, date: attendanceDate },
-          { 
+          {
             status: normalizedStatus,
-            markedBy: facultyId 
+            markedBy: facultyId
           },
           { upsert: true, new: true, setDefaultsOnInsert: true }
         );
@@ -119,7 +120,7 @@ exports.markBulkAttendance = async (req, res, next) => {
 exports.getStudentAttendance = async (req, res, next) => {
   try {
     const attendance = await Attendance.find({ student: req.params.studentId }).sort({ date: -1 });
-    
+
     res.status(200).json({
       success: true,
       attendance,
@@ -131,18 +132,20 @@ exports.getStudentAttendance = async (req, res, next) => {
 
 
 // Get Attendance for a specific Date and Class (For Admin/Faculty View)
-exports.getClassAttendance = async (req, res, next) => { 
+exports.getClassAttendance = async (req, res, next) => {
   try {
     const { date, course, sem } = req.query;
 
     // 1. Get IDs of students in that course/sem
-    const students = await require('../models/Student').find({ course, sem }).select('_id name rollNum');
+    const students = await Student.find({ course, sem }).select('_id name rollNum');
     const studentIds = students.map(s => s._id);
+    const queryDate = new Date(date);
+    queryDate.setUTCHours(0, 0, 0, 0);
 
     // 2. Get attendance records for those IDs on the specific date
-    const attendanceRecords = await require('../models/Attendance').find({
+    const attendanceRecords = await Attendance.find({
       student: { $in: studentIds },
-      date: new Date(date)
+      date: queryDate
     }).populate('student', 'name rollNum');
 
     res.status(200).json({ success: true, data: attendanceRecords });

@@ -26,75 +26,77 @@ const StudentCard = ({ student, onEdit, onDelete, onView, onToggleStatus }) => {
   };
 
   return (
-    <div 
+    <div
       className="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-lg hover:z-30 transition-all duration-300 group relative"
     >
-      
+
       {/* Card Header / Actions */}
-      <div 
-        className={`absolute top-4 right-4 z-10 ${showActions ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity duration-200`} 
+      <div
+        className={`absolute top-4 right-4 z-10 ${showActions ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity duration-200`}
         onMouseLeave={handleMouseLeave}
         onMouseEnter={handleMouseEnter}
       >
-        <button 
+        <button
           onClick={() => setShowActions(!showActions)}
           className="p-2 text-slate-400 hover:bg-slate-50 rounded-full transition-colors"
         >
           <MoreVertical size={20} />
         </button>
-        
-        <div className={`absolute right-0 top-0 bg-white rounded-xl shadow-xl border border-slate-100 p-3 flex flex-col gap-2 z-20 min-w-25 transition-all duration-200 origin-top-right ${showActions ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'}`}>
-            <div className="flex justify-center space-x-2">
-              <button 
-                onClick={() => onEdit(student)} 
-                className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors" 
-                title="Edit"
-              >
-                <Edit size={16} />
-              </button>
-              <button 
-                onClick={() => onDelete(student._id)} 
-                className="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors" 
+
+        <div className={`absolute right-0 top-0 bg-white/40 backdrop-blur-2xl rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/60 p-2 flex flex-col gap-1.5 z-20 min-w-[100px] transition-all duration-300 ${showActions ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'}`}>
+          <div className="flex justify-center space-x-2">
+            <button
+              onClick={() => onEdit(student)}
+              className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+              title="Edit"
+            >
+              <Edit size={16} />
+            </button>
+            {onDelete && (
+              <button
+                onClick={() => onDelete(student._id)}
+                className="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
                 title="Delete"
               >
                 <Trash2 size={16} />
               </button>
-            </div>
-            <div className="flex justify-center space-x-2">
-              <button 
-                onClick={() => onView(student)} 
-                className="p-2 text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors" 
-                title="View Details"
-              >
-                <Eye size={16} />
-              </button>
-              <button 
+            )}
+          </div>
+          <div className="flex justify-center space-x-2">
+            <button
+              onClick={() => onView(student)}
+              className="p-2 text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors"
+              title="View Details"
+            >
+              <Eye size={16} />
+            </button>
+            {onToggleStatus && (
+              <button
                 onClick={() => onToggleStatus(student)}
-                className={`p-2 rounded-lg transition-colors ${
-                  student.isActive 
-                    ? 'text-orange-600 bg-orange-50 hover:bg-orange-100' 
-                    : 'text-green-600 bg-green-50 hover:bg-green-100'
-                }`}
+                className={`p-2 rounded-lg transition-colors ${student.isActive
+                  ? 'text-orange-600 bg-orange-50 hover:bg-orange-100'
+                  : 'text-green-600 bg-green-50 hover:bg-green-100'
+                  }`}
                 title={student.isActive ? "Deactivate" : "Activate"}
               >
                 <Power size={16} />
               </button>
-            </div>
+            )}
           </div>
+        </div>
       </div>
 
       {/* Profile Info */}
       <div className="flex flex-col items-center text-center mb-4">
         <div className="relative mb-3">
-          <img 
-            src={`https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=random&size=128`} 
+          <img
+            src={`https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=random&size=128`}
             alt={student.name}
             className="w-20 h-20 rounded-full object-cover border-4 border-slate-50 shadow-sm"
           />
-          <span 
-            className={`absolute bottom-1 right-1 w-4 h-4 border-2 border-white rounded-full ${
-              student.isActive ? 'bg-green-500' : 'bg-red-500'
-            }`}
+          <span
+            className={`absolute bottom-1 right-1 w-4 h-4 border-2 border-white rounded-full ${student.isActive ? 'bg-green-500' : 'bg-red-500'
+              }`}
           />
         </div>
         <h3 className="text-lg font-bold text-slate-800 mb-1">{student.name}</h3>

@@ -71,6 +71,20 @@ const CourseList = () => {
     setCurrentPage(1);
   }, [searchTerm]);
 
+  // Lock body scroll when any modal is open
+  useEffect(() => {
+    if (modal.type) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    // Cleanup when component unmounts
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [modal.type]);
+
   return (
     <div className="p-6 max-w-7xl mx-auto">
       {/* Header */}
@@ -102,22 +116,20 @@ const CourseList = () => {
           <div className="flex bg-white border border-slate-200 rounded-xl p-1">
             <button
               onClick={() => setViewType('grid')}
-              className={`p-2 rounded-lg transition-all ${
-                viewType === 'grid'
-                  ? 'bg-indigo-50 text-indigo-600 shadow-sm'
-                  : 'text-slate-400 hover:text-slate-600'
-              }`}
+              className={`p-2 rounded-lg transition-all ${viewType === 'grid'
+                ? 'bg-indigo-50 text-indigo-600 shadow-sm'
+                : 'text-slate-400 hover:text-slate-600'
+                }`}
               title="Grid View"
             >
               <LayoutGrid size={20} />
             </button>
             <button
               onClick={() => setViewType('table')}
-              className={`p-2 rounded-lg transition-all ${
-                viewType === 'table'
-                  ? 'bg-indigo-50 text-indigo-600 shadow-sm'
-                  : 'text-slate-400 hover:text-slate-600'
-              }`}
+              className={`p-2 rounded-lg transition-all ${viewType === 'table'
+                ? 'bg-indigo-50 text-indigo-600 shadow-sm'
+                : 'text-slate-400 hover:text-slate-600'
+                }`}
               title="Table View"
             >
               <List size={20} />
@@ -248,7 +260,7 @@ const CourseList = () => {
       )}
 
       {/* Branch Management Modal */}
-      {modal.type === MODAL_TYPE.MANAGE_BRANCHES && (
+      {[MODAL_TYPE.MANAGE_BRANCHES, MODAL_TYPE.ADD_SUBJECT, MODAL_TYPE.EDIT_SUBJECT].includes(modal.type) && (
         <BranchManageModal
           isOpen={true}
           onClose={closeModal}
@@ -284,7 +296,6 @@ const CourseList = () => {
           isEditingSubject={modal.type === MODAL_TYPE.EDIT_SUBJECT}
         />
       )}
-
       {/* Delete Confirmation Modal */}
       {modal.type === MODAL_TYPE.DELETE && (
         <DeleteConfirmModal

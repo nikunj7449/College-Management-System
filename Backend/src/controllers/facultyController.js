@@ -82,7 +82,6 @@ exports.addFaculty = async (req, res, next) => {
       joiningDate: joiningDate || undefined,
       documents: documentsArray
     });
-    console.log('Created Faculty:', faculty);
     res.status(201).json({
       success: true,
       message: 'Faculty added and Login created successfully',

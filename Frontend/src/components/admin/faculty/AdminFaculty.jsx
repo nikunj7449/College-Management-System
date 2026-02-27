@@ -22,7 +22,7 @@ import FacultyFormModal from '../../modals/FacultyFormModal';
 import DeleteConfirmModal from '../../modals/DeleteConfirmModal';
 import FacultyFilterPanel from './sub-components/FacultyFilterPanel';
 
-const AdminFaculty = () => {
+const AdminFaculty = ({ hideHeader = false }) => {
   const [showFilters, setShowFilters] = useState(false);
   const [viewType, setViewType] = useState('grid');
 
@@ -72,90 +72,177 @@ const AdminFaculty = () => {
     filters.sem
   );
 
+  // Lock body scroll when any modal is open
+  React.useEffect(() => {
+    if (modal.type) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [modal.type]);
+
   return (
     <div className="p-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800">Faculty Directory</h1>
-          <p className="text-slate-500 text-sm mt-1">Manage teaching staff and details</p>
+      {!hideHeader && (
+        <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800">Faculty Directory</h1>
+            <p className="text-slate-500 text-sm mt-1">Manage teaching staff and details</p>
+          </div>
+
+          <div className="flex w-full md:w-auto gap-3">
+            {/* Search */}
+            <div className="relative flex-1 md:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+              <input
+                type="text"
+                placeholder="Search faculty..."
+                className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+
+            {/* View Toggle */}
+            <div className="flex bg-white border border-slate-200 rounded-xl p-1">
+              <button
+                onClick={() => setViewType('grid')}
+                className={`p-2 rounded-lg transition-all ${viewType === 'grid'
+                  ? 'bg-indigo-50 text-indigo-600 shadow-sm'
+                  : 'text-slate-400 hover:text-slate-600'
+                  }`}
+                title="Grid View"
+              >
+                <LayoutGrid size={20} />
+              </button>
+              <button
+                onClick={() => setViewType('table')}
+                className={`p-2 rounded-lg transition-all ${viewType === 'table'
+                  ? 'bg-indigo-50 text-indigo-600 shadow-sm'
+                  : 'text-slate-400 hover:text-slate-600'
+                  }`}
+                title="Table View"
+              >
+                <List size={20} />
+              </button>
+            </div>
+
+            {/* Filter Button */}
+            <div className="relative">
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`flex items-center justify-center px-4 py-2.5 border rounded-xl transition-colors ${showFilters
+                  ? 'bg-indigo-50 border-indigo-200 text-indigo-600'
+                  : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                  }`}
+              >
+                <Filter size={20} />
+              </button>
+
+              {showFilters && (
+                <FacultyFilterPanel
+                  filters={filters}
+                  onFilterChange={setFilters}
+                  designationOptions={FACULTY_DESIGNATIONS}
+                  courseOptions={courseOptions}
+                  branchOptions={filterBranchOptions}
+                  semOptions={filterSemOptions}
+                  subjectOptions={filterSubjectOptions}
+                />
+              )}
+            </div>
+
+            {/* Add Faculty Button */}
+            <button
+              onClick={openAddModal}
+              className="flex items-center justify-center px-4 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
+            >
+              <Plus size={20} className="mr-2" />
+              <span className="font-medium text-sm">Add Faculty</span>
+            </button>
+          </div>
         </div>
-        
-        <div className="flex w-full md:w-auto gap-3">
-          {/* Search */}
-          <div className="relative flex-1 md:w-64">
+      )}
+
+      {hideHeader && (
+        <div className="flex w-full justify-between items-center mb-6 gap-3">
+          <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-            <input 
-              type="text" 
-              placeholder="Search faculty..." 
-              className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+            <input
+              type="text"
+              placeholder="Search faculty..."
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
 
-          {/* View Toggle */}
-          <div className="flex bg-white border border-slate-200 rounded-xl p-1">
-            <button 
-              onClick={() => setViewType('grid')}
-              className={`p-2 rounded-lg transition-all ${
-                viewType === 'grid' 
-                  ? 'bg-indigo-50 text-indigo-600 shadow-sm' 
+          <div className="flex gap-3">
+            {/* View Toggle */}
+            <div className="flex bg-slate-50 border border-slate-200 rounded-xl p-1">
+              <button
+                onClick={() => setViewType('grid')}
+                className={`p-2 rounded-lg transition-all ${viewType === 'grid'
+                  ? 'bg-white text-indigo-600 shadow-sm'
                   : 'text-slate-400 hover:text-slate-600'
-              }`}
-              title="Grid View"
-            >
-              <LayoutGrid size={20} />
-            </button>
-            <button 
-              onClick={() => setViewType('table')}
-              className={`p-2 rounded-lg transition-all ${
-                viewType === 'table' 
-                  ? 'bg-indigo-50 text-indigo-600 shadow-sm' 
+                  }`}
+                title="Grid View"
+              >
+                <LayoutGrid size={20} />
+              </button>
+              <button
+                onClick={() => setViewType('table')}
+                className={`p-2 rounded-lg transition-all ${viewType === 'table'
+                  ? 'bg-white text-indigo-600 shadow-sm'
                   : 'text-slate-400 hover:text-slate-600'
-              }`}
-              title="Table View"
-            >
-              <List size={20} />
-            </button>
-          </div>
-          
-          {/* Filter Button */}
-          <div className="relative">
-            <button 
-              onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center justify-center px-4 py-2.5 border rounded-xl transition-colors ${
-                showFilters 
-                  ? 'bg-indigo-50 border-indigo-200 text-indigo-600' 
-                  : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              <Filter size={20} />
-            </button>
-            
-            {showFilters && (
-              <FacultyFilterPanel
-                filters={filters}
-                onFilterChange={setFilters}
-                designationOptions={FACULTY_DESIGNATIONS}
-                courseOptions={courseOptions}
-                branchOptions={filterBranchOptions}
-                semOptions={filterSemOptions}
-                subjectOptions={filterSubjectOptions}
-              />
-            )}
-          </div>
+                  }`}
+                title="Table View"
+              >
+                <List size={20} />
+              </button>
+            </div>
 
-          {/* Add Faculty Button */}
-          <button 
-            onClick={openAddModal}
-            className="flex items-center justify-center px-4 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
-          >
-            <Plus size={20} className="mr-2" />
-            <span className="font-medium text-sm">Add Faculty</span>
-          </button>
+            {/* Filter Button */}
+            <div className="relative">
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`flex items-center justify-center px-4 py-2.5 border rounded-xl transition-colors ${showFilters
+                  ? 'bg-indigo-50 border-indigo-200 text-indigo-600'
+                  : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                  }`}
+              >
+                <Filter size={20} />
+              </button>
+
+              {showFilters && (
+                <FacultyFilterPanel
+                  filters={filters}
+                  onFilterChange={setFilters}
+                  designationOptions={FACULTY_DESIGNATIONS}
+                  courseOptions={courseOptions}
+                  branchOptions={filterBranchOptions}
+                  semOptions={filterSemOptions}
+                  subjectOptions={filterSubjectOptions}
+                />
+              )}
+            </div>
+
+            {/* Add Faculty Button */}
+            <button
+              onClick={openAddModal}
+              className="flex items-center justify-center px-4 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-sm"
+            >
+              <Plus size={20} className="mr-2" />
+              <span className="font-medium text-sm">Add Faculty</span>
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Loading State */}
       {loading && (
@@ -229,7 +316,7 @@ const AdminFaculty = () => {
           </div>
         </div>
       )}
-      
+
       {/* Pagination */}
       {!loading && facultyList.length > 0 && (
         <Pagination

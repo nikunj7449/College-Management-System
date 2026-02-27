@@ -3,7 +3,7 @@ import { Edit, Trash2, Eye, GraduationCap, GitBranch } from 'lucide-react';
 
 const CourseTableRow = ({ course, onEdit, onDelete, onView, onManage }) => {
   const totalSubjects = course.branches?.reduce(
-    (acc, branch) => acc + (branch.subjects?.length || 0), 
+    (acc, branch) => acc + (branch.subjects?.length || 0),
     0
   ) || 0;
 
@@ -34,34 +34,40 @@ const CourseTableRow = ({ course, onEdit, onDelete, onView, onManage }) => {
       </td>
       <td className="px-6 py-4 text-right">
         <div className="flex justify-end space-x-2">
-          <button 
-            onClick={() => onManage(course)} 
-            className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" 
-            title="Manage Branches"
-          >
-            <GitBranch size={16} />
-          </button>
-          <button 
-            onClick={() => onView(course)} 
-            className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors" 
+          {onManage && (
+            <button
+              onClick={() => onManage(course)}
+              className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+              title="Manage Branches"
+            >
+              <GitBranch size={16} />
+            </button>
+          )}
+          <button
+            onClick={() => onView(course)}
+            className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
             title="View Details"
           >
             <Eye size={16} />
           </button>
-          <button 
-            onClick={() => onEdit(course)} 
-            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" 
-            title="Edit"
-          >
-            <Edit size={16} />
-          </button>
-          <button 
-            onClick={() => onDelete(course)} 
-            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" 
-            title="Delete"
-          >
-            <Trash2 size={16} />
-          </button>
+          {onEdit && (
+            <button
+              onClick={() => onEdit(course)}
+              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              title="Edit"
+            >
+              <Edit size={16} />
+            </button>
+          )}
+          {onDelete && (
+            <button
+              onClick={() => onDelete(course)}
+              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              title="Delete"
+            >
+              <Trash2 size={16} />
+            </button>
+          )}
         </div>
       </td>
     </tr>

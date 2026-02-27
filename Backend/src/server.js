@@ -1,7 +1,9 @@
 const dotenv = require('dotenv');
 
+const path = require('path');
+
 // 1. Load env vars BEFORE importing other files
-dotenv.config(); 
+dotenv.config({ path: path.join(__dirname, '../.env') });
 
 // 2. Handle Uncaught Exceptions (Sync Errors)
 // Put this at the top to catch errors in imports

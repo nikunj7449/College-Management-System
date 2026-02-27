@@ -25,10 +25,10 @@ const StudentList = () => {
   const [viewType, setViewType] = useState('grid');
 
   const {
-    students,coursesData,loading,submitLoading,searchTerm,filters,currentPage,
-    formData,modal,setSearchTerm,setFilters,setCurrentPage,handleChange,handleSubmit,
-    handleEdit,handleView,handleDelete,handleToggleStatus,confirmDelete,confirmToggleStatus,
-    openAddModal,closeModal,
+    students, coursesData, loading, submitLoading, searchTerm, filters, currentPage,
+    formData, modal, setSearchTerm, setFilters, setCurrentPage, handleChange, handleSubmit,
+    handleEdit, handleView, handleDelete, handleToggleStatus, confirmDelete, confirmToggleStatus,
+    openAddModal, closeModal,
   } = useStudentOperations();
 
   const userRole = JSON.parse(localStorage.getItem('user')).role;
@@ -47,6 +47,19 @@ const StudentList = () => {
   const filterBranchOptions = getFilterBranchOptions(coursesData, filters.course);
   const filterSemOptions = getFilterSemOptions(coursesData, filters.course);
 
+  // Lock body scroll when any modal is open
+  React.useEffect(() => {
+    if (modal.type) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [modal.type]);
+
   return (
     <div className="p-6 max-w-7xl mx-auto">
       {/* Header */}
@@ -55,14 +68,14 @@ const StudentList = () => {
           <h1 className="text-2xl font-bold text-slate-800">Students Directory</h1>
           <p className="text-slate-500 text-sm mt-1">Manage and view all registered students</p>
         </div>
-        
+
         <div className="flex w-full md:w-auto gap-3">
           {/* Search */}
           <div className="relative flex-1 md:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-            <input 
-              type="text" 
-              placeholder="Search by name or ID..." 
+            <input
+              type="text"
+              placeholder="Search by name or ID..."
               className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -71,24 +84,22 @@ const StudentList = () => {
 
           {/* View Toggle */}
           <div className="flex bg-white border border-slate-200 rounded-xl p-1">
-            <button 
+            <button
               onClick={() => setViewType('grid')}
-              className={`p-2 rounded-lg transition-all ${
-                viewType === 'grid' 
-                  ? 'bg-indigo-50 text-indigo-600 shadow-sm' 
-                  : 'text-slate-400 hover:text-slate-600'
-              }`}
+              className={`p-2 rounded-lg transition-all ${viewType === 'grid'
+                ? 'bg-indigo-50 text-indigo-600 shadow-sm'
+                : 'text-slate-400 hover:text-slate-600'
+                }`}
               title="Grid View"
             >
               <LayoutGrid size={20} />
             </button>
-            <button 
+            <button
               onClick={() => setViewType('table')}
-              className={`p-2 rounded-lg transition-all ${
-                viewType === 'table' 
-                  ? 'bg-indigo-50 text-indigo-600 shadow-sm' 
-                  : 'text-slate-400 hover:text-slate-600'
-              }`}
+              className={`p-2 rounded-lg transition-all ${viewType === 'table'
+                ? 'bg-indigo-50 text-indigo-600 shadow-sm'
+                : 'text-slate-400 hover:text-slate-600'
+                }`}
               title="Table View"
             >
               <List size={20} />
@@ -97,17 +108,16 @@ const StudentList = () => {
 
           {/* Filter Button */}
           <div className="relative">
-            <button 
+            <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center justify-center px-4 py-2.5 border rounded-xl transition-colors ${
-                showFilters 
-                  ? 'bg-indigo-50 border-indigo-200 text-indigo-600' 
-                  : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-              }`}
+              className={`flex items-center justify-center px-4 py-2.5 border rounded-xl transition-colors ${showFilters
+                ? 'bg-indigo-50 border-indigo-200 text-indigo-600'
+                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                }`}
             >
               <Filter size={20} />
             </button>
-            
+
             {showFilters && (
               <FilterPanel
                 filters={filters}
@@ -120,7 +130,7 @@ const StudentList = () => {
           </div>
 
           {/* Add Student Button */}
-          <button 
+          <button
             onClick={openAddModal}
             className="flex items-center justify-center px-4 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
           >
@@ -203,7 +213,7 @@ const StudentList = () => {
           </div>
         </div>
       )}
-      
+
       {/* Pagination */}
       {!loading && students.length > 0 && (
         <Pagination
@@ -214,15 +224,15 @@ const StudentList = () => {
           onPageChange={setCurrentPage}
         />
       )}
-      
+
       {/* Empty State */}
-     {!loading && students.length === 0 && 
+      {!loading && students.length === 0 &&
         <div className="text-center py-12">
-            <div className="bg-slate-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Search className="text-slate-400" size={32} />
-            </div>
-            <h3 className="text-lg font-medium text-slate-800">No students found</h3>
-            <p className="text-slate-500">Try adjusting your search terms or add a new student.</p>
+          <div className="bg-slate-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Search className="text-slate-400" size={32} />
+          </div>
+          <h3 className="text-lg font-medium text-slate-800">No students found</h3>
+          <p className="text-slate-500">Try adjusting your search terms or add a new student.</p>
         </div>
       }
 
