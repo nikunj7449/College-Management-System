@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import { Search, Filter, Mail, Phone, Calendar, Shield, Edit2, Eye, Loader2, Trash2, Power, UserPlus, User } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Pagination from '../common/Pagination';
@@ -14,10 +14,14 @@ import {
     getSemOptions,
     getSubjectOptions,
 } from '../../utils/adminUtils/courseUtils';
+import { useRoles } from '../../hooks/useRoles';
+import { hasPermission } from '../../utils/permissionUtils';
+import { AuthContext } from '../../context/AuthContext';
 
 const AllUsersList = () => {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
+    const { roles, fetchRoles } = useRoles();
 
     // Filters
     const [searchTerm, setSearchTerm] = useState('');
@@ -27,6 +31,14 @@ const AllUsersList = () => {
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 12;
+
+    const { user: loggedInUser, fetchLatestRole: fetchRoleData } = useContext(AuthContext);
+
+    useEffect(() => {
+        if (fetchRoleData) {
+            fetchRoleData();
+        }
+    }, [fetchRoleData]);
 
     // Action States
     const [isFetchingProfile, setIsFetchingProfile] = useState(false);
@@ -51,8 +63,9 @@ const AllUsersList = () => {
 
     useEffect(() => {
         fetchUsers();
+        fetchRoles();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [roleFilter, statusFilter]);
+    }, [roleFilter, statusFilter, fetchRoles]);
 
     useEffect(() => {
         // Reset page on search or filter change
@@ -101,7 +114,7 @@ const AllUsersList = () => {
             if (searchTerm) params.append('search', searchTerm);
 
             const response = await api.get(`/users?${params.toString()}`);
-            setUsers(response.data.data);
+            setUsers(response.data.data || []);
         } catch (error) {
             console.error('Error fetching users:', error);
             toast.error('Failed to load user list');
@@ -146,13 +159,12 @@ const AllUsersList = () => {
         }
     };
 
-    const getRoleBadge = (role) => {
-        switch (role) {
-            case 'SUPERADMIN': return 'bg-purple-100 text-purple-700 border-purple-200';
-            case 'ADMIN': return 'bg-indigo-100 text-indigo-700 border-indigo-200';
-            case 'FACULTY': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
-            default: return 'bg-slate-100 text-slate-700 border-slate-200';
-        }
+    const getRoleBadge = (roleObj) => {
+        const role = roleObj?.name || roleObj; // Fallback if it's somehow a string
+        if (role === 'SUPERADMIN') return 'bg-purple-100 text-purple-700 border-purple-200';
+        if (role === 'ADMIN') return 'bg-indigo-100 text-indigo-700 border-indigo-200';
+        if (role === 'FACULTY') return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+        return 'bg-blue-100 text-blue-700 border-blue-200'; // Default custom role badge
     };
 
     // Handle Fetch Profile for Modals
@@ -237,7 +249,7 @@ const AllUsersList = () => {
                     <div className="w-40 z-20 shadow-sm rounded-xl">
                         <CustomDropdown
                             name="roleFilter"
-                            options={['ALL', 'SUPERADMIN', 'ADMIN', 'FACULTY']}
+                            options={['ALL', ...roles.map(r => r.name)]}
                             value={roleFilter}
                             onChange={(e) => setRoleFilter(e.target.value)}
                             placeholder="All Roles"
@@ -255,44 +267,46 @@ const AllUsersList = () => {
                     </div>
 
                     {/* Add User Button */}
-                    <div className="relative z-30 ml-auto md:ml-4" ref={addMenuRef}>
-                        <button
-                            onClick={() => setShowAddMenu(!showAddMenu)}
-                            className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                        >
-                            <UserPlus size={18} />
-                            <span className="font-medium">Add User</span>
-                        </button>
+                    {hasPermission(loggedInUser, 'USER', 'create') && (
+                        <div className="relative z-30 ml-auto md:ml-4" ref={addMenuRef}>
+                            <button
+                                onClick={() => setShowAddMenu(!showAddMenu)}
+                                className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                            >
+                                <UserPlus size={18} />
+                                <span className="font-medium">Add User</span>
+                            </button>
 
-                        {showAddMenu && (
-                            <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                                <button
-                                    onClick={() => {
-                                        setShowAddMenu(false);
-                                        setAdminModalState({ isOpen: true, mode: 'create', adminData: null });
-                                    }}
-                                    className="w-full text-left px-4 py-3 hover:bg-slate-50 flex items-center gap-3 border-b border-slate-50 transition-colors group"
-                                >
-                                    <div className="bg-indigo-50 p-1.5 rounded-lg text-indigo-600 group-hover:bg-indigo-100 transition-colors">
-                                        <Shield size={16} />
-                                    </div>
-                                    <span className="text-sm font-medium text-slate-700 group-hover:text-indigo-700">Admin User</span>
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        setShowAddMenu(false);
-                                        facultyOps.openAddModal();
-                                    }}
-                                    className="w-full text-left px-4 py-3 hover:bg-slate-50 flex items-center gap-3 transition-colors group"
-                                >
-                                    <div className="bg-emerald-50 p-1.5 rounded-lg text-emerald-600 group-hover:bg-emerald-100 transition-colors">
-                                        <User size={16} />
-                                    </div>
-                                    <span className="text-sm font-medium text-slate-700 group-hover:text-emerald-700">Faculty User</span>
-                                </button>
-                            </div>
-                        )}
-                    </div>
+                            {showAddMenu && (
+                                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                                    <button
+                                        onClick={() => {
+                                            setShowAddMenu(false);
+                                            setAdminModalState({ isOpen: true, mode: 'create', adminData: null });
+                                        }}
+                                        className="w-full text-left px-4 py-3 hover:bg-slate-50 flex items-center gap-3 border-b border-slate-50 transition-colors group"
+                                    >
+                                        <div className="bg-indigo-50 p-1.5 rounded-lg text-indigo-600 group-hover:bg-indigo-100 transition-colors">
+                                            <Shield size={16} />
+                                        </div>
+                                        <span className="text-sm font-medium text-slate-700 group-hover:text-indigo-700">Admin User</span>
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setShowAddMenu(false);
+                                            facultyOps.openAddModal();
+                                        }}
+                                        className="w-full text-left px-4 py-3 hover:bg-slate-50 flex items-center gap-3 transition-colors group"
+                                    >
+                                        <div className="bg-emerald-50 p-1.5 rounded-lg text-emerald-600 group-hover:bg-emerald-100 transition-colors">
+                                            <User size={16} />
+                                        </div>
+                                        <span className="text-sm font-medium text-slate-700 group-hover:text-emerald-700">Faculty User</span>
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -340,7 +354,7 @@ const AllUsersList = () => {
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className={`px-2.5 py-1 text-xs font-bold rounded-lg border ${getRoleBadge(user.role)}`}>
-                                                {user.role}
+                                                {user.role?.name || user.role}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4">
@@ -367,30 +381,36 @@ const AllUsersList = () => {
                                                 </button>
 
                                                 {/* Edit Button */}
-                                                <button
-                                                    onClick={() => fetchUserProfile(user._id, 'edit')}
-                                                    disabled={isFetchingProfile}
-                                                    title="Edit Profile"
-                                                    className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50"
-                                                >
-                                                    <Edit2 size={18} />
-                                                </button>
+                                                {hasPermission(loggedInUser, 'USER', 'update') && (
+                                                    <button
+                                                        onClick={() => fetchUserProfile(user._id, 'edit')}
+                                                        disabled={isFetchingProfile}
+                                                        title="Edit Profile"
+                                                        className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50"
+                                                    >
+                                                        <Edit2 size={18} />
+                                                    </button>
+                                                )}
 
                                                 {/* Status Toggle Button */}
-                                                <button
-                                                    onClick={() => handleToggleStatus(user._id)}
-                                                    className={`p-2 rounded-lg transition-colors ${user.status === 'Active' ? 'bg-amber-50 text-amber-600 hover:bg-amber-100' : 'bg-green-50 text-green-600 hover:bg-green-100'}`}
-                                                    title={user.status === 'Active' ? 'Deactivate User' : 'Activate User'}
-                                                >
-                                                    <Power size={18} />
-                                                </button>
-                                                <button
-                                                    onClick={() => deleteUser(user._id)}
-                                                    className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
-                                                    title="Delete User completely"
-                                                >
-                                                    <Trash2 size={18} />
-                                                </button>
+                                                {hasPermission(loggedInUser, 'USER', 'update') && (
+                                                    <button
+                                                        onClick={() => handleToggleStatus(user._id)}
+                                                        className={`p-2 rounded-lg transition-colors ${user.status === 'Active' ? 'bg-amber-50 text-amber-600 hover:bg-amber-100' : 'bg-green-50 text-green-600 hover:bg-green-100'}`}
+                                                        title={user.status === 'Active' ? 'Deactivate User' : 'Activate User'}
+                                                    >
+                                                        <Power size={18} />
+                                                    </button>
+                                                )}
+                                                {hasPermission(loggedInUser, 'USER', 'delete') && (
+                                                    <button
+                                                        onClick={() => deleteUser(user._id)}
+                                                        className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+                                                        title="Delete User completely"
+                                                    >
+                                                        <Trash2 size={18} />
+                                                    </button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>

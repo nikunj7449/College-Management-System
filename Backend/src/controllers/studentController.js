@@ -1,5 +1,6 @@
 const Student = require('../models/Student');
 const User = require('../models/User');
+const Role = require('../models/Role');
 const bcrypt = require('bcryptjs');
 const Attendance = require('../models/Attendance');
 const Remark = require('../models/Remark');
@@ -10,6 +11,7 @@ const cloudinary = require('cloudinary').v2;
 // @route   POST /api/v1/students
 // @access  Private (Admin/Faculty)
 exports.addStudent = async (req, res, next) => {
+  console.log("add student called")
   try {
     let {
       name,
@@ -60,11 +62,24 @@ exports.addStudent = async (req, res, next) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(formattedPassword, salt);
 
+    // Get Student Role ID
+    const studentRole = await Role.findOne({ name: 'STUDENT' });
+    if (!studentRole) {
+      res.status(500);
+      throw new Error('Student role not found in database. Please run seeding script.');
+    }
+    console.log({
+      name: name,
+      email: studentEmail,
+      password: hashedPassword,
+      role: studentRole._id
+    })
+
     const newUser = await User.create({
       name: name,
       email: studentEmail,
       password: hashedPassword,
-      role: 'STUDENT'
+      role: studentRole._id
     });
 
     // 4. Process Documents
@@ -170,11 +185,19 @@ exports.addBulkStudents = async (req, res, next) => {
         const hashedPassword = await bcrypt.hash(formattedPassword, salt);
 
         // Create User
+        // Get Student Role ID
+        const studentRole = await Role.findOne({ name: 'STUDENT' });
+        if (!studentRole) {
+          skippedCount++;
+          errors.push(`Skipped '${studentId}' - Student role not found in database`);
+          continue;
+        }
+
         const newUser = await User.create({
           name,
           email: studentEmail,
           password: hashedPassword,
-          role: 'STUDENT'
+          role: studentRole._id
         });
 
         // Create Student

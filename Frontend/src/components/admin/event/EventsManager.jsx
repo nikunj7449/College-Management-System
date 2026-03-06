@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import {
   Plus, Search, Edit, Trash2, X, Calendar, MapPin, AlignLeft,
   Loader2, Save, LayoutGrid, List, MoreVertical, Eye, Clock, FileText,
@@ -11,6 +11,8 @@ import Pagination from '../../common/Pagination';
 import DeleteConfirmModal from '../../modals/DeleteConfirmModal';
 import EventCardSkeleton from '../../common/EventCardSkeleton';
 import EventViewModal from '../../modals/EventViewModal';
+import { hasPermission } from '../../../utils/permissionUtils';
+import { AuthContext } from '../../../context/AuthContext';
 
 const getEventStatus = (dateStr, startStr, endStr) => {
   if (!dateStr || !startStr) return 'Upcoming';
@@ -105,12 +107,16 @@ const EventCard = ({ event, onEdit, onDelete, onView }) => {
 
           <div className={`absolute right-0 top-0 bg-white/40 backdrop-blur-2xl rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/60 p-2 flex flex-col gap-1.5 z-20 min-w-[100px] transition-all duration-300 ${showActions ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'}`}>
             <div className="flex justify-center space-x-1.5">
-              <button onClick={() => onEdit(event)} className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors" title="Edit">
-                <Edit size={16} />
-              </button>
-              <button onClick={() => onDelete(event)} className="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors" title="Delete">
-                <Trash2 size={16} />
-              </button>
+              {onEdit && (
+                <button onClick={() => onEdit(event)} className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors" title="Edit">
+                  <Edit size={16} />
+                </button>
+              )}
+              {onDelete && (
+                <button onClick={() => onDelete(event)} className="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors" title="Delete">
+                  <Trash2 size={16} />
+                </button>
+              )}
             </div>
             <div className="flex justify-center space-x-1.5">
               <button onClick={() => onView(event)} className="p-2 text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors w-full flex justify-center" title="View Details">
@@ -167,10 +173,18 @@ const EventsManager = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(8);
 
+  const { user: loggedInUser, fetchLatestRole } = useContext(AuthContext);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (fetchLatestRole) {
+      fetchLatestRole();
+    }
+  }, [fetchLatestRole]);
 
   useEffect(() => {
     fetchEvents();
@@ -286,13 +300,15 @@ const EventsManager = () => {
             </button>
           </div>
 
-          <button
-            onClick={openCreateModal}
-            className="flex items-center justify-center px-4 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
-          >
-            <Plus size={20} className="mr-2" />
-            <span className="font-medium text-sm">Add Event</span>
-          </button>
+          {hasPermission(loggedInUser, 'EVENT', 'create') && (
+            <button
+              onClick={openCreateModal}
+              className="flex items-center justify-center px-4 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
+            >
+              <Plus size={20} className="mr-2" />
+              <span className="font-medium text-sm">Add Event</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -321,8 +337,8 @@ const EventsManager = () => {
             <EventCard
               key={event.id}
               event={event}
-              onEdit={() => handleEditClick(event)}
-              onDelete={() => openDeleteModal(event)}
+              onEdit={hasPermission(loggedInUser, 'EVENT', 'update') ? () => handleEditClick(event) : null}
+              onDelete={hasPermission(loggedInUser, 'EVENT', 'delete') ? () => openDeleteModal(event) : null}
               onView={() => {
                 setSelectedEvent(event);
                 setIsModalOpen(true);
@@ -390,12 +406,16 @@ const EventsManager = () => {
                           }} className="p-2 text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors" title="View Details">
                             <Eye size={18} />
                           </button>
-                          <button onClick={() => handleEditClick(event)} className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors" title="Edit">
-                            <Edit size={18} />
-                          </button>
-                          <button onClick={() => openDeleteModal(event)} className="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors" title="Delete">
-                            <Trash2 size={18} />
-                          </button>
+                          {hasPermission(loggedInUser, 'EVENT', 'update') && (
+                            <button onClick={() => handleEditClick(event)} className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors" title="Edit">
+                              <Edit size={18} />
+                            </button>
+                          )}
+                          {hasPermission(loggedInUser, 'EVENT', 'delete') && (
+                            <button onClick={() => openDeleteModal(event)} className="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors" title="Delete">
+                              <Trash2 size={18} />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

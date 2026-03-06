@@ -29,7 +29,6 @@ const adminSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['ADMIN', 'SUPERADMIN'],
     default: 'ADMIN'
   },
   joinedDate: {

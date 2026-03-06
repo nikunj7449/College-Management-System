@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, User, Shield, Mail, Phone, Calendar, Lock, Loader2, Save } from 'lucide-react';
+import { useRoles } from '../../hooks/useRoles';
 
 const AdminModal = ({ isOpen, onClose, mode, admin, onSubmit }) => {
   const initialFormState = {
@@ -9,9 +10,11 @@ const AdminModal = ({ isOpen, onClose, mode, admin, onSubmit }) => {
     phone: '',
     password: '',
     confirmPassword: '',
-    role: 'ADMIN',
+    role: '',
     joinedDate: new Date().toISOString().split('T')[0]
   };
+
+  const { roles, fetchRoles } = useRoles();
 
   const [formData, setFormData] = useState(initialFormState);
   const [formErrors, setFormErrors] = useState({});
@@ -19,8 +22,10 @@ const AdminModal = ({ isOpen, onClose, mode, admin, onSubmit }) => {
 
   useEffect(() => {
     if (isOpen) {
+      fetchRoles();
       if (mode === 'create') {
-        setFormData(initialFormState);
+        const defaultRole = roles.find(r => r.name === 'ADMIN')?.name || (roles.length > 0 ? roles[0].name : '');
+        setFormData({ ...initialFormState, role: defaultRole });
       } else if (admin) {
         setFormData({
           name: admin.name,
@@ -33,9 +38,9 @@ const AdminModal = ({ isOpen, onClose, mode, admin, onSubmit }) => {
           joinedDate: admin.joinedDate ? new Date(admin.joinedDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
         });
       }
-      setFormErrors({});
     }
-  }, [isOpen, mode, admin]);
+    setFormErrors({});
+  }, [isOpen, mode, admin, fetchRoles, roles.length]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -137,8 +142,10 @@ const AdminModal = ({ isOpen, onClose, mode, admin, onSubmit }) => {
                   onChange={handleInputChange}
                   className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none appearance-none bg-white disabled:bg-slate-50 disabled:text-slate-500"
                 >
-                  <option value="ADMIN">Admin</option>
-                  <option value="SUPERADMIN">Super Admin</option>
+                  <option value="" disabled>Select Role</option>
+                  {roles.map(role => (
+                    <option key={role._id} value={role.name}>{role.name}</option>
+                  ))}
                 </select>
               </div>
             </div>

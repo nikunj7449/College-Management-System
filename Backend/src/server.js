@@ -18,7 +18,83 @@ const connectDB = require('./config/db');
 const app = require('./app');
 
 // Connect to database
-connectDB();
+connectDB().then(async () => {
+  // Seed default system modules
+  const Module = require('./models/Module');
+  const Role = require('./models/Role');
+
+  const systemModulesList = [
+    'STUDENT', 'FACULTY', 'ADMIN', 'COURSE',
+    'ATTENDANCE', 'EVENT', 'PERFORMANCE',
+    'REMARK', 'USER', 'ROLE'
+  ];
+
+  try {
+    const existingModules = await Module.find({ name: { $in: systemModulesList } });
+    const existingModuleNames = existingModules.map(m => m.name);
+
+    for (const modName of systemModulesList) {
+      if (!existingModuleNames.includes(modName)) {
+        await Module.create({ name: modName, isSystem: true });
+        console.log(`[Seeder] Created core system module: ${modName}`);
+      }
+    }
+
+    // Prepare default full permissions object dynamically based on modules
+    const allModules = await Module.find({});
+    const superAdminPerms = {};
+    allModules.forEach(mod => {
+      superAdminPerms[mod.name] = { create: true, read: true, update: true, delete: true };
+    });
+
+    const defaultSidebarConfig = [
+      { key: 'DASHBOARD', label: 'Dashboard', visible: true, order: 1, children: [] },
+      { key: 'STUDENT', label: 'Students', visible: true, order: 2, children: [] },
+      { key: 'FACULTY', label: 'Faculty', visible: true, order: 3, children: [] },
+      { key: 'USER_MANAGEMENT', label: 'User Management', visible: true, order: 4, children: [] },
+      { key: 'ROLES_PERMISSIONS', label: 'Roles & Permissions', visible: true, order: 5, children: [] },
+      { key: 'SYSTEM_MODULES', label: 'System Modules', visible: true, order: 6, children: [] },
+      { key: 'COURSE', label: 'Courses', visible: true, order: 7, children: [] },
+      { key: 'ATTENDANCE', label: 'Attendance', visible: true, order: 8, children: [] },
+      { key: 'PERFORMANCE', label: 'Performance', visible: true, order: 9, children: [] },
+      {
+        key: 'EVENT', label: 'Events', visible: true, order: 10, children: [
+          { key: 'EVENT_VIEW', label: 'View All Events', visible: true },
+          { key: 'EVENT_CREATE', label: 'Add Event', visible: true },
+          { key: 'EVENT_UPDATE', label: 'Edit Event', visible: true }
+        ]
+      }
+    ];
+
+    const systemRoles = ['SUPERADMIN', 'ADMIN', 'FACULTY', 'STUDENT'];
+    const existingRoles = await Role.find({ name: { $in: systemRoles } });
+    const existingRoleNames = existingRoles.map(r => r.name);
+
+    for (const roleName of systemRoles) {
+      if (!existingRoleNames.includes(roleName)) {
+        await Role.create({
+          name: roleName,
+          description: `System defined ${roleName} role`,
+          isSystem: true,
+          // Give full access by default to SUPERADMIN, rest empty for now
+          permissions: roleName === 'SUPERADMIN' ? superAdminPerms : undefined,
+          sidebarConfig: defaultSidebarConfig
+        });
+        console.log(`[Seeder] Created core system role: ${roleName}`);
+      } else {
+        // Upgrade existing roles if they don't have sidebarConfig
+        const currentRole = existingRoles.find(r => r.name === roleName);
+        if (!currentRole.sidebarConfig || currentRole.sidebarConfig.length === 0) {
+          currentRole.sidebarConfig = defaultSidebarConfig;
+          await currentRole.save();
+          console.log(`[Seeder] Upgraded core system role with sidebarConfig: ${roleName}`);
+        }
+      }
+    }
+  } catch (error) {
+    console.error(`[Seeder] Failed to seed system roles: ${error.message}`);
+  }
+});
 
 const PORT = process.env.PORT || 5000;
 

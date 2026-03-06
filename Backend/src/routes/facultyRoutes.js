@@ -1,14 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { 
-  addFaculty, 
-  getAllFaculty, 
-  updateFaculty, 
+const {
+  addFaculty,
+  getAllFaculty,
+  updateFaculty,
   deleteFaculty,
   addBulkFaculty
 } = require('../controllers/facultyController');
 const { protect } = require('../middleware/authMiddleware');
-const { authorize } = require('../middleware/roleMiddleware');
+const { authorize, requirePermission } = require('../middleware/roleMiddleware');
 const upload = require('../middleware/uploadMiddleware');
 const cleanBody = require('../middleware/cleanBody');
 
@@ -16,14 +16,14 @@ const cleanBody = require('../middleware/cleanBody');
 router.use(protect);
 
 router.route('/')
-  .get(getAllFaculty) // Accessible to any logged-in user
-  .post(authorize('ADMIN', 'SUPERADMIN'), upload.array('documents', 3),cleanBody, addFaculty); // Admin only
+  .get(requirePermission('FACULTY', 'read'), getAllFaculty) // Accessible to any logged-in user
+  .post(requirePermission('FACULTY', 'create'), upload.array('documents', 3), cleanBody, addFaculty); // Admin only
 
 router.route('/bulk')
-  .post(authorize('ADMIN', 'SUPERADMIN'), addBulkFaculty);
+  .post(requirePermission('FACULTY', 'create'), addBulkFaculty);
 
 router.route('/:id')
-  .put(authorize('ADMIN', 'SUPERADMIN'), upload.array('documents', 3), updateFaculty) // Admin only
-  .delete(authorize('ADMIN', 'SUPERADMIN'), deleteFaculty); // Admin only
+  .put(requirePermission('FACULTY', 'update'), upload.array('documents', 3), updateFaculty) // Admin only
+  .delete(requirePermission('FACULTY', 'delete'), deleteFaculty); // Admin only
 
 module.exports = router;

@@ -10,6 +10,8 @@ import AdminFaculty from './components/admin/faculty/AdminFaculty';
 import AdminCourse from './components/admin/course/AdminCourse';
 import AdminManagement from './components/admin/AdminManagement';
 import SuperadminUserManagement from './components/superadmin/SuperadminUserManagement';
+import RolesManagement from './components/superadmin/RolesManagement';
+import ModulesManagement from './components/superadmin/ModulesManagement';
 import EventsManager from './components/admin/event/EventsManager';
 import AddEvent from './components/admin/event/AddEvent';
 import EditEvent from './components/admin/event/EditEvent';
@@ -17,6 +19,7 @@ import FacultyDashboard from './components/faculty/dashboard/FacultyDashboard';
 import FacultyStudent from './components/faculty/student/FacultyStudent';
 import FacultyCourse from './components/faculty/course/FacultyCourse';
 import FacultyAttendance from './components/faculty/attendance/FacultyAttendance';
+import FacultyPerformance from './components/faculty/performance/FacultyPerformance';
 
 // Placeholder components
 const StudentDashboard = () => <div className="p-4 text-xl">Student Dashboard</div>;
@@ -55,6 +58,12 @@ const AppRoutes = () => {
           <Route path="/user-management" element={
             <ProtectedRoute roles={['SUPERADMIN']}><SuperadminUserManagement /></ProtectedRoute>
           } />
+          <Route path="/superadmin/roles" element={
+            <ProtectedRoute roles={['SUPERADMIN']}><RolesManagement /></ProtectedRoute>
+          } />
+          <Route path="/superadmin/modules" element={
+            <ProtectedRoute roles={['SUPERADMIN']}><ModulesManagement /></ProtectedRoute>
+          } />
           <Route path="/events/add" element={
             <ProtectedRoute roles={['ADMIN', 'SUPERADMIN', 'FACULTY']}><AddEvent /></ProtectedRoute>
           } />
@@ -75,6 +84,9 @@ const AppRoutes = () => {
           } />
           <Route path="/faculty/attendance" element={
             <ProtectedRoute roles={['FACULTY']}><FacultyAttendance /></ProtectedRoute>
+          } />
+          <Route path="/performance" element={
+            <ProtectedRoute roles={['FACULTY']}><FacultyPerformance /></ProtectedRoute>
           } />
           <Route path="/student/dashboard" element={
             <ProtectedRoute roles={['STUDENT']}><StudentDashboard /></ProtectedRoute>

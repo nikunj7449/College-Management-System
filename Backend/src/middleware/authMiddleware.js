@@ -16,7 +16,7 @@ const protect = async (req, res, next) => {
       const decoded = verifyToken(token);
 
       // Get user from the token (exclude password)
-      req.user = await User.findById(decoded.id).select('-password');
+      req.user = await User.findById(decoded.id).select('-password').populate('role');
 
       if (!req.user) {
         res.status(401);

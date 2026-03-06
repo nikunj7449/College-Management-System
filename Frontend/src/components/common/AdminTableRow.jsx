@@ -32,7 +32,7 @@ const AdminTableRow = ({ admin, onEdit, onDelete, onView }) => {
       <td className="px-6 py-4 whitespace-nowrap">
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-100">
           <Shield size={12} className="mr-1" />
-          {admin.role}
+          {admin.role?.name || admin.role}
         </span>
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
@@ -40,27 +40,33 @@ const AdminTableRow = ({ admin, onEdit, onDelete, onView }) => {
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
         <div className="flex justify-end space-x-2">
-          <button 
-            onClick={() => onView(admin)}
-            className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-            title="View"
-          >
-            <Eye size={18} />
-          </button>
-          <button 
-            onClick={() => onEdit(admin)}
-            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-            title="Edit"
-          >
-            <Edit size={18} />
-          </button>
-          <button 
-            onClick={() => onDelete(admin)}
-            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-            title="Delete"
-          >
-            <Trash2 size={18} />
-          </button>
+          {onView && (
+            <button
+              onClick={() => onView(admin)}
+              className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+              title="View"
+            >
+              <Eye size={18} />
+            </button>
+          )}
+          {onEdit && (
+            <button
+              onClick={() => onEdit(admin)}
+              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              title="Edit"
+            >
+              <Edit size={18} />
+            </button>
+          )}
+          {onDelete && (
+            <button
+              onClick={() => onDelete(admin)}
+              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              title="Delete"
+            >
+              <Trash2 size={18} />
+            </button>
+          )}
         </div>
       </td>
     </tr>

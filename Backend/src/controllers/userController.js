@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const Admin = require('../models/Admin');
 const Faculty = require('../models/faculty');
+const Role = require('../models/Role');
 
 // @desc    Get All Users (Excluding Students)
 // @route   GET /api/v1/users
@@ -10,11 +11,21 @@ exports.getAllUsers = async (req, res, next) => {
         const { search, role, status } = req.query;
 
         // Base query: Exclude students
-        let query = { role: { $ne: 'STUDENT' } };
+        let query = {};
+        const studentRole = await Role.findOne({ name: 'STUDENT' });
+        if (studentRole) {
+            query.role = { $ne: studentRole._id };
+        }
 
         // Strict Filter by Role
         if (role && role !== 'ALL') {
-            query.role = role;
+            const filterRole = await Role.findOne({ name: role });
+            if (filterRole) {
+                query.role = filterRole._id;
+            } else {
+                // If role name not found, force empty result
+                query.role = null;
+            }
         }
 
         // Strict Filter by Status
@@ -30,7 +41,7 @@ exports.getAllUsers = async (req, res, next) => {
             ];
         }
 
-        const users = await User.find(query).sort({ createdAt: -1 }).select('-password');
+        const users = await User.find(query).sort({ createdAt: -1 }).select('-password').populate('role');
 
         res.status(200).json({
             success: true,
@@ -47,7 +58,7 @@ exports.getAllUsers = async (req, res, next) => {
 // @access  Private (SuperAdmin)
 exports.toggleUserStatus = async (req, res, next) => {
     try {
-        const user = await User.findById(req.params.id);
+        const user = await User.findById(req.params.id).populate('role');
 
         if (!user) {
             res.status(404);
@@ -77,7 +88,7 @@ exports.toggleUserStatus = async (req, res, next) => {
 // @access  Private (SuperAdmin)
 exports.deleteUser = async (req, res, next) => {
     try {
-        const user = await User.findById(req.params.id);
+        const user = await User.findById(req.params.id).populate('role');
         if (!user) {
             res.status(404);
             throw new Error('User not found');
@@ -89,9 +100,9 @@ exports.deleteUser = async (req, res, next) => {
         }
 
         // Attempt to delete associated profile based on role
-        if (user.role === 'ADMIN' || user.role === 'SUPERADMIN') {
+        if (user.role?.name === 'ADMIN' || user.role?.name === 'SUPERADMIN') {
             await Admin.findOneAndDelete({ user: user._id });
-        } else if (user.role === 'FACULTY') {
+        } else if (user.role?.name === 'FACULTY') {
             await Faculty.findOneAndDelete({ user: user._id });
             // Optional: you can delete Remarks here or trigger a hook
         }
@@ -113,28 +124,28 @@ exports.deleteUser = async (req, res, next) => {
 // @access  Private (SuperAdmin)
 exports.getUserProfile = async (req, res, next) => {
     try {
-        const user = await User.findById(req.params.id).select('-password');
+        const user = await User.findById(req.params.id).select('-password').populate('role');
         if (!user) {
             res.status(404);
             throw new Error('User not found');
         }
 
         let profile = null;
-        if (user.role === 'ADMIN' || user.role === 'SUPERADMIN') {
+        if (user.role?.name === 'ADMIN' || user.role?.name === 'SUPERADMIN') {
             profile = await Admin.findOne({ user: user._id });
-        } else if (user.role === 'FACULTY') {
+        } else if (user.role?.name === 'FACULTY') {
             profile = await Faculty.findOne({ user: user._id });
         }
 
         if (!profile) {
             res.status(404);
-            throw new Error(`Profile data not found for this ${user.role}`);
+            throw new Error(`Profile data not found for this ${user.role?.name}`);
         }
 
         res.status(200).json({
             success: true,
             data: profile,
-            userRole: user.role // Handled natively so the frontend knows which modal to launch
+            userRole: user.role?.name // Handled natively so the frontend knows which modal to launch
         });
     } catch (error) {
         next(error);

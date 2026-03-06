@@ -2,17 +2,16 @@ const express = require('express');
 const router = express.Router();
 const { addAdmin, getAllAdmins, updateAdmin, deleteAdmin } = require('../controllers/adminController');
 const { protect } = require('../middleware/authMiddleware');
-const { authorize } = require('../middleware/roleMiddleware');
+const { authorize, requirePermission } = require('../middleware/roleMiddleware');
 
 router.use(protect);
-router.use(authorize('SUPERADMIN'));
 
 router.route('/')
-  .get(getAllAdmins)
-  .post(addAdmin);
+  .get(requirePermission('ADMIN', 'read'), getAllAdmins)
+  .post(requirePermission('ADMIN', 'create'), addAdmin);
 
 router.route('/:id')
-  .put(updateAdmin)
-  .delete(deleteAdmin);
+  .put(requirePermission('ADMIN', 'update'), updateAdmin)
+  .delete(requirePermission('ADMIN', 'delete'), deleteAdmin);
 
 module.exports = router;

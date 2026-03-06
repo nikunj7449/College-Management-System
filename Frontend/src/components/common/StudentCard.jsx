@@ -45,13 +45,15 @@ const StudentCard = ({ student, onEdit, onDelete, onView, onToggleStatus }) => {
 
         <div className={`absolute right-0 top-0 bg-white/40 backdrop-blur-2xl rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/60 p-2 flex flex-col gap-1.5 z-20 min-w-[100px] transition-all duration-300 ${showActions ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'}`}>
           <div className="flex justify-center space-x-2">
-            <button
-              onClick={() => onEdit(student)}
-              className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
-              title="Edit"
-            >
-              <Edit size={16} />
-            </button>
+            {onEdit && (
+              <button
+                onClick={() => onEdit(student)}
+                className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                title="Edit"
+              >
+                <Edit size={16} />
+              </button>
+            )}
             {onDelete && (
               <button
                 onClick={() => onDelete(student._id)}
@@ -63,13 +65,15 @@ const StudentCard = ({ student, onEdit, onDelete, onView, onToggleStatus }) => {
             )}
           </div>
           <div className="flex justify-center space-x-2">
-            <button
-              onClick={() => onView(student)}
-              className="p-2 text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors"
-              title="View Details"
-            >
-              <Eye size={16} />
-            </button>
+            {onView && (
+              <button
+                onClick={() => onView(student)}
+                className="p-2 text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors"
+                title="View Details"
+              >
+                <Eye size={16} />
+              </button>
+            )}
             {onToggleStatus && (
               <button
                 onClick={() => onToggleStatus(student)}

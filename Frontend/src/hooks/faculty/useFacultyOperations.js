@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import api from '../../services/api';
 import { toast } from 'react-toastify';
 import {
@@ -7,6 +7,7 @@ import {
     validateFileUpload
 } from '../../utils/adminUtils/courseUtils';
 import { MODAL_TYPE } from '../admin/useStudentOperations '; // Keep Modal enum common
+import { AuthContext } from '../../context/AuthContext';
 
 const INITIAL_FORM_STATE = {
     name: '',
@@ -47,7 +48,7 @@ export const useFacultyOperations = () => {
     const [formData, setFormData] = useState(INITIAL_FORM_STATE);
 
     // To get faculty user details for filtering:
-    const user = JSON.parse(localStorage.getItem('user'));
+    const { user } = useContext(AuthContext);
 
     const fetchStudents = async () => {
         try {

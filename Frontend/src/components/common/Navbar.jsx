@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 
 import { ChevronDown, Circle } from 'lucide-react';
+import { hasPermission } from '../../utils/permissionUtils';
 
 const SidebarItem = ({ icon: Icon, label, to, active, badge, onClick, children, isSidebarOpen, toggleSidebar }) => {
   const location = useLocation();
@@ -212,65 +213,118 @@ const Navbar = () => {
   };
 
   const getNavLinks = () => {
-    const role = user?.role?.toUpperCase();
+    const roleName = user?.role?.name?.toUpperCase() || '';
+    if (!roleName) return [];
+
+    // Fallback for legacy local storage or missing sidebar configuration
+    if (!user?.role?.sidebarConfig || !Array.isArray(user.role.sidebarConfig) || user.role.sidebarConfig.length === 0) {
+      const dashboardRole = (roleName === 'ADMIN' || roleName === 'SUPERADMIN') ? 'admin' : (roleName === 'FACULTY' ? 'faculty' : 'student');
+      return [{ icon: LayoutDashboard, label: "Dashboard", path: `/${dashboardRole}/dashboard` }];
+    }
+
+    const iconMap = {
+      'DASHBOARD': LayoutDashboard,
+      'STUDENT': Users,
+      'FACULTY': GraduationCap,
+      'USER_MANAGEMENT': Shield,
+      'ROLES_PERMISSIONS': Shield,
+      'SYSTEM_MODULES': Shield,
+      'COURSE': BookOpen,
+      'ATTENDANCE': Calendar,
+      'PERFORMANCE': Award,
+      'EVENT': Calendar
+    };
+
+    const getPath = (key) => {
+      if (key === 'DASHBOARD') {
+        const dashboardRole = (roleName === 'ADMIN' || roleName === 'SUPERADMIN') ? 'admin' : (roleName === 'FACULTY' ? 'faculty' : 'student');
+        return `/${dashboardRole}/dashboard`;
+      }
+      if (key === 'STUDENT') return roleName === 'FACULTY' ? "/faculty/students" : "/students";
+      if (key === 'FACULTY') return "/facultys";
+      if (key === 'USER_MANAGEMENT') return "/user-management";
+      if (key === 'ROLES_PERMISSIONS') return "/superadmin/roles";
+      if (key === 'SYSTEM_MODULES') return "/superadmin/modules";
+      if (key === 'COURSE') return roleName === 'FACULTY' ? "/faculty/courses" : "/courses";
+      if (key === 'ATTENDANCE') return "/faculty/attendance";
+      if (key === 'PERFORMANCE') return "/performance";
+      if (key === 'EVENT' || key === 'EVENT_VIEW') return "/events";
+      if (key === 'EVENT_CREATE') return "/events/add";
+      if (key === 'EVENT_UPDATE') return location.pathname.startsWith("/events/edit") ? location.pathname : "/events";
+      return "#";
+    };
+
+    const moduleMapping = {
+      'STUDENT': 'STUDENT',
+      'FACULTY': 'FACULTY',
+      'COURSE': 'COURSE',
+      'ATTENDANCE': 'ATTENDANCE',
+      'PERFORMANCE': 'PERFORMANCE',
+      'EVENT': 'EVENT',
+      'USER_MANAGEMENT': 'USER',
+      'ROLES_PERMISSIONS': 'ROLE',
+      'SYSTEM_MODULES': 'MODULE'
+    };
+
+    const actionMapping = {
+      'EVENT_VIEW': 'read',
+      'EVENT_CREATE': 'create',
+      'EVENT_UPDATE': 'update'
+    };
+
+    const sortedConfig = [...user.role.sidebarConfig].sort((a, b) => a.order - b.order);
     const links = [];
 
-    if (role) {
-      const dashboardRole = (role === 'ADMIN' || role === 'SUPERADMIN') ? 'admin' : (role === 'FACULTY' ? 'faculty' : 'student');
-      links.push({ icon: LayoutDashboard, label: "Dashboard", path: `/${dashboardRole}/dashboard` });
-    }
+    sortedConfig.forEach(item => {
+      if (!item.visible) return;
 
-    if (role === 'ADMIN' || role === 'SUPERADMIN') {
-      links.push(
-        { icon: Users, label: "Students", path: "/students" }
-      );
-
-      if (role === 'ADMIN') {
-        links.push({ icon: GraduationCap, label: "Faculty", path: "/facultys" });
-      }
-
-      if (role === 'SUPERADMIN') {
-        links.push({ icon: Shield, label: "User Management", path: "/user-management" });
-      }
-
-      links.push(
-        { icon: BookOpen, label: "Courses", path: "/courses" },
-        { icon: Award, label: "Performance", path: "/performance" },
-        {
-          icon: Calendar,
-          label: "Events",
-          path: "/events",
-          children: [
-            { label: "View All Events", path: "/events" },
-            { label: "Add Event", path: "/events/add" },
-            { label: "Edit Event", path: location.pathname.startsWith("/events/edit") ? location.pathname : "/events", activePattern: "/events/edit/" }
-          ]
-        },
-        { icon: Settings, label: "Settings", path: "/settings" }
-      );
-    } else if (role === 'FACULTY') {
-      links.push(
-        { icon: Users, label: "My Students", path: "/faculty/students" },
-        { icon: BookOpen, label: "Courses", path: "/faculty/courses" },
-        { icon: Calendar, label: "Attendance", path: "/faculty/attendance" },
-        {
-          icon: Calendar,
-          label: "Events",
-          path: "/events",
-          children: [
-            { label: "View All Events", path: "/events" },
-            { label: "Add Event", path: "/events/add" },
-            { label: "Edit Event", path: location.pathname.startsWith("/events/edit") ? location.pathname : "/events", activePattern: "/events/edit/" }
-          ]
+      if (item.key !== 'DASHBOARD') {
+        const permModule = moduleMapping[item.key];
+        if (permModule && !hasPermission(user, permModule, 'read')) {
+          return;
         }
-      );
-    } else if (role === 'STUDENT') {
-      links.push(
-        { icon: BookOpen, label: "Courses", path: "/courses" },
-        { icon: Award, label: "Performance", path: "/performance" },
-        { icon: Calendar, label: "Events", path: "/events" }
-      );
+      }
+
+      let linkObj = {
+        icon: iconMap[item.key] || LayoutDashboard,
+        label: item.label,
+        path: getPath(item.key)
+      };
+
+      if (item.children && item.children.length > 0) {
+        const validChildren = [];
+        item.children.forEach(child => {
+          if (!child.visible) return;
+
+          const action = actionMapping[child.key] || 'read';
+          const parentModule = moduleMapping[item.key];
+
+          if (parentModule && !hasPermission(user, parentModule, action)) {
+            return;
+          }
+
+          let childObj = {
+            label: child.label,
+            path: getPath(child.key)
+          };
+          if (child.key === 'EVENT_UPDATE') {
+            childObj.activePattern = "/events/edit/";
+          }
+          validChildren.push(childObj);
+        });
+
+        if (validChildren.length > 0) {
+          linkObj.children = validChildren.length > 1 ? validChildren : undefined;
+        }
+      }
+
+      links.push(linkObj);
+    });
+
+    if (roleName === 'ADMIN' || roleName === 'SUPERADMIN') {
+      links.push({ icon: Settings, label: "Settings", path: "/settings" });
     }
+
     return links;
   };
 
@@ -291,7 +345,7 @@ const Navbar = () => {
             <div className="h-10 w-10 bg-linear-to-br from-indigo-600 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/30">
               <span className="text-white font-bold text-xl">S</span>
             </div>
-            <Link to={`/${user?.role?.toLowerCase()}/dashboard`} className="flex flex-col">
+            <Link to={`/${user?.role?.name?.toLowerCase()}/dashboard`} className="flex flex-col">
               <h1 className="text-xl font-bold text-slate-800 tracking-tight hover:text-indigo-600 transition-colors">
                 SmartSMS
               </h1>
@@ -332,7 +386,7 @@ const Navbar = () => {
                     <span className="text-sm font-bold text-slate-800 truncate">
                       {user?.name}
                     </span>
-                    <span className="text-xs text-slate-500">{user?.role || 'User'}</span>
+                    <span className="text-xs text-slate-500">{user?.role?.name || user?.role || 'User'}</span>
                   </div>
                 </div>
 

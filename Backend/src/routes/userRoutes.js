@@ -7,20 +7,19 @@ const {
 } = require('../controllers/userController');
 
 const { protect } = require('../middleware/authMiddleware');
-const { authorize } = require('../middleware/roleMiddleware');
+const { authorize, requirePermission } = require('../middleware/roleMiddleware');
 
 const router = express.Router();
 
-// All routes require SUPERADMIN access
+// All routes require SUPERADMIN access OR specific USER permissions
 router.use(protect);
-router.use(authorize('SUPERADMIN'));
 
-router.get('/', getAllUsers);
+router.get('/', requirePermission('USER', 'read'), getAllUsers);
 // Route to fetch underlying Admin or Faculty profile specifically
-router.get('/:id/profile', getUserProfile);
+router.get('/:id/profile', requirePermission('USER', 'read'), getUserProfile);
 
 // Route to Toggle User Status
-router.put('/:id/status', toggleUserStatus);
-router.delete('/:id', deleteUser);
+router.put('/:id/status', requirePermission('USER', 'update'), toggleUserStatus);
+router.delete('/:id', requirePermission('USER', 'delete'), deleteUser);
 
 module.exports = router;

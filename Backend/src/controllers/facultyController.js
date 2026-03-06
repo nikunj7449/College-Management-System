@@ -1,5 +1,6 @@
 const Faculty = require('../models/faculty');
 const User = require('../models/User');
+const Role = require('../models/Role');
 const bcrypt = require('bcryptjs');
 const Remark = require('../models/Remark');
 const cloudinary = require('cloudinary').v2;
@@ -9,7 +10,7 @@ const cloudinary = require('cloudinary').v2;
 // @access  Private (Admin)
 exports.addFaculty = async (req, res, next) => {
   try {
-    const { 
+    const {
       name, facultyId, personalEmail, phone, subject, qualification, designation, salary, dob, course, branch, sem, joiningDate
     } = req.body;
     // 1. Validation
@@ -29,7 +30,7 @@ exports.addFaculty = async (req, res, next) => {
     // Login Email = facultyId@school.com
     // Login Password = faculty dob in "DD/MM/YYYY" format (e.g., "15/05/2006")
     const loginEmail = `${facultyId}@school.com`;
-    
+
     // Check if Login already exists
     const userExists = await User.findOne({ email: loginEmail });
     if (userExists) {
@@ -46,21 +47,28 @@ exports.addFaculty = async (req, res, next) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(formattedPassword, salt);
 
+    // Get Faculty Role ID
+    const facultyRole = await Role.findOne({ name: 'FACULTY' });
+    if (!facultyRole) {
+      res.status(500);
+      throw new Error('Faculty role not found in database. Please run seeding script.');
+    }
+
     const newUser = await User.create({
       name,
       email: loginEmail,
       password: hashedPassword,
-      role: 'FACULTY'
+      role: facultyRole._id
     });
     // Process Documents
     let documentsArray = [];
     if (req.files && req.files.length > 0) {
       documentsArray = req.files.map(file => ({
         name: file.originalname,
-        url: file.path, 
+        url: file.path,
         type: file.mimetype,
         publicId: file.filename
-      }));  
+      }));
     }
 
     // 3. Create Faculty Profile
@@ -88,7 +96,7 @@ exports.addFaculty = async (req, res, next) => {
       data: faculty,
       credentials: {
         loginEmail: loginEmail,
-        password: formattedPassword 
+        password: formattedPassword
       }
     });
 
@@ -114,9 +122,9 @@ exports.addBulkFaculty = async (req, res, next) => {
     const errors = [];
 
     for (const data of facultyData) {
-      let { 
-        name, facultyId, personalEmail, phone, subject, qualification, 
-        designation, salary, dob, course, branch, sem, joiningDate 
+      let {
+        name, facultyId, personalEmail, phone, subject, qualification,
+        designation, salary, dob, course, branch, sem, joiningDate
       } = data;
 
       if (!name || !facultyId || !dob || !personalEmail) {
@@ -145,21 +153,29 @@ exports.addBulkFaculty = async (req, res, next) => {
         // Password generation
         const dateParts = dob.split('-');
         if (dateParts.length !== 3) {
-             skippedCount++;
-             errors.push(`Skipped '${facultyId}' - Invalid DOB format (Use YYYY-MM-DD)`);
-             continue;
+          skippedCount++;
+          errors.push(`Skipped '${facultyId}' - Invalid DOB format (Use YYYY-MM-DD)`);
+          continue;
         }
         const formattedPassword = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
-        
+
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(formattedPassword, salt);
 
         // Create User
+        // Get Faculty Role ID
+        const facultyRole = await Role.findOne({ name: 'FACULTY' });
+        if (!facultyRole) {
+          skippedCount++;
+          errors.push(`Skipped '${facultyId}' - Faculty role not found in database`);
+          continue;
+        }
+
         const newUser = await User.create({
-          name,
+          name: name,
           email: loginEmail,
           password: hashedPassword,
-          role: 'FACULTY'
+          role: facultyRole._id
         });
 
         // Ensure arrays for subject and sem
@@ -211,7 +227,7 @@ exports.addBulkFaculty = async (req, res, next) => {
 exports.getAllFaculty = async (req, res, next) => {
   try {
     const { search, designation, branch, course, sem, subject } = req.query;
-    
+
     let query = {};
 
     // Helper to handle single value or array for $in query
@@ -236,7 +252,7 @@ exports.getAllFaculty = async (req, res, next) => {
     // 3. Search Functionality (Name or Faculty ID)
     if (search) {
       const searchTerm = search.toString().trim(); // Safety trim
-      
+
       if (searchTerm !== "") {
         query.$or = [
           { name: { $regex: searchTerm, $options: 'i' } },      // Case-insensitive Name
@@ -285,7 +301,7 @@ exports.updateFaculty = async (req, res, next) => {
         const keptPublicIds = keptDocuments.map(doc => doc.publicId).filter(id => id);
 
         // Identify documents to delete
-        const docsToDelete = faculty.documents.filter(doc => 
+        const docsToDelete = faculty.documents.filter(doc =>
           doc.publicId && !keptPublicIds.includes(doc.publicId)
         );
 

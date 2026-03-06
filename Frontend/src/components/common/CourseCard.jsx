@@ -62,13 +62,15 @@ const CourseCard = ({ course, onEdit, onDelete, onView, onManage }) => {
             )}
           </div>
           <div className="flex justify-center space-x-1.5">
-            <button
-              onClick={() => onView(course)}
-              className="p-2 text-slate-600 bg-white/50 hover:bg-slate-50/80 backdrop-blur-sm shadow-sm border border-white/60 rounded-xl transition-all w-full flex justify-center"
-              title="View Details"
-            >
-              <Eye size={16} />
-            </button>
+            {onView && (
+              <button
+                onClick={() => onView(course)}
+                className="p-2 text-slate-600 bg-white/50 hover:bg-slate-50/80 backdrop-blur-sm shadow-sm border border-white/60 rounded-xl transition-all w-full flex justify-center"
+                title="View Details"
+              >
+                <Eye size={16} />
+              </button>
+            )}
           </div>
         </div>
       </div>

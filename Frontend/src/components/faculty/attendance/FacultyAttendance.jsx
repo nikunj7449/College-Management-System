@@ -6,11 +6,20 @@ import { useStudentOperations } from '../../../hooks/admin/useStudentOperations 
 import { useAttendanceOperations } from '../../../hooks/faculty/useAttendanceOperations';
 import api from '../../../services/api';
 import CustomDropdown from '../../custom/CustomDropdown';
+import { hasPermission } from '../../../utils/permissionUtils';
 
 const FacultyAttendance = () => {
-    const { user } = useContext(AuthContext); // user contains login info, we might need to fetch full Faculty profile
+    const { user, fetchLatestRole } = useContext(AuthContext); // user contains login info, we might need to fetch full Faculty profile
     const [facultyProfile, setFacultyProfile] = useState(null);
     const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+
+    useEffect(() => {
+        if (fetchLatestRole) {
+            fetchLatestRole();
+        }
+    }, [fetchLatestRole]);
+
+    const canUpdateAttendance = user ? (hasPermission(user, 'ATTENDANCE', 'update') || hasPermission(user, 'ATTENDANCE', 'create')) : false;
 
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
     const [selectedSem, setSelectedSem] = useState('');
@@ -285,18 +294,22 @@ const FacultyAttendance = () => {
                         </div>
 
                         <div className="flex space-x-3">
-                            <button
-                                onClick={() => handleMarkAll('Present')}
-                                className="px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors"
-                            >
-                                Mark All Present
-                            </button>
-                            <button
-                                onClick={() => handleMarkAll('Absent')}
-                                className="px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors"
-                            >
-                                Mark All Absent
-                            </button>
+                            {canUpdateAttendance && (
+                                <>
+                                    <button
+                                        onClick={() => handleMarkAll('Present')}
+                                        className="px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors"
+                                    >
+                                        Mark All Present
+                                    </button>
+                                    <button
+                                        onClick={() => handleMarkAll('Absent')}
+                                        className="px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors"
+                                    >
+                                        Mark All Absent
+                                    </button>
+                                </>
+                            )}
                         </div>
                     </div>
 
@@ -324,12 +337,15 @@ const FacultyAttendance = () => {
 
                                                 {/* Present Button */}
                                                 <button
-                                                    onClick={() => handleStatusChange(student._id, 'Present')}
+                                                    onClick={() => canUpdateAttendance && handleStatusChange(student._id, 'Present')}
+                                                    disabled={!canUpdateAttendance}
                                                     className={`
                             px-4 py-2 rounded-xl border flex items-center justify-center font-medium transition-all w-28
                             ${attendanceData[student._id] === 'Present'
                                                             ? 'bg-emerald-50 border-emerald-500 text-emerald-700 shadow-sm'
-                                                            : 'bg-white border-slate-200 text-slate-500 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-600'}
+                                                            : 'bg-white border-slate-200 text-slate-500'}
+                            ${canUpdateAttendance && attendanceData[student._id] !== 'Present' ? 'hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-600 cursor-pointer' : ''}
+                            ${!canUpdateAttendance && attendanceData[student._id] !== 'Present' ? 'cursor-not-allowed opacity-60' : ''}
                           `}
                                                 >
                                                     {attendanceData[student._id] === 'Present' && <CheckCircle2 size={16} className="mr-1.5" />}
@@ -338,12 +354,15 @@ const FacultyAttendance = () => {
 
                                                 {/* Absent Button */}
                                                 <button
-                                                    onClick={() => handleStatusChange(student._id, 'Absent')}
+                                                    onClick={() => canUpdateAttendance && handleStatusChange(student._id, 'Absent')}
+                                                    disabled={!canUpdateAttendance}
                                                     className={`
                             px-4 py-2 rounded-xl border flex items-center justify-center font-medium transition-all w-28
                             ${attendanceData[student._id] === 'Absent'
                                                             ? 'bg-red-50 border-red-500 text-red-700 shadow-sm'
-                                                            : 'bg-white border-slate-200 text-slate-500 hover:border-red-300 hover:bg-red-50 hover:text-red-600'}
+                                                            : 'bg-white border-slate-200 text-slate-500'}
+                            ${canUpdateAttendance && attendanceData[student._id] !== 'Absent' ? 'hover:border-red-300 hover:bg-red-50 hover:text-red-600 cursor-pointer' : ''}
+                            ${!canUpdateAttendance && attendanceData[student._id] !== 'Absent' ? 'cursor-not-allowed opacity-60' : ''}
                           `}
                                                 >
                                                     {attendanceData[student._id] === 'Absent' && <XCircle size={16} className="mr-1.5" />}
@@ -359,27 +378,29 @@ const FacultyAttendance = () => {
                     </div>
 
                     {/* Footer Save Button */}
-                    <div className="p-6 border-t border-slate-200 bg-slate-50 flex justify-end">
-                        <button
-                            onClick={handleSaveAttendance}
-                            disabled={isAttendanceSaving}
-                            className={`
-                  px-6 py-3 rounded-xl flex items-center font-medium shadow-sm transition-all
-                  ${isAttendanceSaving
-                                    ? 'bg-indigo-400 text-white cursor-not-allowed'
-                                    : 'bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-indigo-500/30'}
-               `}
-                        >
-                            {isAttendanceSaving ? (
-                                <>Saving...</>
-                            ) : (
-                                <>
-                                    <Save size={18} className="mr-2" />
-                                    Save Attendance
-                                </>
-                            )}
-                        </button>
-                    </div>
+                    {canUpdateAttendance && (
+                        <div className="p-6 border-t border-slate-200 bg-slate-50 flex justify-end">
+                            <button
+                                onClick={handleSaveAttendance}
+                                disabled={isAttendanceSaving}
+                                className={`
+                    px-6 py-3 rounded-xl flex items-center font-medium shadow-sm transition-all
+                    ${isAttendanceSaving
+                                        ? 'bg-indigo-400 text-white cursor-not-allowed'
+                                        : 'bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-indigo-500/30'}
+                `}
+                            >
+                                {isAttendanceSaving ? (
+                                    <>Saving...</>
+                                ) : (
+                                    <>
+                                        <Save size={18} className="mr-2" />
+                                        Save Attendance
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
         </div>

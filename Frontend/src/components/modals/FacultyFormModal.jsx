@@ -3,6 +3,7 @@ import { X, Loader, UploadCloud, FileText } from 'lucide-react';
 import { toast } from 'react-toastify';
 import CustomDropdown from '../custom/CustomDropdown';
 import MultiSelectDropdown from '../custom/MultiSelectDropdown';
+import { useRoles } from '../../hooks/useRoles';
 
 const FacultyFormModal = ({
   isOpen,
@@ -20,6 +21,13 @@ const FacultyFormModal = ({
   subjectOptions
 }) => {
   const [previewImage, setPreviewImage] = useState(null);
+  const { roles, fetchRoles } = useRoles();
+
+  React.useEffect(() => {
+    if (isOpen) {
+      fetchRoles();
+    }
+  }, [isOpen, fetchRoles]);
 
   if (!isOpen) return null;
 
@@ -183,6 +191,30 @@ const FacultyFormModal = ({
                   options={designationOptions}
                   placeholder="Select Designation"
                 />
+              )}
+            </div>
+
+            {/* Role */}
+            <div className="relative z-40">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                System Role *
+              </label>
+              {isViewMode ? (
+                <div className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl min-h-11.5 flex items-center">
+                  <span className="text-slate-900">{formData.role || 'N/A'}</span>
+                </div>
+              ) : (
+                <select
+                  name="role"
+                  value={formData.role || ''}
+                  onChange={onChange}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 appearance-none bg-white font-medium"
+                >
+                  <option value="" disabled>Select Role</option>
+                  {roles.map(role => (
+                    <option key={role._id} value={role.name}>{role.name}</option>
+                  ))}
+                </select>
               )}
             </div>
 

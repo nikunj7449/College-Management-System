@@ -70,7 +70,7 @@ const Login = () => {
     const res = await login({ email, password });
 
     if (res.success) {
-      handleRedirect(res.user.role.toUpperCase());
+      handleRedirect(res.user.role.name.toUpperCase());
     }
   };
 

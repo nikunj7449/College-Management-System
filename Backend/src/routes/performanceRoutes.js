@@ -1,18 +1,30 @@
 const express = require('express');
 const router = express.Router();
-const { 
-  addPerformance, 
-  getStudentPerformance 
+const {
+  addPerformance,
+  getStudentPerformance,
+  getAllPerformance,
+  updatePerformance,
+  deletePerformance
 } = require('../controllers/performanceController');
 const { protect } = require('../middleware/authMiddleware');
-const { authorize } = require('../middleware/roleMiddleware');
+const { authorize, requirePermission } = require('../middleware/roleMiddleware');
 
 router.use(protect);
 
 // Add Marks
-router.post('/', authorize('ADMIN', 'SUPERADMIN', 'FACULTY'), addPerformance);
+router.post('/', requirePermission('PERFORMANCE', 'create'), addPerformance);
 
-// View Marks
-router.get('/student/:studentId', getStudentPerformance);
+// Get All Marks
+router.get('/', requirePermission('PERFORMANCE', 'read'), getAllPerformance);
+
+// Update Marks
+router.put('/:id', requirePermission('PERFORMANCE', 'update'), updatePerformance);
+
+// Delete Marks
+router.delete('/:id', requirePermission('PERFORMANCE', 'delete'), deletePerformance);
+
+// View Marks by Student
+router.get('/student/:studentId', requirePermission('PERFORMANCE', 'read'), getStudentPerformance);
 
 module.exports = router;

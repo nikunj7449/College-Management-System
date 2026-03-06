@@ -17,13 +17,13 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, deleteRole }) => {
           {`Are you sure you want to delete this ${deleteRole}? This action cannot be undone and will remove all associated data.`}
         </p>
         <div className="flex space-x-3">
-          <button 
+          <button
             onClick={onClose}
             className="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl text-slate-600 font-medium hover:bg-slate-50 transition-colors"
           >
             Cancel
           </button>
-          <button 
+          <button
             onClick={onConfirm}
             className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors shadow-lg shadow-red-200"
           >

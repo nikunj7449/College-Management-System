@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Search, Filter, Plus, LayoutGrid, List } from 'lucide-react';
 import { useFacultyOperations, MODAL_TYPE } from '../../../hooks/admin/useFacultyOperations';
 import {
@@ -11,6 +11,8 @@ import {
   getFilterSemOptions,
   getFilterSubjectOptions,
 } from '../../../utils/adminUtils/courseUtils';
+import { hasPermission } from '../../../utils/permissionUtils';
+import { AuthContext } from '../../../context/AuthContext';
 
 // Components
 import FacultyCard from '../../common/FacultyCard';
@@ -48,6 +50,15 @@ const AdminFaculty = ({ hideHeader = false }) => {
     openAddModal,
     closeModal,
   } = useFacultyOperations();
+
+  // User Permissions
+  const { user, fetchLatestRole } = useContext(AuthContext);
+
+  React.useEffect(() => {
+    if (fetchLatestRole) {
+      fetchLatestRole();
+    }
+  }, [fetchLatestRole]);
 
   // Pagination
   const itemsPerPage = 12;
@@ -158,13 +169,15 @@ const AdminFaculty = ({ hideHeader = false }) => {
             </div>
 
             {/* Add Faculty Button */}
-            <button
-              onClick={openAddModal}
-              className="flex items-center justify-center px-4 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
-            >
-              <Plus size={20} className="mr-2" />
-              <span className="font-medium text-sm">Add Faculty</span>
-            </button>
+            {hasPermission(user, 'FACULTY', 'create') && (
+              <button
+                onClick={openAddModal}
+                className="flex items-center justify-center px-4 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
+              >
+                <Plus size={20} className="mr-2" />
+                <span className="font-medium text-sm">Add Faculty</span>
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -233,13 +246,15 @@ const AdminFaculty = ({ hideHeader = false }) => {
             </div>
 
             {/* Add Faculty Button */}
-            <button
-              onClick={openAddModal}
-              className="flex items-center justify-center px-4 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-sm"
-            >
-              <Plus size={20} className="mr-2" />
-              <span className="font-medium text-sm">Add Faculty</span>
-            </button>
+            {hasPermission(user, 'FACULTY', 'create') && (
+              <button
+                onClick={openAddModal}
+                className="flex items-center justify-center px-4 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-sm"
+              >
+                <Plus size={20} className="mr-2" />
+                <span className="font-medium text-sm">Add Faculty</span>
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -266,8 +281,8 @@ const AdminFaculty = ({ hideHeader = false }) => {
             <FacultyCard
               key={faculty._id}
               faculty={faculty}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
+              onEdit={hasPermission(user, 'FACULTY', 'update') ? handleEdit : null}
+              onDelete={hasPermission(user, 'FACULTY', 'delete') ? handleDelete : null}
               onView={handleView}
             />
           ))}
@@ -306,8 +321,8 @@ const AdminFaculty = ({ hideHeader = false }) => {
                   <FacultyTableRow
                     key={faculty._id}
                     faculty={faculty}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
+                    onEdit={hasPermission(user, 'FACULTY', 'update') ? handleEdit : null}
+                    onDelete={hasPermission(user, 'FACULTY', 'delete') ? handleDelete : null}
                     onView={handleView}
                   />
                 ))}

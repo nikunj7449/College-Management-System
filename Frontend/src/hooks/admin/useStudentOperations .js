@@ -208,7 +208,7 @@ export const useStudentOperations = () => {
       fetchStudents();
       closeModal();
     } catch (error) {
-      toast.error('Failed to update student status');
+      toast.error(error.response?.data?.message || 'Failed to update student status');
     }
   };
 

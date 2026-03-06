@@ -53,20 +53,24 @@ const StudentTableRow = ({ student, onEdit, onDelete, onView, onToggleStatus, ro
       </td>
       <td className="px-6 py-4 text-right">
         <div className="flex justify-end space-x-2">
-          <button
-            onClick={() => onView(student)}
-            className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-            title="View Details"
-          >
-            <Eye size={16} />
-          </button>
-          <button
-            onClick={() => onEdit(student)}
-            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-            title="Edit"
-          >
-            <Edit size={16} />
-          </button>
+          {onView && (
+            <button
+              onClick={() => onView(student)}
+              className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+              title="View Details"
+            >
+              <Eye size={16} />
+            </button>
+          )}
+          {onEdit && (
+            <button
+              onClick={() => onEdit(student)}
+              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              title="Edit"
+            >
+              <Edit size={16} />
+            </button>
+          )}
           {onToggleStatus && (
             <button
               onClick={() => onToggleStatus(student)}

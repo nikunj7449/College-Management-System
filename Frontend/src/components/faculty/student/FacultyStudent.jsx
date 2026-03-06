@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Search, LayoutGrid, List } from 'lucide-react';
 import { useFacultyOperations } from '../../../hooks/faculty/useFacultyOperations';
 import { MODAL_TYPE } from '../../../hooks/admin/useStudentOperations ';
@@ -7,6 +7,7 @@ import {
     getBranchOptions,
     getSemOptions,
 } from '../../../utils/adminUtils/courseUtils';
+import { AuthContext } from '../../../context/AuthContext';
 
 import StudentCard from '../../common/StudentCard';
 import StudentTableRow from '../../common/StudentTableRow';
@@ -24,7 +25,14 @@ const FacultyStudent = () => {
         handleEdit, handleView, closeModal,
     } = useFacultyOperations();
 
-    const userRole = JSON.parse(localStorage.getItem('user')).role;
+    const { user, fetchLatestRole } = useContext(AuthContext);
+    const userRole = user?.role;
+
+    React.useEffect(() => {
+        if (fetchLatestRole) {
+            fetchLatestRole();
+        }
+    }, [fetchLatestRole]);
 
     const itemsPerPage = 12;
     const indexOfLastItem = currentPage * itemsPerPage;

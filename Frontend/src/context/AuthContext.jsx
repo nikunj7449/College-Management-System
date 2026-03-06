@@ -1,5 +1,6 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useCallback } from 'react';
 import authService from '../services/authService';
+import api from '../services/api';
 
 export const AuthContext = createContext();
 
@@ -11,11 +12,26 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [message, setMessage] = useState(null);
 
+  const fetchLatestRole = useCallback(async () => {
+    const currentUser = authService.getCurrentUser();
+    if (isAuthenticated && currentUser && currentUser.role && currentUser.role._id) {
+      try {
+        const response = await api.get(`/roles/${currentUser.role._id}`);
+        if (response.data && response.data.success) {
+          const updatedRole = response.data.data;
+          const updatedUser = { ...currentUser, role: updatedRole };
+          setUser(updatedUser);
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+        }
+      } catch (err) {
+        console.error("Failed to sync latest role permissions", err);
+      }
+    }
+  }, [isAuthenticated]);
+
   useEffect(() => {
-    // This effect simply ensures the initial state is set correctly.
-    // The main check happens with the initial state values above.
-    setLoading(false);
-  }, []);
+    fetchLatestRole().finally(() => setLoading(false));
+  }, [fetchLatestRole]);
 
   const clearError = () => setError(null);
   const clearMessage = () => setMessage(null);
@@ -62,6 +78,7 @@ export const AuthProvider = ({ children }) => {
         clearError,
         setMessage,
         clearMessage,
+        fetchLatestRole,
       }}
     >
       {!loading && children}

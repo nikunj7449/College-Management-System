@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const Admin = require('../models/Admin');
+const Role = require('../models/Role');
 const bcrypt = require('bcryptjs');
 
 // @desc    Add a new Admin
@@ -30,11 +31,18 @@ exports.addAdmin = async (req, res, next) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    const roleName = role || 'ADMIN';
+    const roleDoc = await Role.findOne({ name: roleName });
+    if (!roleDoc) {
+      res.status(400);
+      throw new Error(`Role ${roleName} not found in database. Cannot create admin.`);
+    }
+
     const newUser = await User.create({
       name,
       email,
       password: hashedPassword,
-      role: role || 'ADMIN'
+      role: roleDoc._id
     });
 
     // 2. Create Admin (Profile)
@@ -44,7 +52,7 @@ exports.addAdmin = async (req, res, next) => {
       email,
       adminId,
       phone,
-      role: role || 'ADMIN',
+      role: roleName,
       joinedDate
     });
 
@@ -86,12 +94,20 @@ exports.updateAdmin = async (req, res, next) => {
     // 1. Update User (Auth) if sensitive fields change
     const userUpdates = {};
     if (req.body.password) {
-        const salt = await bcrypt.genSalt(10);
-        userUpdates.password = await bcrypt.hash(req.body.password, salt);
+      const salt = await bcrypt.genSalt(10);
+      userUpdates.password = await bcrypt.hash(req.body.password, salt);
     }
     if (req.body.name) userUpdates.name = req.body.name;
     if (req.body.email) userUpdates.email = req.body.email;
-    if (req.body.role) userUpdates.role = req.body.role;
+    if (req.body.role) {
+      const newRoleDoc = await Role.findOne({ name: req.body.role });
+      if (newRoleDoc) {
+        userUpdates.role = newRoleDoc._id;
+      } else {
+        res.status(400);
+        throw new Error(`Role ${req.body.role} not found in database.`);
+      }
+    }
 
     if (Object.keys(userUpdates).length > 0) {
       await User.findByIdAndUpdate(admin.user, userUpdates);
@@ -122,10 +138,10 @@ exports.deleteAdmin = async (req, res, next) => {
       res.status(404);
       throw new Error('Admin not found');
     }
-    
+
     if (admin.user.toString() === req.user.id) {
-        res.status(400);
-        throw new Error('Cannot delete yourself');
+      res.status(400);
+      throw new Error('Cannot delete yourself');
     }
 
     await User.findByIdAndDelete(admin.user);

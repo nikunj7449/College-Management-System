@@ -43,13 +43,15 @@ const CourseTableRow = ({ course, onEdit, onDelete, onView, onManage }) => {
               <GitBranch size={16} />
             </button>
           )}
-          <button
-            onClick={() => onView(course)}
-            className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-            title="View Details"
-          >
-            <Eye size={16} />
-          </button>
+          {onView && (
+            <button
+              onClick={() => onView(course)}
+              className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+              title="View Details"
+            >
+              <Eye size={16} />
+            </button>
+          )}
           {onEdit && (
             <button
               onClick={() => onEdit(course)}

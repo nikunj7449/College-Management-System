@@ -1,22 +1,22 @@
 const express = require('express');
 const router = express.Router();
-const { 
-  addRemark, 
+const {
+  addRemark,
   getStudentRemarks,
   getFacultyWorkLog
 } = require('../controllers/remarkController');
 const { protect } = require('../middleware/authMiddleware');
-const { authorize } = require('../middleware/roleMiddleware');
+const { authorize, requirePermission } = require('../middleware/roleMiddleware');
 
 router.use(protect);
 
 // Create Remark
-router.post('/', authorize('FACULTY'), addRemark);
+router.post('/', requirePermission('REMARK', 'create'), addRemark);
 
 // View Remarks for a Student
-router.get('/student/:studentId', getStudentRemarks);
+router.get('/student/:studentId', requirePermission('REMARK', 'read'), getStudentRemarks);
 
 // Admin Module: View Faculty Daily Work Log
-router.get('/faculty-log/:facultyId', authorize('ADMIN', 'SUPERADMIN'), getFacultyWorkLog);
+router.get('/faculty-log/:facultyId', requirePermission('REMARK', 'read'), getFacultyWorkLog);
 
 module.exports = router;

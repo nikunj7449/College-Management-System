@@ -19,9 +19,9 @@ const userSchema = new mongoose.Schema({
     required: [true, 'Please add a password'],
   },
   role: {
-    type: String,
-    enum: ['ADMIN', 'FACULTY', 'STUDENT', 'SUPERADMIN'],
-    default: 'STUDENT',
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Role',
+    required: true
   },
   status: {
     type: String,

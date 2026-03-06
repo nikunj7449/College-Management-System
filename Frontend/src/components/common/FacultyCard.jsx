@@ -43,29 +43,35 @@ const FacultyCard = ({ faculty, onEdit, onDelete, onView }) => {
 
         <div className={`absolute right-0 top-0 bg-white/40 backdrop-blur-2xl rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] border border-white/80 p-2 flex flex-col gap-1.5 z-20 min-w-[100px] transition-all duration-300 ${showActions ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'}`}>
           <div className="flex justify-center space-x-1.5">
-            <button
-              onClick={() => onEdit(faculty)}
-              className="p-2 text-blue-600 bg-white/50 hover:bg-blue-50/80 backdrop-blur-sm shadow-sm border border-white/60 rounded-xl transition-all"
-              title="Edit"
-            >
-              <Edit size={16} />
-            </button>
-            <button
-              onClick={() => onDelete(faculty._id)}
-              className="p-2 text-red-600 bg-white/50 hover:bg-red-50/80 backdrop-blur-sm shadow-sm border border-white/60 rounded-xl transition-all"
-              title="Delete"
-            >
-              <Trash2 size={16} />
-            </button>
+            {onEdit && (
+              <button
+                onClick={() => onEdit(faculty)}
+                className="p-2 text-blue-600 bg-white/50 hover:bg-blue-50/80 backdrop-blur-sm shadow-sm border border-white/60 rounded-xl transition-all"
+                title="Edit"
+              >
+                <Edit size={16} />
+              </button>
+            )}
+            {onDelete && (
+              <button
+                onClick={() => onDelete(faculty._id)}
+                className="p-2 text-red-600 bg-white/50 hover:bg-red-50/80 backdrop-blur-sm shadow-sm border border-white/60 rounded-xl transition-all"
+                title="Delete"
+              >
+                <Trash2 size={16} />
+              </button>
+            )}
           </div>
           <div className="flex justify-center space-x-1.5">
-            <button
-              onClick={() => onView(faculty)}
-              className="p-2 text-slate-600 bg-white/50 hover:bg-slate-50/80 backdrop-blur-sm shadow-sm border border-white/60 rounded-xl transition-all w-full flex justify-center"
-              title="View Details"
-            >
-              <Eye size={16} />
-            </button>
+            {onView && (
+              <button
+                onClick={() => onView(faculty)}
+                className="p-2 text-slate-600 bg-white/50 hover:bg-slate-50/80 backdrop-blur-sm shadow-sm border border-white/60 rounded-xl transition-all w-full flex justify-center"
+                title="View Details"
+              >
+                <Eye size={16} />
+              </button>
+            )}
           </div>
         </div>
       </div>

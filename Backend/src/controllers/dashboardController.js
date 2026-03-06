@@ -4,6 +4,7 @@ const Attendance = require('../models/Attendance');
 const Remark = require('../models/Remark');
 const Course = require('../models/Course');
 const Faculty = require('../models/faculty');
+const Role = require('../models/Role');
 
 // @desc    Get Admin Dashboard Stats
 // @route   GET /api/v1/dashboard/admin/stats
@@ -11,7 +12,12 @@ const Faculty = require('../models/faculty');
 exports.getAdminStats = async (req, res, next) => {
   try {
     const totalStudents = await Student.countDocuments();
-    const totalFaculty = await User.countDocuments({ role: 'FACULTY' });
+
+    let totalFaculty = 0;
+    const facultyRole = await Role.findOne({ name: 'FACULTY' });
+    if (facultyRole) {
+      totalFaculty = await User.countDocuments({ role: facultyRole._id });
+    }
     const totalCourses = await Course.countDocuments();
 
     // Get today's attendance count (System-wide)
@@ -123,7 +129,7 @@ exports.getAdminStats = async (req, res, next) => {
         presentToday,
         attendanceData,
         recentRemarks,
-      },
+      }
     });
   } catch (error) {
     next(error);

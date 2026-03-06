@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Search, Filter, Plus, LayoutGrid, List } from 'lucide-react';
 import { useStudentOperations, MODAL_TYPE } from '../../../hooks/admin/useStudentOperations ';
 import {
@@ -8,6 +8,8 @@ import {
   getFilterBranchOptions,
   getFilterSemOptions,
 } from '../../../utils/adminUtils/courseUtils';
+import { hasPermission } from '../../../utils/permissionUtils';
+import { AuthContext } from '../../../context/AuthContext';
 
 // Import Components
 import StudentCard from '../../common/StudentCard';
@@ -31,7 +33,14 @@ const StudentList = () => {
     openAddModal, closeModal,
   } = useStudentOperations();
 
-  const userRole = JSON.parse(localStorage.getItem('user')).role;
+  const { user, fetchLatestRole } = useContext(AuthContext);
+  const userRole = user?.role;
+
+  React.useEffect(() => {
+    if (fetchLatestRole) {
+      fetchLatestRole();
+    }
+  }, [fetchLatestRole]);
 
   // Pagination
   const itemsPerPage = 12;
@@ -130,13 +139,15 @@ const StudentList = () => {
           </div>
 
           {/* Add Student Button */}
-          <button
-            onClick={openAddModal}
-            className="flex items-center justify-center px-4 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
-          >
-            <Plus size={20} className="mr-2" />
-            <span className="font-medium text-sm">Add Student</span>
-          </button>
+          {hasPermission(user, 'STUDENT', 'create') && (
+            <button
+              onClick={openAddModal}
+              className="flex items-center justify-center px-4 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
+            >
+              <Plus size={20} className="mr-2" />
+              <span className="font-medium text-sm">Add Student</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -160,10 +171,10 @@ const StudentList = () => {
             <StudentCard
               key={student._id}
               student={student}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
+              onEdit={hasPermission(user, 'STUDENT', 'update') ? handleEdit : null}
+              onDelete={hasPermission(user, 'STUDENT', 'delete') ? handleDelete : null}
               onView={handleView}
-              onToggleStatus={handleToggleStatus}
+              onToggleStatus={hasPermission(user, 'STUDENT', 'update') ? handleToggleStatus : null}
             />
           ))}
         </div>
@@ -202,10 +213,10 @@ const StudentList = () => {
                     key={student._id}
                     student={student}
                     role={userRole}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
+                    onEdit={hasPermission(user, 'STUDENT', 'update') ? handleEdit : null}
+                    onDelete={hasPermission(user, 'STUDENT', 'delete') ? handleDelete : null}
                     onView={handleView}
-                    onToggleStatus={handleToggleStatus}
+                    onToggleStatus={hasPermission(user, 'STUDENT', 'update') ? handleToggleStatus : null}
                   />
                 ))}
               </tbody>

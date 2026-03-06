@@ -67,7 +67,7 @@ exports.loginUser = async (req, res, next) => {
     }
 
     // Check for user email
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).populate('role');
 
     if (!user) {
       res.status(401);
@@ -91,7 +91,7 @@ exports.loginUser = async (req, res, next) => {
           email: user.email,
           role: user.role,
         },
-        token: generateToken(user._id, user.role),
+        token: generateToken(user._id, user.role.name),
       });
     } else {
       res.status(401);
@@ -107,8 +107,8 @@ exports.loginUser = async (req, res, next) => {
 // @route   GET /api/v1/auth/me
 exports.getProfile = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user.id).select('-password');
-    
+    const user = await User.findById(req.user.id).select('-password').populate('role');
+
     if (!user) {
       res.status(404);
       throw new Error('User not found');

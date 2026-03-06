@@ -9,19 +9,22 @@ const {
 
 // You can add your authentication middleware here if needed
 const { protect } = require('../middleware/authMiddleware');
+const { requirePermission } = require('../middleware/roleMiddleware');
 const upload = require('../middleware/uploadMiddleware');
 
 const router = express.Router();
 
+router.use(protect);
+
 router
     .route('/')
-    .get(getAllEvents)
-    .post(protect, upload.single('imageURL'), createEvent); // Only logged in users can create
+    .get(requirePermission('EVENT', 'read'), getAllEvents)
+    .post(requirePermission('EVENT', 'create'), upload.single('imageURL'), createEvent);
 
 router
     .route('/:id')
-    .get(getEventById)
-    .put(protect, upload.single('imageURL'), updateEvent) // Only logged in users can update
-    .delete(protect, deleteEvent); // Only logged in users can delete
+    .get(requirePermission('EVENT', 'read'), getEventById)
+    .put(requirePermission('EVENT', 'update'), upload.single('imageURL'), updateEvent)
+    .delete(requirePermission('EVENT', 'delete'), deleteEvent);
 
 module.exports = router;
