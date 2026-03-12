@@ -100,6 +100,11 @@ const Login = () => {
                 </button>
               </div>
               {formErrors.password && <p className="text-red-500 text-xs mt-1">{formErrors.password}</p>}
+              <div className="flex items-center justify-end mt-1">
+                <Link to="/forgot-password" disable={loading} className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
+                  Forgot Password?
+                </Link>
+              </div>
             </div>
           </div>
 

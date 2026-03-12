@@ -49,11 +49,11 @@ export const useAttendanceOperations = () => {
     };
 
     // Get attendance records for an entire class on a specific date
-    const getClassAttendance = async (date, course, sem) => {
+    const getClassAttendance = async (date, course, sem, subject) => {
         try {
             setLoading(true);
             const response = await api.get('/attendance/history', {
-                params: { date, course, sem }
+                params: { date, course, sem, subject }
             });
             return response.data;
         } catch (error) {

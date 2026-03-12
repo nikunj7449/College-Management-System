@@ -11,7 +11,8 @@ const {
     deleteSubject,
     addBulkCourses,
     updateBranch,
-    updateSubject
+    updateSubject,
+    getMyCourses
 } = require('../controllers/courseController');
 
 const { protect } = require('../middleware/authMiddleware');
@@ -23,6 +24,9 @@ const router = express.Router();
 router.use(protect);
 
 // 1. Course Routes (Base)
+router.route('/my-courses')
+    .get(requirePermission('COURSE', 'read'), getMyCourses);
+
 router.route('/')
     .post(requirePermission('COURSE', 'create'), addCourse)
     .get(requirePermission('COURSE', 'read'), getAllCourses);

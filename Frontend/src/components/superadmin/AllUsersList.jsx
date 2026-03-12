@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import { Search, Filter, Mail, Phone, Calendar, Shield, Edit2, Eye, Loader2, Trash2, Power, UserPlus, User } from 'lucide-react';
 import { toast } from 'react-toastify';
-import Pagination from '../common/Pagination';
+import Pagination from '../common/core/Pagination';
 import api from '../../services/api';
 import CustomDropdown from '../custom/CustomDropdown';
 import AdminModal from '../modals/AdminModal';
@@ -112,6 +112,7 @@ const AllUsersList = () => {
             if (roleFilter !== 'ALL') params.append('role', roleFilter);
             if (statusFilter !== 'ALL') params.append('status', statusFilter);
             if (searchTerm) params.append('search', searchTerm);
+            console.log(params.toString());
 
             const response = await api.get(`/users?${params.toString()}`);
             setUsers(response.data.data || []);

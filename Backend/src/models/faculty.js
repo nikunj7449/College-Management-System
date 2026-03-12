@@ -25,7 +25,7 @@ const facultySchema = new mongoose.Schema({
     required: [true, 'Personal Email is required'], // contact email
     unique: true
   },
-   personalEmail: {
+  personalEmail: {
     type: String,
     required: [true, 'Personal Email is required'], // Personal contact email
   },

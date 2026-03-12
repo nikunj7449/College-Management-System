@@ -8,9 +8,11 @@ const CustomDropdown = ({
   name,
   placeholder,
   disabled,
-  renderLabel // optional function to customize displayed label
+  renderLabel, // optional function to customize displayed label
+  searchable = false
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -29,6 +31,7 @@ const CustomDropdown = ({
     const selectedValue = typeof option === 'object' && option !== null && 'value' in option ? option.value : option;
     onChange({ target: { name, value: selectedValue } });
     setIsOpen(false);
+    setSearchTerm('');
   };
 
   // Helper to get display label for the currently selected value
@@ -63,23 +66,53 @@ const CustomDropdown = ({
       </button>
 
       {isOpen && !disabled && (
-        <div className="absolute z-20 mt-1 w-full bg-white border border-slate-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
-          {options.map((opt, idx) => {
-            const isObj = typeof opt === 'object' && opt !== null;
-            const optValue = isObj && 'value' in opt ? opt.value : opt;
-            const optLabel = isObj && 'label' in opt ? opt.label : opt;
-            const displayLabel = renderLabel ? renderLabel(opt) : optLabel;
+        <div className="absolute z-20 mt-1 w-full bg-white border border-slate-200 rounded-xl shadow-lg max-h-60 flex flex-col overflow-hidden">
+          {searchable && (
+            <div className="p-2 border-b border-slate-100 bg-white">
+              <input
+                type="text"
+                autoFocus
+                className="w-full px-3 py-1.5 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+          )}
+          <div className="overflow-y-auto">
+            {options.filter(opt => {
+              if (!searchable || !searchTerm) return true;
+              const isObj = typeof opt === 'object' && opt !== null;
+              const optLabel = isObj && 'label' in opt ? opt.label : opt;
+              const displayLabel = renderLabel ? renderLabel(opt) : optLabel;
+              return String(displayLabel).toLowerCase().includes(searchTerm.toLowerCase());
+            }).map((opt, idx) => {
+              const isObj = typeof opt === 'object' && opt !== null;
+              const optValue = isObj && 'value' in opt ? opt.value : opt;
+              const optLabel = isObj && 'label' in opt ? opt.label : opt;
+              const displayLabel = renderLabel ? renderLabel(opt) : optLabel;
 
-            return (
-              <div
-                key={optValue || idx}
-                onClick={() => handleSelect(opt)}
-                className="px-4 py-2.5 hover:bg-indigo-50 text-slate-700 cursor-pointer text-sm transition-colors border-b border-slate-50 last:border-0"
-              >
-                {displayLabel}
-              </div>
-            );
-          })}
+              return (
+                <div
+                  key={optValue || idx}
+                  onClick={() => handleSelect(opt)}
+                  className="px-4 py-2.5 hover:bg-indigo-50 text-slate-700 cursor-pointer text-sm transition-colors border-b border-slate-50 last:border-0"
+                >
+                  {displayLabel}
+                </div>
+              );
+            })}
+            {options.filter(opt => {
+              if (!searchable || !searchTerm) return true;
+              const isObj = typeof opt === 'object' && opt !== null;
+              const optLabel = isObj && 'label' in opt ? opt.label : opt;
+              const displayLabel = renderLabel ? renderLabel(opt) : optLabel;
+              return String(displayLabel).toLowerCase().includes(searchTerm.toLowerCase());
+            }).length === 0 && (
+                <div className="px-4 py-3 text-sm text-slate-500 text-center">No results found</div>
+              )}
+          </div>
         </div>
       )}
     </div>

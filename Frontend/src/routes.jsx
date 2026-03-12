@@ -1,8 +1,8 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
-import ProtectedRoute from './components/common/ProtectedRoute';
-import Navbar from './components/common/Navbar';
-import Footer from './components/common/Footer';
+import ProtectedRoute from './components/common/core/ProtectedRoute';
+import Navbar from './components/common/core/Navbar';
+import Footer from './components/common/core/Footer';
 
 import AdminDashboard from './components/admin/dashboard/AdminDashboard';
 import AdminStudent from './components/admin/student/AdminStudent';
@@ -15,14 +15,24 @@ import ModulesManagement from './components/superadmin/ModulesManagement';
 import EventsManager from './components/admin/event/EventsManager';
 import AddEvent from './components/admin/event/AddEvent';
 import EditEvent from './components/admin/event/EditEvent';
+import ExamManager from './components/admin/exam/ExamManager';
 import FacultyDashboard from './components/faculty/dashboard/FacultyDashboard';
 import FacultyStudent from './components/faculty/student/FacultyStudent';
 import FacultyCourse from './components/faculty/course/FacultyCourse';
 import FacultyAttendance from './components/faculty/attendance/FacultyAttendance';
 import FacultyPerformance from './components/faculty/performance/FacultyPerformance';
+import RemarksManager from './components/common/remark/RemarksManager';
+import StudentDashboard from './components/student/dashboard/StudentDashboard';
+import StudentCourse from './components/student/course/StudentCourse';
+import StudentFaculty from './components/student/faculty/StudentFaculty';
+import StudentAttendance from './components/student/attendance/StudentAttendance';
+import StudentExams from './components/student/exams/StudentExams';
+import StudentEvents from './components/student/events/StudentEvents';
+import StudentProfile from './components/student/profile/StudentProfile';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 // Placeholder components
-const StudentDashboard = () => <div className="p-4 text-xl">Student Dashboard</div>;
 const Unauthorized = () => <div className="p-4 text-xl text-red-500">403 - You are not authorized to view this page.</div>;
 const NotFound = () => <div className="p-4 text-xl">404 - Page Not Found</div>;
 
@@ -34,6 +44,8 @@ const AppRoutes = () => {
         <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
 
           {/* Protected Routes */}
@@ -44,52 +56,78 @@ const AppRoutes = () => {
             <ProtectedRoute roles={['SUPERADMIN']}><AdminDashboard /></ProtectedRoute>
           } />
           <Route path="/students" element={
-            <ProtectedRoute roles={['ADMIN', 'FACULTY', 'SUPERADMIN']}><AdminStudent /></ProtectedRoute>
+            <ProtectedRoute requireModule="STUDENT" requireAction="read"><AdminStudent /></ProtectedRoute>
           } />
           <Route path="/courses" element={
-            <ProtectedRoute roles={['ADMIN', 'SUPERADMIN']}><AdminCourse /></ProtectedRoute>
+            <ProtectedRoute requireModule="COURSE" requireAction="read"><AdminCourse /></ProtectedRoute>
           } />
           <Route path="/facultys" element={
-            <ProtectedRoute roles={['ADMIN']}><AdminFaculty /></ProtectedRoute>
+            <ProtectedRoute requireModule="FACULTY" requireAction="read"><AdminFaculty /></ProtectedRoute>
           } />
           <Route path="/admins" element={
             <ProtectedRoute roles={[]}><AdminManagement /></ProtectedRoute> // Kept for reference, but superadmins use user-management
           } />
           <Route path="/user-management" element={
-            <ProtectedRoute roles={['SUPERADMIN']}><SuperadminUserManagement /></ProtectedRoute>
+            <ProtectedRoute requireModule="USER" requireAction="read"><SuperadminUserManagement /></ProtectedRoute>
           } />
           <Route path="/superadmin/roles" element={
-            <ProtectedRoute roles={['SUPERADMIN']}><RolesManagement /></ProtectedRoute>
+            <ProtectedRoute requireModule="ROLE" requireAction="read"><RolesManagement /></ProtectedRoute>
           } />
           <Route path="/superadmin/modules" element={
             <ProtectedRoute roles={['SUPERADMIN']}><ModulesManagement /></ProtectedRoute>
           } />
+          <Route path="/exams" element={
+            <ProtectedRoute requireModule="EXAM" requireAction="read"><ExamManager /></ProtectedRoute>
+          } />
           <Route path="/events/add" element={
-            <ProtectedRoute roles={['ADMIN', 'SUPERADMIN', 'FACULTY']}><AddEvent /></ProtectedRoute>
+            <ProtectedRoute requireModule="EVENT" requireAction="create"><AddEvent /></ProtectedRoute>
           } />
           <Route path="/events/edit/:id" element={
-            <ProtectedRoute roles={['ADMIN', 'SUPERADMIN', 'FACULTY']}><EditEvent /></ProtectedRoute>
+            <ProtectedRoute requireModule="EVENT" requireAction="update"><EditEvent /></ProtectedRoute>
           } />
           <Route path="/events" element={
-            <ProtectedRoute roles={['ADMIN', 'SUPERADMIN', 'FACULTY']}><EventsManager /></ProtectedRoute>
+            <ProtectedRoute requireModule="EVENT" requireAction="read"><EventsManager /></ProtectedRoute>
           } />
           <Route path="/faculty/dashboard" element={
             <ProtectedRoute roles={['FACULTY']}><FacultyDashboard /></ProtectedRoute>
           } />
           <Route path="/faculty/students" element={
-            <ProtectedRoute roles={['FACULTY']}><FacultyStudent /></ProtectedRoute>
+            <ProtectedRoute requireModule="STUDENT" requireAction="read"><FacultyStudent /></ProtectedRoute>
           } />
           <Route path="/faculty/courses" element={
-            <ProtectedRoute roles={['FACULTY']}><FacultyCourse /></ProtectedRoute>
+            <ProtectedRoute requireModule="COURSE" requireAction="read"><FacultyCourse /></ProtectedRoute>
           } />
           <Route path="/faculty/attendance" element={
-            <ProtectedRoute roles={['FACULTY']}><FacultyAttendance /></ProtectedRoute>
+            <ProtectedRoute requireModule="ATTENDANCE" requireAction="read"><FacultyAttendance /></ProtectedRoute>
           } />
           <Route path="/performance" element={
-            <ProtectedRoute roles={['FACULTY']}><FacultyPerformance /></ProtectedRoute>
+            <ProtectedRoute requireModule="PERFORMANCE" requireAction="read"><FacultyPerformance /></ProtectedRoute>
           } />
+          <Route path="/remarks" element={
+            <ProtectedRoute requireModule="REMARK" requireAction="read"><RemarksManager /></ProtectedRoute>
+          } />
+          
+          {/* Student Dedicated Routes */}
           <Route path="/student/dashboard" element={
             <ProtectedRoute roles={['STUDENT']}><StudentDashboard /></ProtectedRoute>
+          } />
+          <Route path="/student/courses" element={
+            <ProtectedRoute roles={['STUDENT']}><StudentCourse /></ProtectedRoute>
+          } />
+          <Route path="/student/faculties" element={
+            <ProtectedRoute roles={['STUDENT']}><StudentFaculty /></ProtectedRoute>
+          } />
+          <Route path="/student/attendance" element={
+            <ProtectedRoute roles={['STUDENT']}><StudentAttendance /></ProtectedRoute>
+          } />
+          <Route path="/student/exams" element={
+            <ProtectedRoute roles={['STUDENT']}><StudentExams /></ProtectedRoute>
+          } />
+          <Route path="/student/events" element={
+            <ProtectedRoute roles={['STUDENT']}><StudentEvents /></ProtectedRoute>
+          } />
+          <Route path="/student/profile" element={
+            <ProtectedRoute roles={['STUDENT']}><StudentProfile /></ProtectedRoute>
           } />
 
           {/* Default Redirect */}

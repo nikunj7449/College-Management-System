@@ -7,7 +7,9 @@ const {
   updateStudent,
   deleteStudent,
   addBulkStudents,
-  generateDummyStudents
+  generateDummyStudents,
+  getMyProfile,
+  updateMyProfile
 } = require('../controllers/studentController');
 const { protect } = require('../middleware/authMiddleware');
 const { authorize, requirePermission } = require('../middleware/roleMiddleware');
@@ -30,6 +32,10 @@ router.route('/bulk')
 
 router.route('/generate')
   .post(requirePermission('STUDENT', 'create'), generateDummyStudents);
+
+router.route('/my-profile')
+  .get(getMyProfile)
+  .put(upload.array('documents', 3), updateMyProfile);
 
 router.route('/:id')
   .get(requirePermission('STUDENT', 'read'), getStudentById)

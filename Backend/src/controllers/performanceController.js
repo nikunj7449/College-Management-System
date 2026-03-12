@@ -1,27 +1,32 @@
 const Performance = require('../models/Performance');
+const Student = require('../models/Student');
 
 // @desc    Add Exam Marks
 // @route   POST /api/v1/performance
 // @access  Private (Faculty/Admin)
 exports.addPerformance = async (req, res, next) => {
   try {
-    const { studentId, examName, subjects, grade, feedback } = req.body;
+    const { studentId, exam, subjects, grade, feedback } = req.body;
 
-    if (!studentId || !examName || !subjects) {
+    if (!studentId || !exam || !subjects) {
       res.status(400);
       throw new Error('Please provide all performance details');
     }
 
     const performance = await Performance.create({
       student: studentId,
-      examName,
+      exam,
+      faculty: req.user.id,
       subjects,
       grade,
       feedback
     });
 
     // Populate before returning so frontend has the data without re-fetching
-    await performance.populate('student', 'name rollNum studentId');
+    await performance.populate([
+      { path: 'student', select: 'name rollNum studentId' },
+      { path: 'exam', select: 'name date type' }
+    ]);
 
     res.status(201).json({
       success: true,
@@ -38,7 +43,8 @@ exports.addPerformance = async (req, res, next) => {
 // @access  Private
 exports.getStudentPerformance = async (req, res, next) => {
   try {
-    const records = await Performance.find({ student: req.params.studentId });
+    const records = await Performance.find({ student: req.params.studentId })
+      .populate('exam', 'name date type');
 
     res.status(200).json({
       success: true,
@@ -55,7 +61,18 @@ exports.getStudentPerformance = async (req, res, next) => {
 // @access  Private (Faculty/Admin)
 exports.getAllPerformance = async (req, res, next) => {
   try {
-    const records = await Performance.find().populate('student', 'name rollNum studentId');
+    const roleName = req.user.role?.name || req.user.role;
+    let query = {};
+
+    // If not SUPERADMIN or ADMIN, restrict to performance created by this faculty
+    if (roleName !== 'SUPERADMIN' && roleName !== 'ADMIN') {
+      query.faculty = req.user.id;
+    }
+
+    const records = await Performance.find(query)
+      .populate('student', 'name rollNum studentId')
+      .populate('exam', 'name date type')
+      .populate('faculty', 'name email');
 
     res.status(200).json({
       success: true,
@@ -72,7 +89,7 @@ exports.getAllPerformance = async (req, res, next) => {
 // @access  Private (Faculty/Admin)
 exports.updatePerformance = async (req, res, next) => {
   try {
-    const { studentId, examName, subjects, grade, feedback } = req.body;
+    const { studentId, exam, subjects, grade, feedback } = req.body;
 
     let performance = await Performance.findById(req.params.id);
 
@@ -83,9 +100,11 @@ exports.updatePerformance = async (req, res, next) => {
 
     performance = await Performance.findByIdAndUpdate(
       req.params.id,
-      { student: studentId, examName, subjects, grade, feedback },
+      { student: studentId, exam, subjects, grade, feedback },
       { new: true, runValidators: true }
-    ).populate('student', 'name rollNum studentId');
+    )
+      .populate('student', 'name rollNum studentId')
+      .populate('exam', 'name date type');
 
     res.status(200).json({
       success: true,
@@ -114,6 +133,35 @@ exports.deletePerformance = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: 'Performance deleted successfully',
+    });
+  } catch (error) {
+    require('console').log('delete error', error);
+    next(error);
+  }
+};
+
+// @desc    Get My Performance (Student Only)
+// @route   GET /api/v1/performance/my-performance
+// @access  Private (Student)
+exports.getMyPerformance = async (req, res, next) => {
+  try {
+    const studentUser = req.user.id;
+    
+    // 1. Get student profile
+    const student = await Student.findOne({ user: studentUser });
+    if (!student) {
+      return res.status(404).json({ success: false, message: 'Student profile not found' });
+    }
+
+    // 2. Fetch all performance records for this student
+    const records = await Performance.find({ student: student._id })
+      .populate('exam', 'name date type')
+      .populate('faculty', 'name');
+
+    res.status(200).json({
+      success: true,
+      count: records.length,
+      data: records
     });
   } catch (error) {
     next(error);

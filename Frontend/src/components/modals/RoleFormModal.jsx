@@ -6,19 +6,23 @@ const defaultSidebarConfig = [
     { key: 'DASHBOARD', label: 'Dashboard', visible: true, order: 1, children: [] },
     { key: 'STUDENT', label: 'Students', visible: true, order: 2, children: [] },
     { key: 'FACULTY', label: 'Faculty', visible: true, order: 3, children: [] },
-    { key: 'USER_MANAGEMENT', label: 'User Management', visible: true, order: 4, children: [] },
-    { key: 'ROLES_PERMISSIONS', label: 'Roles & Permissions', visible: true, order: 5, children: [] },
-    { key: 'SYSTEM_MODULES', label: 'System Modules', visible: true, order: 6, children: [] },
-    { key: 'COURSE', label: 'Courses', visible: true, order: 7, children: [] },
-    { key: 'ATTENDANCE', label: 'Attendance', visible: true, order: 8, children: [] },
-    { key: 'PERFORMANCE', label: 'Performance', visible: true, order: 9, children: [] },
+    { key: 'USER_MANAGEMENT', label: 'User Management', visible: true, order: 4, children: [
+        { key: 'USER_LIST', label: 'All Users', visible: true },
+        { key: 'ROLES_PERMISSIONS', label: 'Roles & Permissions', visible: true },
+        { key: 'SYSTEM_MODULES', label: 'System Modules', visible: true }
+    ] },
+    { key: 'COURSE', label: 'Courses', visible: true, order: 5, children: [] },
+    { key: 'ATTENDANCE', label: 'Attendance', visible: true, order: 6, children: [] },
+    { key: 'PERFORMANCE', label: 'Performance', visible: true, order: 7, children: [] },
     {
-        key: 'EVENT', label: 'Events', visible: true, order: 10, children: [
+        key: 'EVENT', label: 'Events', visible: true, order: 8, children: [
             { key: 'EVENT_VIEW', label: 'View All Events', visible: true },
             { key: 'EVENT_CREATE', label: 'Add Event', visible: true },
             { key: 'EVENT_UPDATE', label: 'Edit Event', visible: true }
         ]
-    }
+    },
+    { key: 'EXAMS', label: 'Exams', visible: true, order: 9, children: [] },
+    { key: 'REMARKS', label: 'Remarks', visible: true, order: 10, children: [] }
 ];
 
 const PermissionRow = React.memo(({ module, idx, canCreate, canRead, canUpdate, canDelete, isEdit, isRoleSystem, roleName, onChange }) => {
@@ -35,7 +39,7 @@ const PermissionRow = React.memo(({ module, idx, canCreate, canRead, canUpdate, 
                 {module}
             </td>
             {actions.map(({ name: action, isChecked }) => {
-                const isDisabled = isEdit && isRoleSystem && roleName === 'SUPERADMIN';
+                const isDisabled = false; // Allow SUPERADMIN to be edited
                 return (
                     <td key={action} className="p-3 border-b border-slate-200 text-center">
                         <label className="inline-flex items-center cursor-pointer">
@@ -363,7 +367,7 @@ const RoleFormModal = ({ isOpen, onClose, role, onSuccess }) => {
                     <button
                         type="submit"
                         form="roleForm"
-                        disabled={loading || (isEdit && role?.isSystem && role?.name === 'SUPERADMIN')} // Lock SUPERADMIN editing
+                        disabled={loading} // Allow editing of SUPERADMIN
                         className="px-5 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {loading && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>}

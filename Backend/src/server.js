@@ -26,7 +26,7 @@ connectDB().then(async () => {
   const systemModulesList = [
     'STUDENT', 'FACULTY', 'ADMIN', 'COURSE',
     'ATTENDANCE', 'EVENT', 'PERFORMANCE',
-    'REMARK', 'USER', 'ROLE'
+    'REMARK', 'USER', 'ROLE', 'EXAM'
   ];
 
   try {
@@ -51,19 +51,23 @@ connectDB().then(async () => {
       { key: 'DASHBOARD', label: 'Dashboard', visible: true, order: 1, children: [] },
       { key: 'STUDENT', label: 'Students', visible: true, order: 2, children: [] },
       { key: 'FACULTY', label: 'Faculty', visible: true, order: 3, children: [] },
-      { key: 'USER_MANAGEMENT', label: 'User Management', visible: true, order: 4, children: [] },
-      { key: 'ROLES_PERMISSIONS', label: 'Roles & Permissions', visible: true, order: 5, children: [] },
-      { key: 'SYSTEM_MODULES', label: 'System Modules', visible: true, order: 6, children: [] },
-      { key: 'COURSE', label: 'Courses', visible: true, order: 7, children: [] },
-      { key: 'ATTENDANCE', label: 'Attendance', visible: true, order: 8, children: [] },
-      { key: 'PERFORMANCE', label: 'Performance', visible: true, order: 9, children: [] },
+      { key: 'USER_MANAGEMENT', label: 'User Management', visible: true, order: 4, children: [
+          { key: 'USER_LIST', label: 'All Users', visible: true },
+          { key: 'ROLES_PERMISSIONS', label: 'Roles & Permissions', visible: true },
+          { key: 'SYSTEM_MODULES', label: 'System Modules', visible: true }
+      ] },
+      { key: 'COURSE', label: 'Courses', visible: true, order: 5, children: [] },
+      { key: 'ATTENDANCE', label: 'Attendance', visible: true, order: 6, children: [] },
+      { key: 'PERFORMANCE', label: 'Performance', visible: true, order: 7, children: [] },
       {
-        key: 'EVENT', label: 'Events', visible: true, order: 10, children: [
+        key: 'EVENT', label: 'Events', visible: true, order: 8, children: [
           { key: 'EVENT_VIEW', label: 'View All Events', visible: true },
           { key: 'EVENT_CREATE', label: 'Add Event', visible: true },
           { key: 'EVENT_UPDATE', label: 'Edit Event', visible: true }
         ]
-      }
+      },
+      { key: 'EXAMS', label: 'Exams', visible: true, order: 9, children: [] },
+      { key: 'REMARKS', label: 'Remarks', visible: true, order: 10, children: [] }
     ];
 
     const systemRoles = ['SUPERADMIN', 'ADMIN', 'FACULTY', 'STUDENT'];

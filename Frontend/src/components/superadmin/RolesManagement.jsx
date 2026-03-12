@@ -3,8 +3,8 @@ import { useRoles } from '../../hooks/useRoles';
 import { Plus, Shield } from 'lucide-react';
 import RoleFormModal from '../modals/RoleFormModal';
 import DeleteConfirmModal from '../modals/DeleteConfirmModal';
-import RoleCard from '../common/RoleCard';
-import RoleCardSkeleton from '../common/RoleCardSkeleton';
+import RoleCard from '../common/role/RoleCard';
+import RoleCardSkeleton from '../common/role/RoleCardSkeleton';
 
 const RolesManagement = () => {
     const { roles, loading, fetchRoles, deleteRole } = useRoles();

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
     Users, BookOpen, Clock, FileText,
-    CalendarCheck, UserCheck, AlertCircle, Loader2
+    CalendarCheck, UserCheck, AlertCircle, Loader2, ArrowRight
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../../../services/api';
 
@@ -135,29 +136,41 @@ const FacultyDashboard = () => {
                     </div>
 
                     {stats.recentRemarks && stats.recentRemarks.length > 0 ? (
-                        <div className="space-y-4">
-                            {stats.recentRemarks.map((remark, idx) => (
-                                <div key={idx} className="flex items-start p-4 bg-slate-50 rounded-xl border border-slate-100">
-                                    <div className="h-10 w-10 shrink-0 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center font-bold mr-4">
-                                        {remark.student?.name?.charAt(0) || '?'}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex justify-between items-start mb-1">
-                                            <p className="font-semibold text-slate-800 truncate">
-                                                {remark.student?.name || 'Unknown Student'}
-                                            </p>
-                                            <span className="text-xs text-slate-400 whitespace-nowrap ml-2">
-                                                {new Date(remark.date).toLocaleDateString()}
-                                            </span>
+                        <>
+                            <div className="space-y-4">
+                                {stats.recentRemarks.slice(0, 3).map((remark, idx) => (
+                                    <div key={idx} className="flex items-start p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                        <div className="h-10 w-10 shrink-0 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center font-bold mr-4">
+                                            {remark.student?.name?.charAt(0) || '?'}
                                         </div>
-                                        <p className="text-xs text-slate-500 mb-2">Roll No: {remark.student?.rollNum || 'N/A'}</p>
-                                        <p className="text-sm text-slate-600 bg-white p-3 rounded-lg border border-slate-200 line-clamp-2">
-                                            {remark.comment}
-                                        </p>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex justify-between items-start mb-1">
+                                                <p className="font-semibold text-slate-800 truncate">
+                                                    {remark.student?.name || 'Unknown Student'}
+                                                </p>
+                                                <span className="text-xs text-slate-400 whitespace-nowrap ml-2">
+                                                    {new Date(remark.date).toLocaleDateString()}
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-slate-500 mb-2">Roll No: {remark.student?.rollNum || 'N/A'}</p>
+                                            <p className="text-sm text-slate-600 bg-white p-3 rounded-lg border border-slate-200 line-clamp-2">
+                                                {remark.comment}
+                                            </p>
+                                        </div>
                                     </div>
+                                ))}
+                            </div>
+                            {stats.recentRemarks.length > 3 && (
+                                <div className="mt-6 pt-4 border-t border-slate-100">
+                                    <Link 
+                                        to="/remarks" 
+                                        className="flex items-center justify-center w-full gap-2 px-4 py-2.5 text-sm font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-colors"
+                                    >
+                                        View All Remarks <ArrowRight size={16} />
+                                    </Link>
                                 </div>
-                            ))}
-                        </div>
+                            )}
+                        </>
                     ) : (
                         <div className="flex flex-col items-center justify-center p-8 bg-slate-50 rounded-xl border border-slate-100 text-center">
                             <AlertCircle className="text-slate-400 mb-3" size={32} />

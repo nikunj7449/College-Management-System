@@ -21,7 +21,7 @@ const studentSchema = new mongoose.Schema({
     required: [true, 'Student name is required'],
     trim: true
   },
-  studentId: {  
+  studentId: {
     type: String,
     required: [true, 'Student ID is required'],
     unique: true,
@@ -81,7 +81,7 @@ const studentSchema = new mongoose.Schema({
 });
 
 // Calculate age automatically
-studentSchema.virtual('age').get(function() {
+studentSchema.virtual('age').get(function () {
   if (!this.dob) return undefined;
   const today = new Date();
   const birthDate = new Date(this.dob);

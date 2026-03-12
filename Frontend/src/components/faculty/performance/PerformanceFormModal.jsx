@@ -2,23 +2,39 @@ import React, { useState, useEffect } from 'react';
 import { X, Plus, Trash2, Save } from 'lucide-react';
 import { toast } from 'react-toastify';
 import performanceService from '../../../services/performanceService';
+import examService from '../../../services/examService';
 import CustomDropdown from '../../custom/CustomDropdown';
 
 const PerformanceFormModal = ({ isOpen, onClose, initialData, isEdit, students, onSave }) => {
     const [formData, setFormData] = useState({
         studentId: '',
-        examName: '',
+        exam: '',
         subjects: [{ subjectName: '', marksObtained: '', totalMarks: '' }],
         grade: '',
         feedback: ''
     });
     const [loading, setLoading] = useState(false);
+    const [exams, setExams] = useState([]);
+
+    useEffect(() => {
+        const fetchExams = async () => {
+            try {
+                const response = await examService.getExams();
+                if (response.success) {
+                    setExams(response.data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch exams", error);
+            }
+        };
+        fetchExams();
+    }, []);
 
     useEffect(() => {
         if (isEdit && initialData) {
             setFormData({
                 studentId: initialData.student?._id || initialData.student,
-                examName: initialData.examName || '',
+                exam: initialData.exam?._id || initialData.exam || '',
                 subjects: initialData.subjects?.length > 0 ? initialData.subjects : [{ subjectName: '', marksObtained: '', totalMarks: '' }],
                 grade: initialData.grade || '',
                 feedback: initialData.feedback || ''
@@ -70,8 +86,8 @@ const PerformanceFormModal = ({ isOpen, onClose, initialData, isEdit, students, 
             setLoading(true);
 
             // Validate
-            if (!formData.studentId || !formData.examName) {
-                toast.error("Student and Exam Name are required!");
+            if (!formData.studentId || !formData.exam) {
+                toast.error("Student and Exam are required!");
                 setLoading(false);
                 return;
             }
@@ -151,17 +167,21 @@ const PerformanceFormModal = ({ isOpen, onClose, initialData, isEdit, students, 
                                         };
                                     })}
                                     placeholder="-- Select Student --"
+                                    searchable={true}
                                 />
                             </div>
                             <div>
                                 <label className="block text-sm font-semibold text-slate-700 mb-1.5">Exam Name <span className="text-red-500">*</span></label>
-                                <input
-                                    type="text"
-                                    placeholder="e.g. Mid Term 2026"
-                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-                                    value={formData.examName}
-                                    onChange={(e) => setFormData({ ...formData, examName: e.target.value })}
-                                    required
+                                <CustomDropdown
+                                    name="exam"
+                                    value={formData.exam}
+                                    onChange={(e) => setFormData({ ...formData, exam: e.target.value })}
+                                    options={exams.map(e => ({
+                                        label: `${e.name} (${e.type})`,
+                                        value: e._id
+                                    }))}
+                                    placeholder="-- Select Exam --"
+                                    searchable={true}
                                 />
                             </div>
                         </div>

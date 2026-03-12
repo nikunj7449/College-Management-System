@@ -1,0 +1,370 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to College Management System</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap');
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'DM Sans', 'Segoe UI', Tahoma, sans-serif;
+      line-height: 1.65;
+      color: #1a1f36;
+      background-color: #eef2f7;
+      margin: 0;
+      padding: 0;
+    }
+
+    .wrapper {
+      padding: 48px 16px;
+    }
+
+    .container {
+      max-width: 580px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(15, 23, 42, 0.10);
+    }
+
+    /* ── Header ── */
+    .header {
+      background: #0f1c3f;
+      padding: 40px 44px 36px;
+      text-align: center;
+      position: relative;
+    }
+
+    .header::after {
+      content: '';
+      display: block;
+      height: 3px;
+      background: linear-gradient(90deg, #2563eb 0%, #7c3aed 50%, #2563eb 100%);
+    }
+
+    .logo-wrap {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 14px;
+      padding: 12px 16px;
+      margin-bottom: 18px;
+    }
+
+    .logo-wrap img {
+      height: 40px;
+      width: auto;
+      display: block;
+      /* invert the SVG icon so it appears white on the dark header */
+      filter: invert(1) brightness(2);
+    }
+
+    .header h1 {
+      color: #ffffff;
+      margin: 0;
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 22px;
+      font-weight: 400;
+      letter-spacing: 0.01em;
+    }
+
+    .header .tagline {
+      color: rgba(255,255,255,0.45);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-top: 6px;
+    }
+
+    /* ── Body content ── */
+    .content {
+      padding: 0 44px 40px;
+    }
+
+    .greeting {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 26px;
+      font-weight: 400;
+      color: #0f1c3f;
+      margin: 0 0 12px;
+    }
+
+    .intro {
+      font-size: 15px;
+      color: #4b5675;
+      margin-bottom: 30px;
+    }
+
+    /* ── Section label ── */
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #94a3b8;
+      margin-bottom: 12px;
+    }
+
+    /* ── Credentials card ── */
+    .credentials-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 30px;
+    }
+
+    .credential-row {
+      display: flex;
+      align-items: center;
+      padding: 16px 20px;
+      position: relative;
+    }
+
+    .credential-row + .credential-row {
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .credential-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: #eff6ff;
+      border: 1px solid #dbeafe;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-right: 14px;
+      font-size: 16px;
+    }
+
+    .credential-meta {
+      flex: 1;
+      padding-right: 40px;
+    }
+
+    .credential-meta .label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #94a3b8;
+      margin-bottom: 3px;
+    }
+
+    .credential-meta .value {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 15px;
+      font-weight: 700;
+      color: #0f1c3f;
+      word-break: break-all;
+    }
+
+    .copy-btn {
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 6px;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .copy-btn:hover {
+      background: #e2e8f0;
+      color: #0f1c3f;
+    }
+    
+    .copy-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* ── CTA Button ── */
+    .btn-wrap {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .btn {
+      display: inline-block;
+      background: #0f1c3f;
+      color: #ffffff !important;
+      text-decoration: none;
+      padding: 14px 36px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+
+    /* ── Security notice ── */
+    .security-notice {
+      display: flex;
+      gap: 12px;
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-left: 3px solid #f59e0b;
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+
+    .security-notice .icon {
+      font-size: 18px;
+      flex-shrink: 0;
+      line-height: 1.4;
+    }
+
+    .security-notice p {
+      margin: 0;
+      font-size: 13px;
+      color: #78350f;
+      line-height: 1.55;
+    }
+
+    .security-notice strong {
+      display: block;
+      margin-bottom: 2px;
+      color: #92400e;
+    }
+
+    /* ── Divider ── */
+    .divider {
+      height: 1px;
+      background: #f1f5f9;
+      margin: 0 44px 28px;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      background: #f8fafc;
+      padding: 24px 44px;
+      text-align: center;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .footer p {
+      margin: 0;
+      font-size: 12.5px;
+      color: #94a3b8;
+      line-height: 1.6;
+    }
+
+    .footer p + p {
+      margin-top: 6px;
+    }
+
+    .footer a {
+      color: #2563eb;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="container">
+
+      <!-- Header -->
+      <div class="header">
+        <div class="logo-wrap">
+          <img src="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/graduation-cap.svg" alt="College Management System Logo">
+        </div>
+        <h1>College Management System</h1>
+        <p class="tagline">Academic Management Portal</p>
+      </div>
+
+      <!-- Body -->
+      <div class="content">
+        <h2 class="greeting">Welcome, Jane Doe!</h2>
+        <p class="intro">
+          Your account has been created and is ready to use. Below are your login credentials — please keep them secure and do not share them with anyone.
+        </p>
+
+        <p class="section-label">Your Login Credentials</p>
+
+        <div class="credentials-card">
+          <div class="credential-row">
+            <div class="credential-icon">&#9993;</div>
+            <div class="credential-meta">
+              <div class="label">Username / Email</div>
+              <div class="value" id="copy-username">S-1928@school.com</div>
+            </div>
+            <button class="copy-btn" onclick="copyToClipboard('copy-username')" title="Copy Username">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            </button>
+          </div>
+          <div class="credential-row">
+            <div class="credential-icon">&#128274;</div>
+            <div class="credential-meta">
+              <div class="label">Temporary Password</div>
+              <div class="value" id="copy-password">15/05/2006</div>
+            </div>
+            <button class="copy-btn" onclick="copyToClipboard('copy-password')" title="Copy Password">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="btn-wrap">
+          <a href="http://localhost:5173/login" class="btn">Access the Portal &rarr;</a>
+        </div>
+
+        <div class="security-notice">
+          <span class="icon">&#9888;&#65039;</span>
+          <p>
+            <strong>Security Notice</strong>
+            This is a temporary password based on your date of birth. Please log in and change it immediately via your Profile settings.
+          </p>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Footer -->
+      <div class="footer">
+        <p>&copy; 2026 College Management System. All rights reserved.</p>
+        <p>Need help? Contact the <strong>IT Administration Helpdesk</strong>.</p>
+      </div>
+
+    </div>
+  </div>
+  <script>
+    function copyToClipboard(elementId) {
+      const text = document.getElementById(elementId).innerText;
+      if(navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          alert('Copied to clipboard!');
+        }).catch(err => {
+          console.error('Failed to copy', err);
+        });
+      } else {
+        // Fallback for older browsers
+        const tempElement = document.createElement("textarea");
+        tempElement.value = text;
+        document.body.appendChild(tempElement);
+        tempElement.select();
+        document.execCommand("copy");
+        document.body.removeChild(tempElement);
+        alert('Copied to clipboard!');
+      }
+    }
+  </script>
+</body>
+</html>
+  

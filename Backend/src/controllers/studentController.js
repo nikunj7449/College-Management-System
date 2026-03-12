@@ -6,6 +6,8 @@ const Attendance = require('../models/Attendance');
 const Remark = require('../models/Remark');
 const Performance = require('../models/Performance');
 const cloudinary = require('cloudinary').v2;
+const sendEmail = require('../utils/sendEmail');
+const { getWelcomeEmailTemplate } = require('../utils/emailTemplates');
 
 // @desc    Add a new student
 // @route   POST /api/v1/students
@@ -68,12 +70,6 @@ exports.addStudent = async (req, res, next) => {
       res.status(500);
       throw new Error('Student role not found in database. Please run seeding script.');
     }
-    console.log({
-      name: name,
-      email: studentEmail,
-      password: hashedPassword,
-      role: studentRole._id
-    })
 
     const newUser = await User.create({
       name: name,
@@ -109,6 +105,27 @@ exports.addStudent = async (req, res, next) => {
       dob,
       documents: documentsArray
     });
+
+    // 6. Send Welcome Email
+    try {
+      const loginUrl = process.env.FRONTEND_URL || 'http://localhost:5173/login';
+      const emailHtml = getWelcomeEmailTemplate(
+          name, 
+          'Student', 
+          studentEmail, 
+          formattedPassword, 
+          loginUrl
+      );
+
+      await sendEmail({
+          email: personalEmail,
+          subject: `Welcome to ${process.env.COLLEGE_NAME || 'College'} - Your Login Credentials`,
+          html: emailHtml
+      });
+      } catch (emailError) {
+      console.error(`Failed to send welcome email to student ${studentId}:`, emailError);
+      // We do not throw here, because the student account was successfully created.
+    }
 
     res.status(201).json({
       success: true,
@@ -321,9 +338,10 @@ exports.updateStudent = async (req, res, next) => {
     }
 
     // If Name or StudentID changes, we must update the linked User account
-    if (req.body.name || req.body.studentId) {
+    if (req.body.name || req.body.studentId || req.body.isActive) {
       const updateFields = {};
       if (req.body.name) updateFields.name = req.body.name;
+      if (req.body.isActive) updateFields.status = req.body.isActive === "true" ? "Active" : "Deactivate";
 
       // If Student ID changes, update Email too (e.g., S-101@school.com)
       if (req.body.studentId) {
@@ -516,6 +534,91 @@ exports.generateDummyStudents = async (req, res, next) => {
       }
     })();
 
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get logged in student profile
+// @route   GET /api/v1/students/my-profile
+// @access  Private (Student)
+exports.getMyProfile = async (req, res, next) => {
+  try {
+    const student = await Student.findOne({ user: req.user.id });
+
+    if (!student) {
+      res.status(404);
+      throw new Error('Student profile not found');
+    }
+
+    res.status(200).json({
+      success: true,
+      data: student,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Update logged in student profile
+// @route   PUT /api/v1/students/my-profile
+// @access  Private (Student)
+exports.updateMyProfile = async (req, res, next) => {
+  try {
+    let student = await Student.findOne({ user: req.user.id });
+
+    if (!student) {
+      res.status(404);
+      throw new Error('Student profile not found');
+    }
+
+    // Only allow updating specific fields (e.g. contact info)
+    const allowedUpdates = {};
+    if (req.body.studentPhone) allowedUpdates.studentPhone = req.body.studentPhone;
+    if (req.body.personalEmail) allowedUpdates.personalEmail = req.body.personalEmail;
+    if (req.body.parentContact) allowedUpdates.parentContact = req.body.parentContact;
+
+    // Handle Documents (Add New & Delete Removed)
+    let updatedDocuments = student.documents || [];
+
+    if (req.body.existingDocuments) {
+      const keptDocuments = JSON.parse(req.body.existingDocuments);
+      const keptPublicIds = keptDocuments.map(doc => doc.publicId).filter(id => id);
+
+      const docsToDelete = student.documents.filter(doc =>
+        doc.publicId && !keptPublicIds.includes(doc.publicId)
+      );
+
+      for (const doc of docsToDelete) {
+        await cloudinary.uploader.destroy(doc.publicId);
+      }
+
+      updatedDocuments = keptDocuments;
+    }
+
+    if (req.files && req.files.length > 0) {
+      const newDocuments = req.files.map(file => ({
+        name: file.originalname,
+        url: file.path,
+        type: file.mimetype,
+        publicId: file.filename
+      }));
+      updatedDocuments = [...updatedDocuments, ...newDocuments];
+    }
+
+    allowedUpdates.documents = updatedDocuments;
+
+    const updatedStudent = await Student.findByIdAndUpdate(
+      student._id,
+      allowedUpdates,
+      { new: true, runValidators: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully',
+      data: updatedStudent,
+    });
   } catch (error) {
     next(error);
   }

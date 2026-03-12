@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Edit, Trash2, Eye, Mail, Phone, BookOpen, MoreVertical } from 'lucide-react';
-import { getShortBranch } from '../../utils/adminUtils/courseUtils';
+import { getShortBranch } from '../../../utils/adminUtils/courseUtils';
 
 const FacultyCard = ({ faculty, onEdit, onDelete, onView }) => {
   const [showActions, setShowActions] = useState(false);

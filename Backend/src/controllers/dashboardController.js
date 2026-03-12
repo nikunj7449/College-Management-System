@@ -2,6 +2,7 @@ const Student = require('../models/Student');
 const User = require('../models/User');
 const Attendance = require('../models/Attendance');
 const Remark = require('../models/Remark');
+const Performance = require('../models/Performance');
 const Course = require('../models/Course');
 const Faculty = require('../models/faculty');
 const Role = require('../models/Role');
@@ -196,6 +197,67 @@ exports.getFacultyStats = async (req, res, next) => {
           present: presentCount,
           absent: absentCount
         },
+        recentRemarks
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get Student Dashboard Stats
+// @route   GET /api/v1/dashboard/student/stats
+// @access  Private (Student)
+exports.getStudentStats = async (req, res, next) => {
+  try {
+    const studentUser = req.user.id;
+
+    // 1. Find the exact Student Profile to base our metrics off of
+    const studentProfile = await Student.findOne({ user: studentUser });
+    
+    if (!studentProfile) {
+      return res.status(404).json({ success: false, message: 'Student profile not found' });
+    }
+
+    const studentId = studentProfile._id;
+
+    // 2. Attendance Stats for this exact student
+    const attendanceRecords = await Attendance.find({ student: studentId });
+    const totalClasses = attendanceRecords.length;
+    const presentClasses = attendanceRecords.filter(a => /^Present$/i.test(a.status)).length;
+    const absentClasses = attendanceRecords.filter(a => /^Absent$/i.test(a.status)).length;
+    const attendancePercentage = totalClasses > 0 ? ((presentClasses / totalClasses) * 100).toFixed(1) : 0;
+
+    // 3. Recent Performance / Exam Results (Last 5)
+    const recentPerformances = await Performance.find({ student: studentId })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .populate('exam', 'name date type')
+      .populate('faculty', 'name');
+
+    // 4. Recent Remarks / Behavior Logs (Last 5)
+    const recentRemarks = await Remark.find({ student: studentId })
+      .sort({ date: -1 })
+      .limit(5)
+      .populate('faculty', 'name');
+
+    res.status(200).json({
+      success: true,
+      data: {
+        profile: {
+          name: studentProfile.name,
+          rollNum: studentProfile.rollNum,
+          course: studentProfile.course,
+          branch: studentProfile.branch,
+          sem: studentProfile.sem
+        },
+        attendance: {
+          totalClasses,
+          presentClasses,
+          absentClasses,
+          percentage: attendancePercentage
+        },
+        recentPerformances,
         recentRemarks
       },
     });

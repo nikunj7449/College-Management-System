@@ -12,15 +12,15 @@ import { hasPermission } from '../../../utils/permissionUtils';
 import { AuthContext } from '../../../context/AuthContext';
 
 // Import Components
-import StudentCard from '../../common/StudentCard';
-import StudentTableRow from '../../common/StudentTableRow';
+import StudentCard from '../../common/student/StudentCard';
+import StudentTableRow from '../../common/student/StudentTableRow';
 import StudentFormModal from '../../modals/StudentFormModal';
 import DeleteConfirmModal from '../../modals/DeleteConfirmModal';
 import StatusToggleModal from '../../modals/StatusToggleModal';
 import FilterPanel from './sub-components/FilterPanel';
-import Pagination from '../../common/Pagination';
-import StudentCardSkeleton from '../../common/StudentCardSkeleton';
-import StudentTableSkeleton from '../../common/StudentTableSkeleton';
+import Pagination from '../../common/core/Pagination';
+import StudentCardSkeleton from '../../common/student/StudentCardSkeleton';
+import StudentTableSkeleton from '../../common/student/StudentTableSkeleton';
 
 const StudentList = () => {
   const [showFilters, setShowFilters] = useState(false);

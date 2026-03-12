@@ -7,9 +7,9 @@ import {
 import { toast } from 'react-toastify';
 import api from '../../../services/api';
 import { useNavigate } from 'react-router-dom';
-import Pagination from '../../common/Pagination';
+import Pagination from '../../common/core/Pagination';
 import DeleteConfirmModal from '../../modals/DeleteConfirmModal';
-import EventCardSkeleton from '../../common/EventCardSkeleton';
+import EventCardSkeleton from '../../common/event/EventCardSkeleton';
 import EventViewModal from '../../modals/EventViewModal';
 import { hasPermission } from '../../../utils/permissionUtils';
 import { AuthContext } from '../../../context/AuthContext';

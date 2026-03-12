@@ -16,6 +16,7 @@ import { useDashboard } from '../../../hooks/admin/useAdminDashboard';
 import {StatCard} from './sub-components/StatCard';
 import AttendanceChart from './sub-components/Attendancechart';
 import RecentRemarks from './sub-components/RecentRemarks';
+import AdminDashboardSkeleton from '../../common/admin/AdminDashboardSkeleton';
 
 
 const AdminDashboard = () => {
@@ -23,12 +24,7 @@ const AdminDashboard = () => {
   const { data, loading, error } = useDashboard(filter);
 
   if (loading) return (
-    <div className="flex h-screen items-center justify-center bg-slate-50">
-      <div className="flex flex-col items-center space-y-4">
-        <div className="animate-spin rounded-full h-16 w-16 border-4 border-indigo-200 border-t-indigo-600"></div>
-        <p className="text-slate-600 text-sm font-medium">Loading Dashboard...</p>
-      </div>
-    </div>
+    <AdminDashboardSkeleton />
   );
 
   if (error) return (

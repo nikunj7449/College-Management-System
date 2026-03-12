@@ -1,14 +1,14 @@
 import { useContext, useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { AuthContext } from '../../context/AuthContext';
+import { AuthContext } from '../../../context/AuthContext';
 import {
   Bell, Search, LogOut, Menu, User,
-  LayoutDashboard, Users, GraduationCap, BookOpen, Award, Calendar, Settings, Shield
+  LayoutDashboard, Users, GraduationCap, BookOpen, Award, Calendar, Settings, Shield, MessageSquare
 } from 'lucide-react';
 
 import { ChevronDown, Circle } from 'lucide-react';
-import { hasPermission } from '../../utils/permissionUtils';
+import { hasPermission } from '../../../utils/permissionUtils';
 
 const SidebarItem = ({ icon: Icon, label, to, active, badge, onClick, children, isSidebarOpen, toggleSidebar }) => {
   const location = useLocation();
@@ -154,7 +154,8 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
-    if (location.pathname === '/login') return false;
+    const authPaths = ['/login', '/forgot-password', '/reset-password'];
+    if (authPaths.includes(location.pathname)) return false;
 
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('sidebarOpen');
@@ -186,7 +187,8 @@ const Navbar = () => {
 
   useEffect(() => {
     const handleResize = () => {
-      if (location.pathname === '/login') {
+      const authPaths = ['/login', '/forgot-password', '/reset-password'];
+      if (authPaths.includes(location.pathname)) {
         document.body.style.paddingLeft = '0';
         return;
       }
@@ -232,7 +234,9 @@ const Navbar = () => {
       'COURSE': BookOpen,
       'ATTENDANCE': Calendar,
       'PERFORMANCE': Award,
-      'EVENT': Calendar
+      'EVENT': Calendar,
+      'EXAMS': BookOpen,
+      'REMARKS': MessageSquare
     };
 
     const getPath = (key) => {
@@ -241,16 +245,18 @@ const Navbar = () => {
         return `/${dashboardRole}/dashboard`;
       }
       if (key === 'STUDENT') return roleName === 'FACULTY' ? "/faculty/students" : "/students";
-      if (key === 'FACULTY') return "/facultys";
-      if (key === 'USER_MANAGEMENT') return "/user-management";
+      if (key === 'FACULTY') return roleName === 'STUDENT' ? "/student/faculties" : "/facultys";
+      if (key === 'USER_LIST') return "/user-management";
       if (key === 'ROLES_PERMISSIONS') return "/superadmin/roles";
       if (key === 'SYSTEM_MODULES') return "/superadmin/modules";
-      if (key === 'COURSE') return roleName === 'FACULTY' ? "/faculty/courses" : "/courses";
-      if (key === 'ATTENDANCE') return "/faculty/attendance";
-      if (key === 'PERFORMANCE') return "/performance";
-      if (key === 'EVENT' || key === 'EVENT_VIEW') return "/events";
+      if (key === 'COURSE') return roleName === 'FACULTY' ? "/faculty/courses" : roleName === 'STUDENT' ? "/student/courses" : "/courses";
+      if (key === 'ATTENDANCE') return roleName === 'FACULTY' ? "/faculty/attendance" : roleName === 'STUDENT' ? "/student/attendance" : "/attendance";
+      if (key === 'PERFORMANCE' || key === 'EXAM') return roleName === 'STUDENT' ? "/student/exams" : "/performance";
+      if (key === 'EVENT' || key === 'EVENT_VIEW') return roleName === 'STUDENT' ? "/student/events" : "/events";
       if (key === 'EVENT_CREATE') return "/events/add";
       if (key === 'EVENT_UPDATE') return location.pathname.startsWith("/events/edit") ? location.pathname : "/events";
+      if (key === 'EXAMS') return "/exams";
+      if (key === 'REMARKS') return "/remarks";
       return "#";
     };
 
@@ -261,9 +267,11 @@ const Navbar = () => {
       'ATTENDANCE': 'ATTENDANCE',
       'PERFORMANCE': 'PERFORMANCE',
       'EVENT': 'EVENT',
-      'USER_MANAGEMENT': 'USER',
+      'USER_LIST': 'USER',
       'ROLES_PERMISSIONS': 'ROLE',
-      'SYSTEM_MODULES': 'MODULE'
+      'SYSTEM_MODULES': 'MODULE',
+      'EXAMS': 'EXAM',
+      'REMARKS': 'REMARK'
     };
 
     const actionMapping = {
@@ -278,7 +286,9 @@ const Navbar = () => {
     sortedConfig.forEach(item => {
       if (!item.visible) return;
 
-      if (item.key !== 'DASHBOARD') {
+      // Only check parent-level permission if it doesn't have children that might have different permissions
+      // For EVENT, it still falls back to parent if child isn't in mapping.
+      if (item.key !== 'DASHBOARD' && (!item.children || item.children.length === 0)) {
         const permModule = moduleMapping[item.key];
         if (permModule && !hasPermission(user, permModule, 'read')) {
           return;
@@ -297,9 +307,10 @@ const Navbar = () => {
           if (!child.visible) return;
 
           const action = actionMapping[child.key] || 'read';
-          const parentModule = moduleMapping[item.key];
+          // Use child's mapped module, fallback to parent's mapped module
+          const childModule = moduleMapping[child.key] || moduleMapping[item.key];
 
-          if (parentModule && !hasPermission(user, parentModule, action)) {
+          if (childModule && !hasPermission(user, childModule, action)) {
             return;
           }
 
@@ -314,15 +325,20 @@ const Navbar = () => {
         });
 
         if (validChildren.length > 0) {
-          linkObj.children = validChildren.length > 1 ? validChildren : undefined;
+          linkObj.children = validChildren;
+          links.push(linkObj);
         }
+      } else {
+        links.push(linkObj);
       }
-
-      links.push(linkObj);
     });
 
     if (roleName === 'ADMIN' || roleName === 'SUPERADMIN') {
       links.push({ icon: Settings, label: "Settings", path: "/settings" });
+    }
+    
+    if (roleName === 'STUDENT') {
+      links.push({ icon: User, label: "My Profile", path: "/student/profile" });
     }
 
     return links;
@@ -405,7 +421,7 @@ const Navbar = () => {
               </>
             ) : (
               <>
-                {location.pathname !== '/login' && (
+                {!['/login', '/forgot-password', '/reset-password'].includes(location.pathname) && (
                   <Link
                     to="/login"
                     className="flex items-center space-x-2 bg-linear-to-r from-indigo-600 to-indigo-500 text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:shadow-lg hover:shadow-indigo-500/30 transition-all"
@@ -429,7 +445,7 @@ const Navbar = () => {
       )}
 
       {/* Sidebar */}
-      {location.pathname !== '/login' && (
+      {!['/login', '/forgot-password', '/reset-password'].includes(location.pathname) && (
         <aside className={`
           fixed inset-y-0 left-0 z-50 bg-white shadow-xl
           transition-all duration-300 ease-in-out flex flex-col

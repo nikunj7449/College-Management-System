@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Edit, Trash2, Eye, Power, Mail, Phone, MoreVertical } from 'lucide-react';
-import { getShortBranch } from '../../utils/adminUtils/courseUtils';
+import { Edit, Trash2, Eye, Power, Mail, Phone, MoreVertical, MessageSquare } from 'lucide-react';
+import { getShortBranch } from '../../../utils/adminUtils/courseUtils';
 
-const StudentCard = ({ student, onEdit, onDelete, onView, onToggleStatus }) => {
+const StudentCard = ({ student, onEdit, onDelete, onView, onToggleStatus, onRemark }) => {
   const [showActions, setShowActions] = useState(false);
   const timeoutRef = useRef(null);
 
@@ -72,6 +72,15 @@ const StudentCard = ({ student, onEdit, onDelete, onView, onToggleStatus }) => {
                 title="View Details"
               >
                 <Eye size={16} />
+              </button>
+            )}
+            {onRemark && (
+              <button
+                onClick={() => onRemark(student)}
+                className="p-2 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
+                title="Give Remark"
+              >
+                <MessageSquare size={16} />
               </button>
             )}
             {onToggleStatus && (

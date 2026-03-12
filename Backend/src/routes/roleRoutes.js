@@ -17,7 +17,7 @@ router.get('/modules', getSystemModules);
 
 router.route('/')
     .post(authorize('SUPERADMIN'),createRole)
-    .get(authorize('SUPERADMIN'),getAllRoles); // Note: Depending on frontend dropdowns, we might need to open GET to 'ADMIN' later, but SUPERADMIN works for now.
+    .get(authorize('SUPERADMIN', 'ADMIN'),getAllRoles); // Allowed ADMIN to fetch roles for dropdowns
 
 router.route('/:id')
     .get(getRoleById)

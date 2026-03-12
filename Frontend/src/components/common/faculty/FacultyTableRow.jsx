@@ -1,6 +1,6 @@
 import React from 'react';
 import { Edit, Trash2, Eye, Mail, Phone } from 'lucide-react';
-import { getShortBranch } from '../../utils/adminUtils/courseUtils';
+import { getShortBranch } from '../../../utils/adminUtils/courseUtils';
 
 const FacultyTableRow = ({ faculty, onEdit, onDelete, onView }) => {
   return (

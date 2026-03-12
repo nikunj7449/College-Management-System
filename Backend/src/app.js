@@ -16,6 +16,8 @@ const eventRoutes = require('./routes/eventRoutes');
 const userRoutes = require('./routes/userRoutes');
 const roleRoutes = require('./routes/roleRoutes');
 const moduleRoutes = require('./routes/moduleRoutes');
+const examRoutes = require('./routes/examRoutes');
+
 const app = express();
 
 const cors = require('cors');
@@ -47,6 +49,7 @@ app.use('/api/v1/events', eventRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/roles', roleRoutes);
 app.use('/api/v1/modules', moduleRoutes);
+app.use('/api/v1/exams', examRoutes);
 
 // Error Handler (Must be last)
 app.use(errorHandler);

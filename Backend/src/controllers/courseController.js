@@ -1,4 +1,6 @@
 const Course = require('../models/Course');
+const Student = require('../models/Student');
+const Faculty = require('../models/faculty');
 
 // ==========================================
 //                 CREATE
@@ -259,7 +261,6 @@ exports.addBulkCourses = async (req, res, next) => {
       }
     }
 
-    // 3. Return Summary
     res.status(201).json({
       success: true,
       message: `Process complete. Added: ${addedCount}, Skipped: ${skippedCount}`,
@@ -269,4 +270,71 @@ exports.addBulkCourses = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
+};
+
+// @desc    Get My Courses (Student Only)
+// @route   GET /api/v1/courses/my-courses
+// @access  Private (Student)
+exports.getMyCourses = async (req, res, next) => {
+  try {
+    const studentUser = req.user.id;
+    
+    // 1. Get the current logged in student's details
+    const student = await Student.findOne({ user: studentUser });
+    if (!student) {
+      return res.status(404).json({ success: false, message: 'Student profile not found' });
+    }
+
+    // 2. Fetch all courses matching the student's registered course
+    const courseObj = await Course.findOne({ name: student.course });
+    if (!courseObj) {
+      return res.status(404).json({ success: false, message: 'Enrolled course not found in database' });
+    }
+
+    // 3. Find the exact branch
+    const branchObj = courseObj.branches.find(b => b.name === student.branch);
+    if (!branchObj) {
+      return res.status(404).json({ success: false, message: 'Enrolled branch not found in database' });
+    }
+
+    // 4. Use requested semester if provided, otherwise default to student's current semester
+    const targetSemester = req.query.semester || student.sem;
+
+    // 5. Filter subjects strictly by the target semester
+    const subjects = branchObj.subjects.filter(sub => sub.semester.toString() === targetSemester.toString());
+
+    // 6. Look up which faculties are teaching these subjects for this course/branch/sem
+    // Currently, Faculty models have: course, branch, sem[] and subject[] arrays mapping names.
+    const facultiesMapping = await Faculty.find({
+      course: student.course,
+      branch: student.branch,
+      sem: targetSemester
+    }).select('name subject email');
+
+    // 7. Augment the subjects with the faculty name if one exists
+    const fullCurriculum = subjects.map(sub => {
+      // Create a clean object from mongoose document
+      const subObj = sub.toObject();
+      
+      // Find a faculty teaching this specific subject
+      const assignedFaculty = facultiesMapping.find(f => f.subject && f.subject.includes(sub.name));
+      if (assignedFaculty) {
+        subObj.faculty = { name: assignedFaculty.name, email: assignedFaculty.email };
+      }
+
+      return subObj;
+    });
+
+
+    res.status(200).json({ 
+      success: true, 
+      data: {
+        course: courseObj.name,
+        branch: branchObj.name,
+        semester: targetSemester, // Include the target semester in the response
+        currentSemester: student.sem, // Also include the student's actual current semester
+        subjects: fullCurriculum
+      } 
+    });
+  } catch (error) { next(error); }
 };

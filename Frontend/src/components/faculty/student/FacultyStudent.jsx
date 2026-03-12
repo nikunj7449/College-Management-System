@@ -9,15 +9,17 @@ import {
 } from '../../../utils/adminUtils/courseUtils';
 import { AuthContext } from '../../../context/AuthContext';
 
-import StudentCard from '../../common/StudentCard';
-import StudentTableRow from '../../common/StudentTableRow';
+import StudentCard from '../../common/student/StudentCard';
+import StudentTableRow from '../../common/student/StudentTableRow';
 import StudentFormModal from '../../modals/StudentFormModal';
-import Pagination from '../../common/Pagination';
-import StudentCardSkeleton from '../../common/StudentCardSkeleton';
-import StudentTableSkeleton from '../../common/StudentTableSkeleton';
+import RemarkFormModal from './RemarkFormModal';
+import Pagination from '../../common/core/Pagination';
+import StudentCardSkeleton from '../../common/student/StudentCardSkeleton';
+import StudentTableSkeleton from '../../common/student/StudentTableSkeleton';
 
 const FacultyStudent = () => {
     const [viewType, setViewType] = useState('grid');
+    const [remarkModal, setRemarkModal] = useState({ isOpen: false, student: null });
 
     const {
         students, coursesData, loading, submitLoading, searchTerm, currentPage,
@@ -39,6 +41,10 @@ const FacultyStudent = () => {
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems = students.slice(indexOfFirstItem, indexOfLastItem);
     const totalPages = Math.ceil(students.length / itemsPerPage);
+
+    const handleRemark = (student) => {
+        setRemarkModal({ isOpen: true, student });
+    };
 
     const courseOptions = getCourseOptions(coursesData);
     const branchOptions = getBranchOptions(coursesData, formData.course);
@@ -122,6 +128,7 @@ const FacultyStudent = () => {
                             student={student}
                             onEdit={handleEdit}
                             onView={handleView}
+                            onRemark={handleRemark}
                         />
                     ))}
                 </div>
@@ -161,6 +168,7 @@ const FacultyStudent = () => {
                                         role={userRole}
                                         onEdit={handleEdit}
                                         onView={handleView}
+                                        onRemark={handleRemark}
                                     />
                                 ))}
                             </tbody>
@@ -204,6 +212,13 @@ const FacultyStudent = () => {
                     semOptions={semOptions}
                 />
             )}
+
+            {/* Remark Modal */}
+            <RemarkFormModal 
+                isOpen={remarkModal.isOpen} 
+                onClose={() => setRemarkModal({ isOpen: false, student: null })} 
+                student={remarkModal.student} 
+            />
         </div>
     );
 };

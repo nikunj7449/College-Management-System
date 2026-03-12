@@ -3,8 +3,8 @@ import { useModules } from '../../hooks/useModules';
 import { Plus, Box } from 'lucide-react';
 import ModuleFormModal from '../modals/ModuleFormModal';
 import DeleteConfirmModal from '../modals/DeleteConfirmModal';
-import ModuleCard from '../common/ModuleCard';
-import ModuleCardSkeleton from '../common/ModuleCardSkeleton';
+import ModuleCard from '../common/module/ModuleCard';
+import ModuleCardSkeleton from '../common/module/ModuleCardSkeleton';
 
 const ModulesManagement = () => {
     const { modules, loading, fetchModules, deleteModule } = useModules();

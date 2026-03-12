@@ -40,12 +40,21 @@ const PerformanceViewModal = ({ isOpen, onClose, data }) => {
                             </div>
                             <div>
                                 <p className="text-sm font-semibold text-slate-500">Exam</p>
-                                <p className="text-lg font-bold text-slate-800">{data.examName}</p>
+                                <p className="text-lg font-bold text-slate-800">{data.exam?.name || 'N/A'}</p>
                                 <p className="text-xs text-slate-600 mt-0.5 flex items-center gap-1">
                                     <Calendar size={12} /> {new Date(data.createdAt).toLocaleDateString()}
                                 </p>
                             </div>
                         </div>
+                        {data.faculty && (
+                            <div className="md:col-span-2 bg-indigo-50/30 p-4 rounded-xl border border-indigo-100/50 flex items-center justify-between">
+                                <span className="text-sm font-semibold text-slate-500">Evaluated By</span>
+                                <div className="text-right">
+                                    <p className="font-bold text-slate-800">{data.faculty?.name || 'Unknown'}</p>
+                                    <p className="text-xs text-slate-500">{data.faculty?.email}</p>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Subjects Table */}

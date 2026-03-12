@@ -4,7 +4,8 @@ const {
   markAttendance,
   getStudentAttendance,
   getClassAttendance,
-  markBulkAttendance
+  markBulkAttendance,
+  getMyAttendance
 } = require('../controllers/attendanceController');
 const { protect } = require('../middleware/authMiddleware');
 const { authorize, requirePermission } = require('../middleware/roleMiddleware');
@@ -13,6 +14,9 @@ router.use(protect);
 
 // Mark Attendance
 router.post('/', requirePermission('ATTENDANCE', 'create'), markAttendance);
+
+// View My Attendance (Student Only)
+router.get('/my-attendance', requirePermission('ATTENDANCE', 'read'), getMyAttendance);
 
 // View specific student's history (Student can view their own)
 router.get('/student/:studentId', requirePermission('ATTENDANCE', 'read'), getStudentAttendance);

@@ -27,7 +27,7 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, deleteRole }) => {
             onClick={onConfirm}
             className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors shadow-lg shadow-red-200"
           >
-            {`Delete ${deleteRole}`}
+            {`Delete ${deleteRole !== undefined ? deleteRole : ""}`}
           </button>
         </div>
       </div>

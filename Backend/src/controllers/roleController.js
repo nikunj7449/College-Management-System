@@ -104,14 +104,7 @@ exports.updateRole = async (req, res, next) => {
             role.description = updateData.description;
         }
 
-        if (role.name === 'SUPERADMIN') {
-            // Forcefully grant ALL permissions across ALL modules to SUPERADMIN
-            const allModules = await Module.find({});
-            allModules.forEach(mod => {
-                role.permissions.set(mod.name, { create: true, read: true, update: true, delete: true });
-            });
-            role.markModified('permissions');
-        } else if (updateData.permissions) {
+        if (updateData.permissions) {
             // Because permissions is a Mongoose Map, we should use .set()
             for (const [moduleName, perms] of Object.entries(updateData.permissions)) {
                 role.permissions.set(moduleName, perms);

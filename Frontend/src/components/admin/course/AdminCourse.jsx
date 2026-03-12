@@ -5,15 +5,15 @@ import { hasPermission } from '../../../utils/permissionUtils';
 import { AuthContext } from '../../../context/AuthContext';
 
 // Components
-import CourseCard from '../../common/CourseCard';
-import CourseTableRow from '../../common/CourseTableRow';
-import CourseEmptyState from '../../common/CourseEmptyState';
+import CourseCard from '../../common/course/CourseCard';
+import CourseTableRow from '../../common/course/CourseTableRow';
+import CourseEmptyState from '../../common/course/CourseEmptyState';
 import CourseFormModal from '../../modals/CourseFormModal';
 import CourseViewModal from '../../modals/CourseViewModal';
 import BranchManageModal from '../../modals/BranchManageModal';
 import DeleteConfirmModal from '../../modals/DeleteConfirmModal';
-import CourseCardSkeleton from '../../common/CourseCardSkeleton';
-import Pagination from '../../common/Pagination';
+import CourseCardSkeleton from '../../common/course/CourseCardSkeleton';
+import Pagination from '../../common/core/Pagination';
 
 const CourseList = () => {
     const [viewType, setViewType] = useState('grid');

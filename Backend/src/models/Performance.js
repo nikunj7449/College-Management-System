@@ -6,10 +6,15 @@ const performanceSchema = new mongoose.Schema({
     ref: 'Student',
     required: [true, 'Student ID is required']
   },
-  examName: {
-    type: String,
-    required: [true, 'Exam name is required'],
-    trim: true
+  exam: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Exam',
+    required: [true, 'Exam ID is required']
+  },
+  faculty: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
   },
   subjects: [{
     subjectName: { type: String, required: true, trim: true },

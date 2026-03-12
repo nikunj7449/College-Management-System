@@ -5,12 +5,16 @@ const {
   getStudentPerformance,
   getAllPerformance,
   updatePerformance,
-  deletePerformance
+  deletePerformance,
+  getMyPerformance
 } = require('../controllers/performanceController');
 const { protect } = require('../middleware/authMiddleware');
-const { authorize, requirePermission } = require('../middleware/roleMiddleware');
+const { requirePermission } = require('../middleware/roleMiddleware');
 
 router.use(protect);
+
+// Get My Performance
+router.get('/my-performance', requirePermission('PERFORMANCE', 'read'), getMyPerformance);
 
 // Add Marks
 router.post('/', requirePermission('PERFORMANCE', 'create'), addPerformance);

@@ -5,7 +5,8 @@ const {
   getAllFaculty,
   updateFaculty,
   deleteFaculty,
-  addBulkFaculty
+  addBulkFaculty,
+  getMyFaculty
 } = require('../controllers/facultyController');
 const { protect } = require('../middleware/authMiddleware');
 const { authorize, requirePermission } = require('../middleware/roleMiddleware');
@@ -14,6 +15,9 @@ const cleanBody = require('../middleware/cleanBody');
 
 // All routes here need login
 router.use(protect);
+
+router.route('/my-faculty')
+  .get(requirePermission('FACULTY', 'read'), getMyFaculty); // Student only
 
 router.route('/')
   .get(requirePermission('FACULTY', 'read'), getAllFaculty) // Accessible to any logged-in user

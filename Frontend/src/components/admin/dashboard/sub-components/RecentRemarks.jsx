@@ -1,6 +1,8 @@
 import { MessageSquare } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const RecentRemarks = ({ recentRemarks = [] }) => {
+    const navigate = useNavigate();
     return(
         <>
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
@@ -12,7 +14,7 @@ const RecentRemarks = ({ recentRemarks = [] }) => {
                 </div>
                 <div className="space-y-5">
                     
-                  {recentRemarks.map((remark, index) => (
+                  {recentRemarks.slice(0, 3).map((remark, index) => (
                     <div key={remark.id} className="flex space-x-4 relative">
                       
                       {index !==recentRemarks.length - 1 && (
@@ -42,7 +44,7 @@ const RecentRemarks = ({ recentRemarks = [] }) => {
                     </div>
                   ))}
                 </div>
-                <button className="w-full mt-6 py-2.5 text-center text-indigo-600 hover:text-indigo-700 font-medium text-sm border border-indigo-200 hover:bg-indigo-50 rounded-xl transition-all">
+                <button className="w-full mt-6 py-2.5 text-center text-indigo-600 hover:text-indigo-700 font-medium text-sm border border-indigo-200 hover:bg-indigo-50 rounded-xl transition-all" onClick={() => navigate('/remarks')}>
                   View All Remarks
                 </button>
               </div>

@@ -3,13 +3,13 @@ import {
   Plus, Search, Shield, LayoutGrid, List
 } from 'lucide-react';
 import { toast } from 'react-toastify';
-import Pagination from '../common/Pagination';
+import Pagination from '../common/core/Pagination';
 import api from '../../services/api';
 import DeleteConfirmModal from '../modals/DeleteConfirmModal';
-import AdminCardSkeleton from '../common/AdminCardSkeleton';
-import AdminTableSkeleton from '../common/AdminTableSkeleton';
-import AdminCard from '../common/AdminCard';
-import AdminTableRow from '../common/AdminTableRow';
+import AdminCardSkeleton from '../common/admin/AdminCardSkeleton';
+import AdminTableSkeleton from '../common/admin/AdminTableSkeleton';
+import AdminCard from '../common/admin/AdminCard';
+import AdminTableRow from '../common/admin/AdminTableRow';
 import AdminModal from '../modals/AdminModal';
 
 const AdminManagement = ({ hideHeader = false }) => {

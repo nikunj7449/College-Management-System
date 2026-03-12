@@ -1,4 +1,5 @@
 const Remark = require('../models/Remark');
+const Student = require('../models/Student');
 
 // @desc    Add a Remark (Faculty Work Log)
 // @route   POST /api/v1/remarks
@@ -65,6 +66,75 @@ exports.getFacultyWorkLog = async (req, res, next) => {
       success: true,
       count: logs.length,
        logs
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get All Remarks (Dynamic based on role)
+// @route   GET /api/v1/remarks
+// @access  Private
+exports.getAllRemarks = async (req, res, next) => {
+  try {
+    const roleName = req.user.role?.name || req.user.role;
+    let query = {};
+
+    // Dynamic logic based on role
+    if (roleName === 'STUDENT') {
+      // Find the linked student profile
+      const studentProfile = await Student.findOne({ user: req.user.id });
+      if (!studentProfile) {
+        return res.status(200).json({ success: true, count: 0, remarks: [] });
+      }
+      query.student = studentProfile._id;
+    } else if (roleName !== 'SUPERADMIN' && roleName !== 'ADMIN') {
+      // Faculty view: Only their own remarks
+      query.faculty = req.user.id;
+    }
+
+    const remarks = await Remark.find(query)
+      .populate('student', 'name studentId rollNum course sem')
+      .populate('faculty', 'name email')
+      .sort({ date: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: remarks.length,
+      remarks: remarks
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Delete a Remark
+// @route   DELETE /api/v1/remarks/:id
+// @access  Private
+exports.deleteRemark = async (req, res, next) => {
+  try {
+    const remark = await Remark.findById(req.params.id);
+
+    if (!remark) {
+      res.status(404);
+      throw new Error('Remark not found');
+    }
+
+    const userRole = req.user.role?.name || req.user.role;
+    const isAdmin = userRole === 'ADMIN' || userRole === 'SUPERADMIN';
+
+    // Faculty can only delete their own remarks. Admins can delete any.
+    if (!isAdmin && remark.faculty.toString() !== req.user.id.toString()) {
+      res.status(403);
+      throw new Error('User not authorized to delete this remark');
+    }
+
+    await remark.deleteOne();
+
+    res.status(200).json({
+      success: true,
+      message: 'Remark deleted successfully',
+      data: {}
     });
   } catch (error) {
     next(error);

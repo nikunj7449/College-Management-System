@@ -6,11 +6,11 @@ const Student = require('../models/Student');
 // @access  Private (Faculty/Admin)
 exports.markAttendance = async (req, res, next) => {
   try {
-    const { studentId, date, status } = req.body;
+    const { studentId, date, status, subject } = req.body;
 
-    if (!studentId || !date || !status) {
+    if (!studentId || !date || !status || !subject) {
       res.status(400);
-      throw new Error('Please provide student ID, date, and status');
+      throw new Error('Please provide student ID, date, status, and subject');
     }
 
     // Normalize status to Title Case (e.g., "present" -> "Present")
@@ -23,7 +23,8 @@ exports.markAttendance = async (req, res, next) => {
     // Check if attendance already marked
     const existingAttendance = await Attendance.findOne({
       student: studentId,
-      date: attendanceDate
+      date: attendanceDate,
+      subject
     });
 
     if (existingAttendance) {
@@ -43,6 +44,7 @@ exports.markAttendance = async (req, res, next) => {
         student: studentId,
         date: attendanceDate,
         status: normalizedStatus,
+        subject,
         markedBy: req.user.id
       });
 
@@ -73,10 +75,10 @@ exports.markBulkAttendance = async (req, res, next) => {
     const errors = [];
 
     for (const record of attendanceData) {
-      const { studentId, date, status, facultyId } = record;
+      const { studentId, date, status, facultyId, subject } = record;
 
-      if (!studentId || !date || !status || !facultyId) {
-        errors.push(`Skipped a record: Missing studentId, date, or status`);
+      if (!studentId || !date || !status || !facultyId || !subject) {
+        errors.push(`Skipped a record: Missing studentId, date, status, or subject`);
         continue;
       }
 
@@ -90,7 +92,7 @@ exports.markBulkAttendance = async (req, res, next) => {
 
         // Upsert (Update if exists, Insert if new)
         await Attendance.findOneAndUpdate(
-          { student: studentId, date: attendanceDate },
+          { student: studentId, date: attendanceDate, subject },
           {
             status: normalizedStatus,
             markedBy: facultyId
@@ -134,7 +136,7 @@ exports.getStudentAttendance = async (req, res, next) => {
 // Get Attendance for a specific Date and Class (For Admin/Faculty View)
 exports.getClassAttendance = async (req, res, next) => {
   try {
-    const { date, course, sem } = req.query;
+    const { date, course, sem, subject } = req.query;
 
     // 1. Get IDs of students in that course/sem
     const students = await Student.find({ course, sem }).select('_id name rollNum');
@@ -142,14 +144,43 @@ exports.getClassAttendance = async (req, res, next) => {
     const queryDate = new Date(date);
     queryDate.setUTCHours(0, 0, 0, 0);
 
-    // 2. Get attendance records for those IDs on the specific date
-    const attendanceRecords = await Attendance.find({
+    // 2. Get attendance records for those IDs on the specific date and subject
+    const query = {
       student: { $in: studentIds },
       date: queryDate
-    }).populate('student', 'name rollNum');
+    };
+    if (subject) query.subject = subject;
+
+    const attendanceRecords = await Attendance.find(query).populate('student', 'name rollNum');
 
     res.status(200).json({ success: true, data: attendanceRecords });
   } catch (error) {
     next(error);
   }
+};
+
+// @desc    Get My Attendance (Student Only)
+// @route   GET /api/v1/attendance/my-attendance
+// @access  Private (Student)
+exports.getMyAttendance = async (req, res, next) => {
+  try {
+    const studentUser = req.user.id;
+    
+    // 1. Get the current logged in student's details
+    const student = await Student.findOne({ user: studentUser });
+    if (!student) {
+      return res.status(404).json({ success: false, message: 'Student profile not found' });
+    }
+
+    // 2. Fetch all attendance matching the student's ID
+    const attendance = await Attendance.find({ student: student._id })
+      .populate('markedBy', 'name')
+      .sort({ date: -1 });
+
+    res.status(200).json({ 
+      success: true, 
+      count: attendance.length,
+      data: attendance 
+    });
+  } catch (error) { next(error); }
 };

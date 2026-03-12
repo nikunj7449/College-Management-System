@@ -1,8 +1,8 @@
 import React from 'react';
-import { Edit, Trash2, Eye, Power, Mail, Phone } from 'lucide-react';
-import { getShortBranch } from '../../utils/adminUtils/courseUtils';
+import { Edit, Trash2, Eye, Power, Mail, Phone, MessageSquare } from 'lucide-react';
+import { getShortBranch } from '../../../utils/adminUtils/courseUtils';
 
-const StudentTableRow = ({ student, onEdit, onDelete, onView, onToggleStatus, role }) => {
+const StudentTableRow = ({ student, onEdit, onDelete, onView, onToggleStatus, onRemark, role }) => {
   return (
     <tr className="hover:bg-slate-50 transition-colors">
       <td className="px-6 py-4">
@@ -60,6 +60,15 @@ const StudentTableRow = ({ student, onEdit, onDelete, onView, onToggleStatus, ro
               title="View Details"
             >
               <Eye size={16} />
+            </button>
+          )}
+          {onRemark && (
+            <button
+              onClick={() => onRemark(student)}
+              className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+              title="Give Remark"
+            >
+              <MessageSquare size={16} />
             </button>
           )}
           {onEdit && (

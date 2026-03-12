@@ -15,6 +15,10 @@ const attendanceSchema = new mongoose.Schema({
     enum: ['Present', 'Absent', 'Late', 'Leave'],
     required: [true, 'Attendance status is required']
   },
+  subject: {
+    type: String,
+    required: [true, 'Subject is required']
+  },
   markedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

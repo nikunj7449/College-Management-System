@@ -3,12 +3,12 @@ import { Search, LayoutGrid, List } from 'lucide-react';
 import { useFacultyOperations } from '../../../hooks/faculty/useFacultyOperations';
 
 // Components
-import CourseCard from '../../common/CourseCard';
-import CourseTableRow from '../../common/CourseTableRow';
-import CourseEmptyState from '../../common/CourseEmptyState';
+import CourseCard from '../../common/course/CourseCard';
+import CourseTableRow from '../../common/course/CourseTableRow';
+import CourseEmptyState from '../../common/course/CourseEmptyState';
 import CourseViewModal from '../../modals/CourseViewModal';
-import CourseCardSkeleton from '../../common/CourseCardSkeleton';
-import Pagination from '../../common/Pagination';
+import CourseCardSkeleton from '../../common/course/CourseCardSkeleton';
+import Pagination from '../../common/core/Pagination';
 
 const FacultyCourse = () => {
     const [viewType, setViewType] = useState('grid');

@@ -15,11 +15,11 @@ import { hasPermission } from '../../../utils/permissionUtils';
 import { AuthContext } from '../../../context/AuthContext';
 
 // Components
-import FacultyCard from '../../common/FacultyCard';
-import FacultyTableRow from '../../common/FacultyTableRow';
-import FacultyCardSkeleton from '../../common/StudentCardSkeleton';
-import FacultyEmptyState from '../../common/FacultyEmptyState';
-import Pagination from '../../common/Pagination';
+import FacultyCard from '../../common/faculty/FacultyCard';
+import FacultyTableRow from '../../common/faculty/FacultyTableRow';
+import FacultyCardSkeleton from '../../common/student/StudentCardSkeleton';
+import FacultyEmptyState from '../../common/faculty/FacultyEmptyState';
+import Pagination from '../../common/core/Pagination';
 import FacultyFormModal from '../../modals/FacultyFormModal';
 import DeleteConfirmModal from '../../modals/DeleteConfirmModal';
 import FacultyFilterPanel from './sub-components/FacultyFilterPanel';

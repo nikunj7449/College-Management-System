@@ -1,9 +1,12 @@
 const Faculty = require('../models/faculty');
+const Student = require('../models/Student');
 const User = require('../models/User');
 const Role = require('../models/Role');
 const bcrypt = require('bcryptjs');
 const Remark = require('../models/Remark');
 const cloudinary = require('cloudinary').v2;
+const sendEmail = require('../utils/sendEmail');
+const { getWelcomeEmailTemplate } = require('../utils/emailTemplates');
 
 // @desc    Add a new Faculty
 // @route   POST /api/v1/faculty
@@ -90,6 +93,29 @@ exports.addFaculty = async (req, res, next) => {
       joiningDate: joiningDate || undefined,
       documents: documentsArray
     });
+
+    // Send Welcome Email
+    try {
+      const loginUrl = process.env.FRONTEND_URL || 'http://localhost:5173/login';
+      const emailHtml = getWelcomeEmailTemplate(
+          name, 
+          'Faculty', 
+          loginEmail, 
+          formattedPassword, 
+          loginUrl
+      );
+
+      await sendEmail({
+          email: personalEmail,
+          subject: `Welcome to ${process.env.COLLEGE_NAME || 'College'} - Your Faculty Portal Credentials`,
+          html: emailHtml
+      });
+      console.log(`Welcome email sent to faculty ${facultyId} at ${personalEmail}`);
+    } catch (emailError) {
+      console.error(`Failed to send welcome email to faculty ${facultyId}:`, emailError);
+      // We do not throw here, because the faculty account was successfully created.
+    }
+
     res.status(201).json({
       success: true,
       message: 'Faculty added and Login created successfully',
@@ -273,6 +299,32 @@ exports.getAllFaculty = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
+};
+
+// @desc    Get My Faculty (Student Only)
+// @route   GET /api/v1/faculty/my-faculty
+// @access  Private (Student)
+exports.getMyFaculty = async (req, res, next) => {
+  try {
+    const studentUser = req.user.id;
+    
+    // 1. Get the current logged in student's details
+    const student = await Student.findOne({ user: studentUser });
+    if (!student) {
+      return res.status(404).json({ success: false, message: 'Student profile not found' });
+    }
+
+    // 2. Fetch all faculty members matching the student's branch
+    const faculties = await Faculty.find({ branch: student.branch })
+      .select('name facultyId personalEmail email phone designation subject qualification course branch joiningDate')
+      .sort({ name: 1 });
+
+    res.status(200).json({ 
+      success: true, 
+      count: faculties.length,
+      data: faculties 
+    });
+  } catch (error) { next(error); }
 };
 
 // @desc    Update Faculty

@@ -23,6 +23,7 @@ const FacultyAttendance = () => {
 
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
     const [selectedSem, setSelectedSem] = useState('');
+    const [selectedSubject, setSelectedSubject] = useState('');
 
     const [students, setStudents] = useState([]);
     const [attendanceData, setAttendanceData] = useState({}); // { studentId: 'Present' | 'Absent' }
@@ -67,6 +68,9 @@ const FacultyAttendance = () => {
                         if (myProfile.sem && myProfile.sem.length > 0) {
                             setSelectedSem(myProfile.sem[0]); // Default to first semester
                         }
+                        if (myProfile.subject && myProfile.subject.length > 0) {
+                            setSelectedSubject(myProfile.subject[0]); // Default to first subject
+                        }
                     } else {
                         toast.error('Faculty profile not found.');
                     }
@@ -89,6 +93,10 @@ const FacultyAttendance = () => {
             toast.warning('Please select a semester');
             return;
         }
+        if (!selectedSubject) {
+            toast.warning('Please select a subject');
+            return;
+        }
 
         if (isHookLoading) {
             toast.info('Loading student data in the background, please try again in a moment...');
@@ -101,9 +109,9 @@ const FacultyAttendance = () => {
             const loadedStudents = hookStudents;
             setStudents(loadedStudents);
 
-            // 2. Fetch existing attendance for this Date, Course, Sem
-            const attendanceRes = await getClassAttendance(date, facultyProfile.course, selectedSem);
-            console.log(date, facultyProfile.course, selectedSem)
+            // 2. Fetch existing attendance for this Date, Course, Sem, Subject
+            const attendanceRes = await getClassAttendance(date, facultyProfile.course, selectedSem, selectedSubject);
+            console.log(date, facultyProfile.course, selectedSem, selectedSubject)
             console.log(attendanceRes)
 
             // 3. Merge data
@@ -164,7 +172,8 @@ const FacultyAttendance = () => {
                 studentId: student._id,
                 date: date,
                 status: attendanceData[student._id],
-                facultyId: user._id // The markedBy ref expects a User ID
+                facultyId: user._id, // The markedBy ref expects a User ID
+                subject: selectedSubject
             }));
 
             const res = await markBulkAttendance(payload);
@@ -234,6 +243,18 @@ const FacultyAttendance = () => {
                         />
                     </div>
 
+                    {/* Subject (Dropdown) */}
+                    <div className="relative z-10 w-full">
+                        <label className="block text-sm font-medium text-slate-700 mb-2">Subject</label>
+                        <CustomDropdown
+                            name="selectedSubject"
+                            options={facultyProfile?.subject || []}
+                            value={selectedSubject}
+                            onChange={(e) => setSelectedSubject(e.target.value)}
+                            placeholder="Select Subject"
+                        />
+                    </div>
+
                     {/* Date Picker */}
                     <div>
                         <label className="block text-sm font-medium text-slate-700 mb-2">Date</label>
@@ -249,11 +270,11 @@ const FacultyAttendance = () => {
                         </div>
                     </div>
 
-                    <div className="flex items-end">
+                    <div className="flex items-end lg:col-span-2">
                         <button
                             onClick={handleFetchStudents}
-                            disabled={isLoadingStudents || isHookLoading || !selectedSem}
-                            className={`w-full py-2.5 px-4 rounded-xl flex items-center justify-center font-medium transition-all ${isLoadingStudents || isHookLoading || !selectedSem
+                            disabled={isLoadingStudents || isHookLoading || !selectedSem || !selectedSubject}
+                            className={`w-full py-2.5 px-4 rounded-xl flex items-center justify-center font-medium transition-all ${isLoadingStudents || isHookLoading || !selectedSem || !selectedSubject
                                 ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
                                 : 'bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-500/30'
                                 }`}

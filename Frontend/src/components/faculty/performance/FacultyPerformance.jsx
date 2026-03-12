@@ -7,6 +7,7 @@ import api from '../../../services/api';
 import PerformanceFormModal from './PerformanceFormModal';
 import PerformanceViewModal from './PerformanceViewModal';
 import { useFacultyOperations } from '../../../hooks/faculty/useFacultyOperations';
+import { hasPermission } from '../../../utils/permissionUtils';
 
 const FacultyPerformance = () => {
     const { user } = useContext(AuthContext);
@@ -21,6 +22,8 @@ const FacultyPerformance = () => {
     // Modals state
     const [formModal, setFormModal] = useState({ isOpen: false, data: null, isEdit: false });
     const [viewModal, setViewModal] = useState({ isOpen: false, data: null });
+
+    const isAdmin = user?.role?.name === 'ADMIN' || user?.role?.name === 'SUPERADMIN';
 
     useEffect(() => {
         fetchData();
@@ -82,7 +85,7 @@ const FacultyPerformance = () => {
         const stdName = perf.student?.name || `${perf.student?.firstName || ''} ${perf.student?.lastName || ''}`.trim() || 'Unknown';
         return (
             stdName.toLowerCase().includes(query) ||
-            perf.examName?.toLowerCase().includes(query)
+            perf.exam?.name?.toLowerCase().includes(query)
         );
     });
 
@@ -105,13 +108,15 @@ const FacultyPerformance = () => {
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
-                    <button
-                        onClick={handleAdd}
-                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-sm text-sm font-medium"
-                    >
-                        <Plus size={18} />
-                        <span className="hidden sm:inline">Add Performance</span>
-                    </button>
+                    {hasPermission(user, 'PERFORMANCE', 'create') && (
+                        <button
+                            onClick={handleAdd}
+                            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-sm text-sm font-medium"
+                        >
+                            <Plus size={18} />
+                            <span className="hidden sm:inline">Add Performance</span>
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -121,6 +126,7 @@ const FacultyPerformance = () => {
                         <thead className="bg-slate-50 border-b border-slate-200">
                             <tr>
                                 <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Student Name</th>
+                                {isAdmin && <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Faculty</th>}
                                 <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Exam Name</th>
                                 <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Subjects Count</th>
                                 <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Grade</th>
@@ -138,7 +144,7 @@ const FacultyPerformance = () => {
                                 </tr>
                             ) : filteredPerformances.length === 0 ? (
                                 <tr>
-                                    <td colSpan="7" className="px-6 py-8 text-center text-slate-500">
+                                    <td colSpan={isAdmin ? "8" : "7"} className="px-6 py-8 text-center text-slate-500">
                                         No performance records found.
                                     </td>
                                 </tr>
@@ -151,7 +157,13 @@ const FacultyPerformance = () => {
                                             </div>
                                             <div className="text-xs text-slate-500">{perf.student?.rollNum || perf.student?.rollNo || perf.student?.studentId || 'N/A'}</div>
                                         </td>
-                                        <td className="px-6 py-4 text-sm text-slate-600 font-medium">{perf.examName}</td>
+                                        {isAdmin && (
+                                            <td className="px-6 py-4">
+                                                <div className="text-sm font-medium text-slate-800">{perf.faculty?.name || 'N/A'}</div>
+                                                <div className="text-xs text-slate-500">{perf.faculty?.email}</div>
+                                            </td>
+                                        )}
+                                        <td className="px-6 py-4 text-sm text-slate-600 font-medium">{perf.exam?.name || 'N/A'}</td>
                                         <td className="px-6 py-4 text-sm text-slate-600">{perf.subjects?.length || 0}</td>
                                         <td className="px-6 py-4">
                                             <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${perf.grade === 'A' ? 'bg-green-100 text-green-700' :
@@ -174,12 +186,16 @@ const FacultyPerformance = () => {
                                                 <button onClick={() => handleView(perf)} className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition-colors" title="View Details">
                                                     <Eye size={18} />
                                                 </button>
-                                                <button onClick={() => handleEdit(perf)} className="p-1.5 text-slate-400 hover:text-green-600 hover:bg-slate-100 rounded-lg transition-colors" title="Edit Record">
-                                                    <Edit size={18} />
-                                                </button>
-                                                <button onClick={() => handleDelete(perf._id)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-slate-100 rounded-lg transition-colors" title="Delete Record">
-                                                    <Trash2 size={18} />
-                                                </button>
+                                                {hasPermission(user, 'PERFORMANCE', 'update') && (
+                                                    <button onClick={() => handleEdit(perf)} className="p-1.5 text-slate-400 hover:text-green-600 hover:bg-slate-100 rounded-lg transition-colors" title="Edit Record">
+                                                        <Edit size={18} />
+                                                    </button>
+                                                )}
+                                                {hasPermission(user, 'PERFORMANCE', 'delete') && (
+                                                    <button onClick={() => handleDelete(perf._id)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-slate-100 rounded-lg transition-colors" title="Delete Record">
+                                                        <Trash2 size={18} />
+                                                    </button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
