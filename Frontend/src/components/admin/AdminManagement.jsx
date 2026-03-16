@@ -11,12 +11,15 @@ import AdminTableSkeleton from '../common/admin/AdminTableSkeleton';
 import AdminCard from '../common/admin/AdminCard';
 import AdminTableRow from '../common/admin/AdminTableRow';
 import AdminModal from '../modals/AdminModal';
+import OtherUserModal from '../modals/OtherUserModal';
 
 const AdminManagement = ({ hideHeader = false }) => {
   // Data State
   const [admins, setAdmins] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState('ALL Roles');
+  const [isRoleFilterOpen, setIsRoleFilterOpen] = useState(false);
   const [viewType, setViewType] = useState('grid');
 
   // Pagination State
@@ -25,9 +28,12 @@ const AdminManagement = ({ hideHeader = false }) => {
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isOtherModalOpen, setIsOtherModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isAddUserDropdownOpen, setIsAddUserDropdownOpen] = useState(false);
   const [modalMode, setModalMode] = useState('create'); // 'create' | 'edit' | 'view'
   const [selectedAdmin, setSelectedAdmin] = useState(null);
+  const [initialRole, setInitialRole] = useState(null);
 
   // --- Effects ---
 
@@ -37,11 +43,11 @@ const AdminManagement = ({ hideHeader = false }) => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm]);
+  }, [searchTerm, roleFilter]);
 
   // Lock body scroll when any modal is open
   useEffect(() => {
-    if (isModalOpen || isDeleteModalOpen) {
+    if (isModalOpen || isOtherModalOpen || isDeleteModalOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
@@ -50,18 +56,25 @@ const AdminManagement = ({ hideHeader = false }) => {
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [isModalOpen, isDeleteModalOpen]);
+  }, [isModalOpen, isOtherModalOpen, isDeleteModalOpen]);
 
   // --- API Handlers (Mocked for now, replace with actual API calls) ---
 
   const fetchAdmins = async () => {
     setLoading(true);
     try {
-      const response = await api.get('/admins');
-      setAdmins(response.data.data);
+      const [adminRes, otherRes] = await Promise.all([
+        api.get('/admins'),
+        api.get('/other-users')
+      ]);
+      
+      const merged = [...adminRes.data.data, ...otherRes.data.data].sort((a, b) => 
+        new Date(b.createdAt) - new Date(a.createdAt)
+      );
+      setAdmins(merged);
     } catch (error) {
-      console.error('Error fetching admins:', error);
-      toast.error('Failed to load admins');
+      console.error('Error fetching users:', error);
+      toast.error('Failed to load users');
     } finally {
       setLoading(false);
     }
@@ -82,8 +95,10 @@ const AdminManagement = ({ hideHeader = false }) => {
     return { success: true };
   };
 
-  const handleDeleteAdmin = async (id) => {
-    await api.delete(`/admins/${id}`);
+  const handleDeleteAdmin = async (id, role) => {
+    const isSystem = ['ADMIN', 'SUPERADMIN'].includes(role.toUpperCase());
+    const endpoint = isSystem ? `/admins/${id}` : `/other-users/${id}`;
+    await api.delete(endpoint);
     await fetchAdmins();
     return { success: true };
   };
@@ -94,34 +109,74 @@ const AdminManagement = ({ hideHeader = false }) => {
     try {
       let result;
       if (modalMode === 'create') {
-        result = await handleCreateAdmin(formData);
-        if (result.success) toast.success('Admin created successfully');
+        result = await api.post('/admins', formData);
+        if (result.data.success) toast.success('Admin created successfully');
       } else {
-        result = await handleUpdateAdmin(selectedAdmin._id, formData);
-        if (result.success) toast.success('Admin updated successfully');
+        const payload = { ...formData };
+        if (!payload.password) delete payload.password;
+        delete payload.confirmPassword;
+        result = await api.put(`/admins/${selectedAdmin._id}`, payload);
+        if (result.data.success) toast.success('Admin updated successfully');
       }
+      await fetchAdmins();
       closeModal();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Operation failed');
-      throw error; // Re-throw to let modal handle loading state if needed
+      throw error;
     }
   };
 
-  const openCreateModal = () => {
+  const handleOtherModalSubmit = async (formData) => {
+    try {
+      let result;
+      if (modalMode === 'create') {
+        result = await api.post('/other-users', formData);
+        if (result.data.success) toast.success('Other user created successfully');
+      } else {
+        const payload = { ...formData };
+        if (!payload.password) delete payload.password;
+        delete payload.confirmPassword;
+        result = await api.put(`/other-users/${selectedAdmin._id}`, payload);
+        if (result.data.success) toast.success('Other user updated successfully');
+      }
+      await fetchAdmins();
+      closeOtherModal();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Operation failed');
+      throw error;
+    }
+  };
+
+  const openCreateModal = (role = null) => {
     setModalMode('create');
-    setIsModalOpen(true);
+    setInitialRole(role);
+    if (role === 'OTHER') {
+      setIsOtherModalOpen(true);
+    } else {
+      setIsModalOpen(true);
+    }
   };
 
   const openEditModal = (admin) => {
     setModalMode('edit');
     setSelectedAdmin(admin);
-    setIsModalOpen(true);
+    const isSystem = ['ADMIN', 'SUPERADMIN'].includes(admin.role.toUpperCase());
+    if (isSystem) {
+      setIsModalOpen(true);
+    } else {
+      setIsOtherModalOpen(true);
+    }
   };
 
   const openViewModal = (admin) => {
     setModalMode('view');
     setSelectedAdmin(admin);
-    setIsModalOpen(true);
+    const isSystem = ['ADMIN', 'SUPERADMIN'].includes(admin.role.toUpperCase());
+    if (isSystem) {
+      setIsModalOpen(true);
+    } else {
+      setIsOtherModalOpen(true);
+    }
   };
 
   const openDeleteModal = (admin) => {
@@ -132,12 +187,12 @@ const AdminManagement = ({ hideHeader = false }) => {
   const confirmDelete = async () => {
     if (!selectedAdmin) return;
     try {
-      await handleDeleteAdmin(selectedAdmin._id);
-      toast.success('Admin deleted successfully');
+      await handleDeleteAdmin(selectedAdmin._id, selectedAdmin.role);
+      toast.success('User deleted successfully');
       setIsDeleteModalOpen(false);
       setSelectedAdmin(null);
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to delete admin');
+      toast.error(error.response?.data?.message || 'Failed to delete user');
     }
   };
 
@@ -146,13 +201,20 @@ const AdminManagement = ({ hideHeader = false }) => {
     setSelectedAdmin(null);
   };
 
+  const closeOtherModal = () => {
+    setIsOtherModalOpen(false);
+    setSelectedAdmin(null);
+  };
+
   // --- Filtering & Pagination ---
 
-  const filteredAdmins = admins.filter(admin =>
-    (admin.name && admin.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (admin.email && admin.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (admin.adminId && admin.adminId.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredAdmins = admins.filter(admin => {
+    const matchesSearch = (admin.name && admin.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (admin.email && admin.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (admin.adminId && admin.adminId.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesRole = roleFilter === 'ALL Roles' || admin.role === roleFilter;
+    return matchesSearch && matchesRole;
+  });
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -206,14 +268,91 @@ const AdminManagement = ({ hideHeader = false }) => {
               </button>
             </div>
 
-            {/* Add Admin Button */}
-            <button
-              onClick={openCreateModal}
-              className="flex items-center justify-center px-4 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
-            >
-              <Plus size={20} className="mr-2" />
-              <span className="font-medium text-sm">Add Admin</span>
-            </button>
+            {/* Role Filter */}
+            <div className="relative">
+              <button
+                onClick={() => setIsRoleFilterOpen(!isRoleFilterOpen)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all ${roleFilter !== 'ALL Roles' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+              >
+                <Shield size={18} />
+                {roleFilter === 'ALL Roles' ? 'ALL Roles' : roleFilter}
+              </button>
+
+              {isRoleFilterOpen && (
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 p-2 z-20 animate-in fade-in zoom-in-95 duration-200">
+                  <button
+                    onClick={() => { setRoleFilter('ALL Roles'); setIsRoleFilterOpen(false); }}
+                    className={`w-full text-left px-4 py-2 rounded-xl text-sm font-medium transition-all ${roleFilter === 'ALL Roles' ? 'bg-indigo-50 text-indigo-600' : 'text-slate-600 hover:bg-slate-50'}`}
+                  >
+                    ALL Roles
+                  </button>
+                  {['SUPERADMIN', 'ADMIN'].map((role) => (
+                    <button
+                      key={role}
+                      onClick={() => {
+                        setRoleFilter(role);
+                        setIsRoleFilterOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-2 rounded-xl text-sm font-medium transition-all ${roleFilter === role ? 'bg-indigo-50 text-indigo-600' : 'text-slate-600 hover:bg-slate-50'}`}
+                    >
+                      {role === 'ADMIN' ? 'Administrators' : 'Super Admins'}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Add User Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setIsAddUserDropdownOpen(!isAddUserDropdownOpen)}
+                className="flex items-center justify-center px-4 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
+              >
+                <Plus size={20} className="mr-2" />
+                <span className="font-medium text-sm">Add User</span>
+              </button>
+
+              {isAddUserDropdownOpen && (
+                <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 p-2 z-20 animate-in fade-in zoom-in-95 duration-200">
+                  <button
+                    onClick={() => {
+                      openCreateModal('ADMIN');
+                      setIsAddUserDropdownOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center gap-3"
+                  >
+                    <div className="p-1.5 bg-indigo-50 rounded-lg text-indigo-600">
+                      <Shield size={16} />
+                    </div>
+                    Admin User
+                  </button>
+                  <button
+                    onClick={() => {
+                      openCreateModal('FACULTY'); 
+                      setIsAddUserDropdownOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 transition-all flex items-center gap-3"
+                  >
+                    <div className="p-1.5 bg-emerald-50 rounded-lg text-emerald-600">
+                      <List size={16} />
+                    </div>
+                    Faculty User
+                  </button>
+                  <button
+                    onClick={() => {
+                      openCreateModal('OTHER'); // Or null to let user choose
+                      setIsAddUserDropdownOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-orange-50 hover:text-orange-600 transition-all flex items-center gap-3"
+                  >
+                    <div className="p-1.5 bg-orange-50 rounded-lg text-orange-600">
+                      <Plus size={16} />
+                    </div>
+                    Other User
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -256,14 +395,57 @@ const AdminManagement = ({ hideHeader = false }) => {
               </button>
             </div>
 
-            {/* Add Admin Button */}
-            <button
-              onClick={openCreateModal}
-              className="flex items-center justify-center px-4 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-sm"
-            >
-              <Plus size={20} className="mr-2" />
-              <span className="font-medium text-sm">Add Admin</span>
-            </button>
+            {/* Add User Dropdown (Synchronized with AllUsersList) */}
+            <div className="relative">
+              <button
+                onClick={() => setIsAddUserDropdownOpen(!isAddUserDropdownOpen)}
+                className="flex items-center justify-center px-4 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-sm"
+              >
+                <Plus size={20} className="mr-2" />
+                <span className="font-medium text-sm">Add User</span>
+              </button>
+
+              {isAddUserDropdownOpen && (
+                <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 p-2 z-20 animate-in fade-in zoom-in-95 duration-200">
+                  <button
+                    onClick={() => {
+                      openCreateModal('ADMIN');
+                      setIsAddUserDropdownOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center gap-3"
+                  >
+                    <div className="p-1.5 bg-indigo-50 rounded-lg text-indigo-600">
+                      <Shield size={16} />
+                    </div>
+                    Admin User
+                  </button>
+                  <button
+                    onClick={() => {
+                      openCreateModal('FACULTY'); 
+                      setIsAddUserDropdownOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 transition-all flex items-center gap-3"
+                  >
+                    <div className="p-1.5 bg-emerald-50 rounded-lg text-emerald-600">
+                      <List size={16} />
+                    </div>
+                    Faculty User
+                  </button>
+                  <button
+                    onClick={() => {
+                      openCreateModal('OTHER');
+                      setIsAddUserDropdownOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-orange-50 hover:text-orange-600 transition-all flex items-center gap-3"
+                  >
+                    <div className="p-1.5 bg-orange-50 rounded-lg text-orange-600">
+                      <Plus size={16} />
+                    </div>
+                    Other User
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -344,9 +526,21 @@ const AdminManagement = ({ hideHeader = false }) => {
         <AdminModal
           isOpen={isModalOpen}
           onClose={closeModal}
+          initialRole={initialRole}
           mode={modalMode}
           admin={selectedAdmin}
           onSubmit={handleModalSubmit}
+        />
+      )}
+
+      {isOtherModalOpen && (
+        <OtherUserModal
+          isOpen={isOtherModalOpen}
+          onClose={closeOtherModal}
+          initialRole={initialRole}
+          mode={modalMode}
+          user={selectedAdmin}
+          onSubmit={handleOtherModalSubmit}
         />
       )}
 

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../../services/api';
-import { Loader2, AlertCircle, FileText, Calendar, Clock, Award, Bookmark, BookOpen, UserSquare2, TrendingUp } from 'lucide-react';
+import { Loader2, AlertCircle, FileText, Calendar, Clock, Award, Bookmark, BookOpen, UserSquare2, TrendingUp, ChevronRight } from 'lucide-react';
 import Pagination from '../../common/core/Pagination';
+import PerformanceDetailModal from './PerformanceDetailModal';
+
 
 const StudentExams = () => {
   const [exams, setExams] = useState([]);
@@ -10,6 +12,8 @@ const StudentExams = () => {
   const [error, setError] = useState(null);
   
   const [activeTab, setActiveTab] = useState('upcoming'); // 'upcoming' or 'results'
+  const [selectedPerformance, setSelectedPerformance] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -18,6 +22,17 @@ const StudentExams = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (isModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isModalOpen]);
 
   // Reset pagination when switching tabs
   useEffect(() => {
@@ -43,6 +58,11 @@ const StudentExams = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleViewDetails = (record) => {
+    setSelectedPerformance(record);
+    setIsModalOpen(true);
   };
 
   const getGradeColor = (grade) => {
@@ -178,8 +198,8 @@ const StudentExams = () => {
                             )}
                           </div>
                           <div className="w-12 h-12 bg-slate-50 rounded-2xl flex flex-col items-center justify-center border border-slate-100 shrink-0">
-                              <span className="text-xs font-bold text-slate-400 leading-none">{new Date(exam.date).toLocaleDateString(undefined, { month: 'short' }).toUpperCase()}</span>
-                              <span className="text-lg font-black text-indigo-600 leading-tight">{new Date(exam.date).getDate()}</span>
+                               <span className="text-xs font-bold text-slate-400 leading-none">{new Date(exam.date).toLocaleDateString(undefined, { month: 'short' }).toUpperCase()}</span>
+                               <span className="text-lg font-black text-indigo-600 leading-tight">{new Date(exam.date).getDate()}</span>
                           </div>
                        </div>
                        
@@ -253,33 +273,37 @@ const StudentExams = () => {
                        </div>
                        
                        <div className="p-6 flex-1 flex flex-col">
-                           {/* Subjects Map */}
+                           {/* Subjects Map - Simplified Breakdown */}
                            <div className="mb-6 flex-1">
                               <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                                  <BookOpen className="w-4 h-4" /> Subject Breakdown
                               </h4>
-                              {record.subjects && record.subjects.size > 0 ? (
+                              {record.subjects && record.subjects.length > 0 ? (
                                  <div className="space-y-2">
-                                   {Array.from(record.subjects).map(([sub, marks]) => (
-                                      <div key={sub} className="flex justify-between items-center bg-slate-50 px-3 py-2 rounded-lg border border-slate-100">
-                                         <span className="text-sm font-semibold text-slate-700 truncate pr-4">{sub}</span>
-                                         <span className="text-sm font-black text-indigo-600 shrink-0">{marks}</span>
+                                   {record.subjects.slice(0, 3).map((sub, idx) => (
+                                      <div key={idx} className="flex justify-between items-center bg-slate-50 px-3 py-2 rounded-lg border border-slate-100">
+                                         <span className="text-sm font-semibold text-slate-700 truncate pr-4">{sub.subjectName}</span>
+                                         <span className="text-sm font-black text-indigo-600 shrink-0">{sub.marksObtained}</span>
                                       </div>
                                    ))}
+                                   {record.subjects.length > 3 && (
+                                     <p className="text-[10px] text-center text-slate-400 font-bold uppercase mt-1">+{record.subjects.length - 3} More Subjects</p>
+                                   )}
                                  </div>
                               ) : (
                                   <p className="text-sm text-slate-500 italic">No detailed breakdown provided.</p>
                               )}
                            </div>
                            
-                           {/* Feedback & Meta */}
-                           <div className="pt-4 border-t border-slate-100 space-y-3 shrink-0">
-                               {record.feedback && (
-                                   <div className="flex gap-3">
-                                      <Bookmark className="w-5 h-5 text-amber-500 shrink-0" />
-                                      <p className="text-sm text-slate-600 italic leading-relaxed line-clamp-2">"{record.feedback}"</p>
-                                   </div>
-                               )}
+                           {/* Action & Meta */}
+                           <div className="pt-4 border-t border-slate-100 space-y-4 shrink-0">
+                               <button 
+                                 onClick={() => handleViewDetails(record)}
+                                 className="w-full flex items-center justify-center gap-2 py-2.5 bg-indigo-50 text-indigo-600 rounded-xl font-bold text-sm hover:bg-indigo-100 transition-colors group/btn"
+                               >
+                                  View Detailed Report <ChevronRight size={16} className="group-hover/btn:translate-x-0.5 transition-transform" />
+                               </button>
+
                                <div className="flex items-center gap-2 text-xs font-semibold text-slate-400 uppercase tracking-wide">
                                    <UserSquare2 className="w-4 h-4" /> 
                                    Evaluator: {record.faculty?.name || 'Unknown'}
@@ -298,6 +322,13 @@ const StudentExams = () => {
           )}
         </div>
       )}
+
+      {/* Detail Modal */}
+      <PerformanceDetailModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        data={selectedPerformance}
+      />
     </div>
   );
 };

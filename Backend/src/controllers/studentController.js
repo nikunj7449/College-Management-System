@@ -8,6 +8,9 @@ const Performance = require('../models/Performance');
 const cloudinary = require('cloudinary').v2;
 const sendEmail = require('../utils/sendEmail');
 const { getWelcomeEmailTemplate } = require('../utils/emailTemplates');
+const StudentFee = require('../models/StudentFee');
+const FeePayment = require('../models/FeePayment');
+const { autoAssignStudentFees } = require('./feeController');
 
 // @desc    Add a new student
 // @route   POST /api/v1/students
@@ -105,6 +108,9 @@ exports.addStudent = async (req, res, next) => {
       dob,
       documents: documentsArray
     });
+
+    // 5.1 Auto-Assign Fee Structure
+    await autoAssignStudentFees(student);
 
     // 6. Send Welcome Email
     try {
@@ -218,7 +224,7 @@ exports.addBulkStudents = async (req, res, next) => {
         });
 
         // Create Student
-        await Student.create({
+        const student = await Student.create({
           user: newUser._id,
           name,
           email: studentEmail,
@@ -233,6 +239,9 @@ exports.addBulkStudents = async (req, res, next) => {
           dob,
           documents: [] // No documents in bulk upload
         });
+
+        // Auto-Assign Fee Structure
+        await autoAssignStudentFees(student);
 
         addedCount++;
 
@@ -396,6 +405,11 @@ exports.updateStudent = async (req, res, next) => {
       { new: true, runValidators: true }
     );
 
+    // Auto-Assign Fee Structure
+    if (updatedStudent) {
+        await autoAssignStudentFees(updatedStudent);
+    }
+
     res.status(200).json({
       success: true,
       message: 'Student profile and linked login updated successfully',
@@ -433,10 +447,12 @@ exports.deleteStudent = async (req, res, next) => {
       }
     }
 
-    // Delete associated data (Attendance, Remarks, Performance)
+    // Delete associated data (Attendance, Remarks, Performance, Fees)
     await Attendance.deleteMany({ student: student._id });
     await Remark.deleteMany({ student: student._id });
     await Performance.deleteMany({ student: student._id });
+    await StudentFee.deleteMany({ student: student._id });
+    await FeePayment.deleteMany({ student: student._id });
 
     // Delete Student profile
     await student.deleteOne();

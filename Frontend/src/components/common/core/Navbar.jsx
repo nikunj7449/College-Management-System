@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import { AuthContext } from '../../../context/AuthContext';
 import {
   Bell, Search, LogOut, Menu, User,
-  LayoutDashboard, Users, GraduationCap, BookOpen, Award, Calendar, Settings, Shield, MessageSquare
+  LayoutDashboard, Users, GraduationCap, BookOpen, Award, Calendar, Settings, Shield, MessageSquare, IndianRupee
 } from 'lucide-react';
 
 import { ChevronDown, Circle } from 'lucide-react';
@@ -87,7 +87,7 @@ const SidebarItem = ({ icon: Icon, label, to, active, badge, onClick, children, 
         <div
           className={`
             ${isSidebarOpen
-              ? `overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? 'max-h-40 opacity-100 mt-1' : 'max-h-0 opacity-0'}`
+              ? `overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? 'max-h-96 opacity-100 mt-1' : 'max-h-0 opacity-0'}`
               : `absolute left-full top-0 w-56 pl-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[100] transform origin-left -translate-x-2 scale-95 group-hover:translate-x-0 group-hover:scale-100`
             }
           `}
@@ -110,9 +110,15 @@ const SidebarItem = ({ icon: Icon, label, to, active, badge, onClick, children, 
                   <Link
                     key={idx}
                     to={child.path}
-                    onClick={onClick}
+                    onClick={(e) => {
+                        if (child.label === 'Edit Event' && child.path === '/events') {
+                            e.preventDefault();
+                            toast.warning('Please select an event to edit from the list');
+                        }
+                        onClick?.();
+                    }}
                     className={`
-                      group/child flex items-center py-2.5 pr-3 pl-3.5 rounded-xl text-sm font-medium transition-all duration-300
+                      group/child flex items-center py-2 pr-4 pl-9 rounded-xl text-sm font-medium transition-all duration-300
                       ${isChildActive
                         ? 'text-indigo-700 bg-indigo-50 shadow-sm ring-1 ring-indigo-100/50'
                         : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'}
@@ -236,7 +242,11 @@ const Navbar = () => {
       'PERFORMANCE': Award,
       'EVENT': Calendar,
       'EXAMS': BookOpen,
-      'REMARKS': MessageSquare
+      'REMARKS': MessageSquare,
+      'FEE_MANAGEMENT': IndianRupee,
+      'FEE': IndianRupee,
+      'MY_FEES': IndianRupee,
+      'PROFILE': User
     };
 
     const getPath = (key) => {
@@ -254,9 +264,26 @@ const Navbar = () => {
       if (key === 'PERFORMANCE' || key === 'EXAM') return roleName === 'STUDENT' ? "/student/exams" : "/performance";
       if (key === 'EVENT' || key === 'EVENT_VIEW') return roleName === 'STUDENT' ? "/student/events" : "/events";
       if (key === 'EVENT_CREATE') return "/events/add";
-      if (key === 'EVENT_UPDATE') return location.pathname.startsWith("/events/edit") ? location.pathname : "/events";
+      if (key === 'EVENT_UPDATE') {
+        const isEditing = location.pathname.startsWith("/events/edit/");
+        if (!isEditing) {
+            // If we're not already editing, we can return a "dummy" path or handle it via onClick
+            return "/events"; 
+        }
+        return location.pathname;
+      }
       if (key === 'EXAMS') return "/exams";
       if (key === 'REMARKS') return "/remarks";
+      if (key === 'FEE_CATEGORIES') return "/fees/categories";
+      if (key === 'FEE_STRUCTURE') return "/fees/structures";
+      if (key === 'STUDENT_FEES') return "/fees/students";
+      if (key === 'FEE_REPORTS') return "/fees/reports";
+      if (key === 'MY_FEES') return "/student/fees";
+      if (key === 'PROFILE') {
+        if (roleName === 'FACULTY') return "/faculty/profile";
+        if (roleName === 'ADMIN' || roleName === 'SUPERADMIN') return "/admin/profile";
+        return "/student/profile";
+      }
       return "#";
     };
 
@@ -271,7 +298,11 @@ const Navbar = () => {
       'ROLES_PERMISSIONS': 'ROLE',
       'SYSTEM_MODULES': 'MODULE',
       'EXAMS': 'EXAM',
-      'REMARKS': 'REMARK'
+      'REMARKS': 'REMARK',
+      'FEE_CATEGORIES': 'FEE',
+      'FEE_STRUCTURE': 'FEE',
+      'STUDENT_FEES': 'FEE',
+      'FEE_REPORTS': 'FEE'
     };
 
     const actionMapping = {
@@ -336,10 +367,6 @@ const Navbar = () => {
     if (roleName === 'ADMIN' || roleName === 'SUPERADMIN') {
       links.push({ icon: Settings, label: "Settings", path: "/settings" });
     }
-    
-    if (roleName === 'STUDENT') {
-      links.push({ icon: User, label: "My Profile", path: "/student/profile" });
-    }
 
     return links;
   };
@@ -354,7 +381,7 @@ const Navbar = () => {
 
   return (
     <>
-      <header className="bg-white border-b border-slate-200 h-20 flex items-center justify-between px-6 md:px-8 sticky top-0 z-50 shadow-sm">
+      <header className="bg-white/80 backdrop-blur-md border-b border-slate-200/60 h-20 flex items-center justify-between px-6 md:px-8 sticky top-0 z-50 shadow-sm">
         <nav className="container mx-auto flex justify-between items-center">
           {/* Logo Section */}
           <div className="flex items-center space-x-3">
@@ -363,7 +390,7 @@ const Navbar = () => {
             </div>
             <Link to={`/${user?.role?.name?.toLowerCase()}/dashboard`} className="flex flex-col">
               <h1 className="text-xl font-bold text-slate-800 tracking-tight hover:text-indigo-600 transition-colors">
-                SmartSMS
+                SmartCMS
               </h1>
               <p className="text-xs text-slate-500 hidden sm:block">
                 College Management

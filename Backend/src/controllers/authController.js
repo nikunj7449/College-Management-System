@@ -82,7 +82,7 @@ exports.loginUser = async (req, res, next) => {
     // Check status
     if (user.status !== 'Active') {
       res.status(403);
-      throw new Error('Account is inactive. Please contact admin.');
+      throw new Error('Account is inactive. Please contact higher authority.');
     }
 
     const comparePassword = await bcrypt.compare(password, user.password);

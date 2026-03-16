@@ -4,6 +4,7 @@ const Attendance = require('../models/Attendance');
 const Remark = require('../models/Remark');
 const Performance = require('../models/Performance');
 const Course = require('../models/Course');
+const StudentFee = require('../models/StudentFee');
 const Faculty = require('../models/faculty');
 const Role = require('../models/Role');
 
@@ -241,6 +242,10 @@ exports.getStudentStats = async (req, res, next) => {
       .limit(5)
       .populate('faculty', 'name');
 
+    // 5. Fee Summary
+    const studentFees = await StudentFee.find({ student: studentId });
+    const totalPendingFees = studentFees.reduce((sum, fee) => sum + fee.pendingAmount, 0);
+
     res.status(200).json({
       success: true,
       data: {
@@ -257,6 +262,7 @@ exports.getStudentStats = async (req, res, next) => {
           absentClasses,
           percentage: attendancePercentage
         },
+        totalPendingFees,
         recentPerformances,
         recentRemarks
       },

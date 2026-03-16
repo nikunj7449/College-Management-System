@@ -1,10 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { addAdmin, getAllAdmins, updateAdmin, deleteAdmin } = require('../controllers/adminController');
+const { addAdmin, getAllAdmins, updateAdmin, deleteAdmin, getMyProfile, updateMyProfile } = require('../controllers/adminController');
 const { protect } = require('../middleware/authMiddleware');
 const { authorize, requirePermission } = require('../middleware/roleMiddleware');
 
 router.use(protect);
+
+router.route('/profile/me')
+  .get(getMyProfile)
+  .put(updateMyProfile);
 
 router.route('/')
   .get(requirePermission('ADMIN', 'read'), getAllAdmins)

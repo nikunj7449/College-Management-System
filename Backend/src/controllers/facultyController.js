@@ -422,3 +422,57 @@ exports.deleteFaculty = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc    Get logged in faculty profile
+// @route   GET /api/v1/faculty/profile/me
+// @access  Private (Faculty)
+exports.getMyProfile = async (req, res, next) => {
+  try {
+    const faculty = await Faculty.findOne({ user: req.user.id });
+
+    if (!faculty) {
+      res.status(404);
+      throw new Error('Faculty profile not found');
+    }
+
+    res.status(200).json({
+      success: true,
+      data: faculty
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Update logged in faculty profile
+// @route   PUT /api/v1/faculty/profile/me
+// @access  Private (Faculty)
+exports.updateMyProfile = async (req, res, next) => {
+  try {
+    const faculty = await Faculty.findOne({ user: req.user.id });
+
+    if (!faculty) {
+      res.status(404);
+      throw new Error('Faculty profile not found');
+    }
+
+    // Only allow updating specific fields
+    const allowedUpdates = {};
+    if (req.body.phone) allowedUpdates.phone = req.body.phone;
+    if (req.body.personalEmail) allowedUpdates.personalEmail = req.body.personalEmail;
+
+    const updatedFaculty = await Faculty.findByIdAndUpdate(
+      faculty._id,
+      allowedUpdates,
+      { new: true, runValidators: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully',
+      data: updatedFaculty
+    });
+  } catch (error) {
+    next(error);
+  }
+};

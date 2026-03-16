@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, User, Shield, Mail, Phone, Calendar, Lock, Loader2, Save } from 'lucide-react';
 import { useRoles } from '../../hooks/useRoles';
 
-const AdminModal = ({ isOpen, onClose, mode, admin, onSubmit }) => {
+const AdminModal = ({ isOpen, onClose, mode, admin, onSubmit, initialRole }) => {
   const initialFormState = {
     name: '',
     adminId: '',
@@ -15,17 +15,23 @@ const AdminModal = ({ isOpen, onClose, mode, admin, onSubmit }) => {
   };
 
   const { roles, fetchRoles } = useRoles();
-
   const [formData, setFormData] = useState(initialFormState);
   const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Fetch roles once when component mounts
   useEffect(() => {
     if (isOpen) {
       fetchRoles();
+    }
+  }, [isOpen, fetchRoles]);
+
+  // Initialize form only when modal opens or admin/mode changes
+  useEffect(() => {
+    if (isOpen) {
       if (mode === 'create') {
-        const defaultRole = roles.find(r => r.name === 'ADMIN')?.name || (roles.length > 0 ? roles[0].name : '');
-        setFormData({ ...initialFormState, role: defaultRole });
+        const defaultRole = roles.find(r => r.name.toUpperCase() === (initialRole?.toUpperCase() || 'ADMIN'))?.name || (roles.length > 0 ? roles[0].name : '');
+        setFormData(prev => ({ ...initialFormState, role: defaultRole || prev.role }));
       } else if (admin) {
         setFormData({
           name: admin.name,
@@ -40,14 +46,12 @@ const AdminModal = ({ isOpen, onClose, mode, admin, onSubmit }) => {
       }
     }
     setFormErrors({});
-  }, [isOpen, mode, admin, fetchRoles, roles.length]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, mode, admin]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-    if (formErrors[name]) {
-      setFormErrors({ ...formErrors, [name]: '' });
-    }
   };
 
   const validateForm = () => {
@@ -55,17 +59,8 @@ const AdminModal = ({ isOpen, onClose, mode, admin, onSubmit }) => {
     if (!formData.name.trim()) errors.name = 'Name is required';
     if (!formData.adminId.trim()) errors.adminId = 'Admin ID is required';
     if (!formData.email.trim()) errors.email = 'Email is required';
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) errors.email = 'Invalid email format';
-
-    if (mode === 'create') {
-      if (!formData.password) errors.password = 'Password is required';
-      if (formData.password !== formData.confirmPassword) errors.confirmPassword = 'Passwords do not match';
-    } else {
-      if (formData.password && formData.password !== formData.confirmPassword) {
-        errors.confirmPassword = 'Passwords do not match';
-      }
-    }
-
+    if (mode === 'create' && !formData.password) errors.password = 'Password is required';
+    if (formData.password && formData.password !== formData.confirmPassword) errors.confirmPassword = 'Passwords do not match';
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -73,13 +68,10 @@ const AdminModal = ({ isOpen, onClose, mode, admin, onSubmit }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
-
     setIsSubmitting(true);
     try {
       await onSubmit(formData);
       onClose();
-    } catch (error) {
-      // Error handling is usually done in parent via toast, but we can stop loading here
     } finally {
       setIsSubmitting(false);
     }
@@ -94,103 +86,61 @@ const AdminModal = ({ isOpen, onClose, mode, admin, onSubmit }) => {
           <h3 className="text-lg font-semibold text-slate-800">
             {mode === 'create' ? 'Add New Admin' : mode === 'edit' ? 'Edit Admin' : 'Admin Details'}
           </h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
-            <X size={20} />
-          </button>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600"><X size={20} /></button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <input disabled={mode === 'view'} type="text" name="name" value={formData.name} onChange={handleInputChange} className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none disabled:bg-slate-50 disabled:text-slate-500" placeholder="John Doe" />
+              <input disabled={mode === 'view'} type="text" name="name" value={formData.name} onChange={handleInputChange} className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg outline-none" required />
             </div>
-            {formErrors.name && <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>}
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Admin ID</label>
             <div className="relative">
               <Shield className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <input disabled={mode === 'view'} type="text" name="adminId" value={formData.adminId} onChange={handleInputChange} className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none disabled:bg-slate-50 disabled:text-slate-500" placeholder="ADM001" />
+              <input disabled={mode === 'view'} type="text" name="adminId" value={formData.adminId} onChange={handleInputChange} className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg outline-none" placeholder="ADM001" required />
             </div>
-            {formErrors.adminId && <p className="text-red-500 text-xs mt-1">{formErrors.adminId}</p>}
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <input disabled={mode === 'view'} type="email" name="email" value={formData.email} onChange={handleInputChange} className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none disabled:bg-slate-50 disabled:text-slate-500" placeholder="admin@college.edu" />
-            </div>
-            {formErrors.email && <p className="text-red-500 text-xs mt-1">{formErrors.email}</p>}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Phone Number</label>
-            <div className="relative">
-              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <input disabled={mode === 'view'} type="tel" name="phone" value={formData.phone} onChange={handleInputChange} className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none disabled:bg-slate-50 disabled:text-slate-500" placeholder="+1 234 567 890" />
+              <input disabled={mode === 'view'} type="email" name="email" value={formData.email} onChange={handleInputChange} className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg outline-none" required />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Role</label>
-              <div className="relative">
-                <Shield className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                <select
-                  disabled={mode === 'view'}
-                  name="role"
-                  value={formData.role}
-                  onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none appearance-none bg-white disabled:bg-slate-50 disabled:text-slate-500"
-                >
-                  <option value="" disabled>Select Role</option>
-                  {roles.map(role => (
-                    <option key={role._id} value={role.name}>{role.name}</option>
-                  ))}
-                </select>
-              </div>
+              <select disabled={mode === 'view'} name="role" value={formData.role} onChange={handleInputChange} className="w-full px-4 py-2 border border-slate-200 rounded-lg outline-none appearance-none bg-white">
+                {roles.filter(r => ['ADMIN', 'SUPERADMIN'].includes(r.name.toUpperCase())).map(role => (
+                  <option key={role._id} value={role.name}>{role.name}</option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Joined Date</label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                <input
-                  disabled={mode === 'view'}
-                  type="date"
-                  name="joinedDate"
-                  value={formData.joinedDate}
-                  onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none disabled:bg-slate-50 disabled:text-slate-500"
-                />
-              </div>
+              <input disabled={mode === 'view'} type="date" name="joinedDate" value={formData.joinedDate} onChange={handleInputChange} className="w-full px-4 py-2 border border-slate-200 rounded-lg outline-none" />
             </div>
           </div>
           {mode !== 'view' && (
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  {mode === 'edit' ? 'New Password (Optional)' : 'Password'}
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                  <input type="password" name="password" value={formData.password} onChange={handleInputChange} className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none" placeholder="••••••" />
-                </div>
-                {formErrors.password && <p className="text-red-500 text-xs mt-1">{formErrors.password}</p>}
+                <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                <input type="password" name="password" value={formData.password} onChange={handleInputChange} className="w-full px-4 py-2 border border-slate-200 rounded-lg outline-none" placeholder="••••••" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Confirm Password</label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                  <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleInputChange} className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none" placeholder="••••••" />
-                </div>
-                {formErrors.confirmPassword && <p className="text-red-500 text-xs mt-1">{formErrors.confirmPassword}</p>}
+                <label className="block text-sm font-medium text-slate-700 mb-1">Confirm</label>
+                <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleInputChange} className="w-full px-4 py-2 border border-slate-200 rounded-lg outline-none" placeholder="••••••" />
               </div>
             </div>
           )}
           <div className="pt-4 flex gap-3">
-            <button type="button" onClick={onClose} className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors">{mode === 'view' ? 'Close' : 'Cancel'}</button>
+            <button type="button" onClick={onClose} className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50">{mode === 'view' ? 'Close' : 'Cancel'}</button>
             {mode !== 'view' && (
-              <button type="submit" disabled={isSubmitting} className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex justify-center items-center">
-                {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : <><Save size={18} className="mr-2" /> Save Admin</>}
+              <button type="submit" disabled={isSubmitting} className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg flex justify-center items-center">
+                {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : <><Save size={18} className="mr-2" /> Save</>}
               </button>
             )}
           </div>

@@ -26,7 +26,7 @@ connectDB().then(async () => {
   const systemModulesList = [
     'STUDENT', 'FACULTY', 'ADMIN', 'COURSE',
     'ATTENDANCE', 'EVENT', 'PERFORMANCE',
-    'REMARK', 'USER', 'ROLE', 'EXAM'
+    'REMARK', 'USER', 'ROLE', 'EXAM', 'FEE'
   ];
 
   try {
@@ -51,11 +51,13 @@ connectDB().then(async () => {
       { key: 'DASHBOARD', label: 'Dashboard', visible: true, order: 1, children: [] },
       { key: 'STUDENT', label: 'Students', visible: true, order: 2, children: [] },
       { key: 'FACULTY', label: 'Faculty', visible: true, order: 3, children: [] },
-      { key: 'USER_MANAGEMENT', label: 'User Management', visible: true, order: 4, children: [
+      {
+        key: 'USER_MANAGEMENT', label: 'User Management', visible: true, order: 4, children: [
           { key: 'USER_LIST', label: 'All Users', visible: true },
           { key: 'ROLES_PERMISSIONS', label: 'Roles & Permissions', visible: true },
           { key: 'SYSTEM_MODULES', label: 'System Modules', visible: true }
-      ] },
+        ]
+      },
       { key: 'COURSE', label: 'Courses', visible: true, order: 5, children: [] },
       { key: 'ATTENDANCE', label: 'Attendance', visible: true, order: 6, children: [] },
       { key: 'PERFORMANCE', label: 'Performance', visible: true, order: 7, children: [] },
@@ -67,7 +69,29 @@ connectDB().then(async () => {
         ]
       },
       { key: 'EXAMS', label: 'Exams', visible: true, order: 9, children: [] },
-      { key: 'REMARKS', label: 'Remarks', visible: true, order: 10, children: [] }
+      { key: 'REMARKS', label: 'Remarks', visible: true, order: 10, children: [] },
+      {
+        key: 'FEE_MANAGEMENT', label: 'Fees Management', visible: true, order: 11, children: [
+          { key: 'FEE_CATEGORIES', label: 'Fee Categories', visible: true },
+          { key: 'FEE_STRUCTURE', label: 'Fee Structure', visible: true },
+          { key: 'STUDENT_FEES', label: 'Student Fees', visible: true },
+          { key: 'ADD_EXTRA_FEE', label: 'Add Extra Fee', visible: true },
+          { key: 'FEE_PAYMENT', label: 'Fee Payment', visible: true },
+          { key: 'PAYMENT_HISTORY', label: 'Payment History', visible: true },
+          { key: 'REPORTS', label: 'Reports', visible: true }
+        ]
+      }
+    ];
+
+    const studentSidebarConfig = [
+      { key: 'DASHBOARD', label: 'Dashboard', visible: true, order: 1, children: [] },
+      { key: 'COURSE', label: 'My Courses', visible: true, order: 2, children: [] },
+      { key: 'ATTENDANCE', label: 'Attendance', visible: true, order: 3, children: [] },
+      { key: 'PERFORMANCE', label: 'Performance', visible: true, order: 4, children: [] },
+      { key: 'EXAMS', label: 'Exams', visible: true, order: 5, children: [] },
+      { key: 'EVENT', label: 'Events', visible: true, order: 6, children: [] },
+      { key: 'PROFILE', label: 'My Profile', visible: true, order: 7, children: [] },
+      { key: 'MY_FEES', label: 'My Fees', visible: true, order: 8, children: [] }
     ];
 
     const systemRoles = ['SUPERADMIN', 'ADMIN', 'FACULTY', 'STUDENT'];
@@ -75,23 +99,24 @@ connectDB().then(async () => {
     const existingRoleNames = existingRoles.map(r => r.name);
 
     for (const roleName of systemRoles) {
+      const sidebarToUse = roleName === 'STUDENT' ? studentSidebarConfig : defaultSidebarConfig;
+      
       if (!existingRoleNames.includes(roleName)) {
         await Role.create({
           name: roleName,
           description: `System defined ${roleName} role`,
           isSystem: true,
-          // Give full access by default to SUPERADMIN, rest empty for now
           permissions: roleName === 'SUPERADMIN' ? superAdminPerms : undefined,
-          sidebarConfig: defaultSidebarConfig
+          sidebarConfig: sidebarToUse
         });
         console.log(`[Seeder] Created core system role: ${roleName}`);
       } else {
-        // Upgrade existing roles if they don't have sidebarConfig
         const currentRole = existingRoles.find(r => r.name === roleName);
-        if (!currentRole.sidebarConfig || currentRole.sidebarConfig.length === 0) {
-          currentRole.sidebarConfig = defaultSidebarConfig;
+        // Force update student sidebar config to ensure it has fee section
+        if (roleName === 'STUDENT' || !currentRole.sidebarConfig || currentRole.sidebarConfig.length === 0) {
+          currentRole.sidebarConfig = sidebarToUse;
           await currentRole.save();
-          console.log(`[Seeder] Upgraded core system role with sidebarConfig: ${roleName}`);
+          console.log(`[Seeder] Updated core system role sidebarConfig: ${roleName}`);
         }
       }
     }

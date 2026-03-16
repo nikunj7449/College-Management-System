@@ -315,7 +315,7 @@ const CourseList = () => {
                     isOpen={true}
                     onClose={closeModal}
                     onConfirm={handleDelete}
-                    deleteRole={"Course"}
+                    deleteRole={deleteConfig.type === DELETE_TYPE.BRANCH ? "Branch" : "Course"}
                 />
             )}
         </div>

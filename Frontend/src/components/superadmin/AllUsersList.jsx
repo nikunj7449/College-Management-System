@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
-import { Search, Filter, Mail, Phone, Calendar, Shield, Edit2, Eye, Loader2, Trash2, Power, UserPlus, User } from 'lucide-react';
+import { Search, Filter, Mail, Phone, Calendar, Shield, Edit2, Eye, Loader2, Trash2, Power, UserPlus, User, Plus } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Pagination from '../common/core/Pagination';
 import api from '../../services/api';
 import CustomDropdown from '../custom/CustomDropdown';
 import AdminModal from '../modals/AdminModal';
+import OtherUserModal from '../modals/OtherUserModal';
 import FacultyFormModal from '../modals/FacultyFormModal';
+import DeleteConfirmModal from '../modals/DeleteConfirmModal';
 import { useFacultyOperations, MODAL_TYPE } from '../../hooks/admin/useFacultyOperations';
 import {
     FACULTY_DESIGNATIONS,
@@ -25,8 +27,8 @@ const AllUsersList = () => {
 
     // Filters
     const [searchTerm, setSearchTerm] = useState('');
-    const [roleFilter, setRoleFilter] = useState('ALL');
-    const [statusFilter, setStatusFilter] = useState('ALL');
+    const [roleFilter, setRoleFilter] = useState('ALL Roles');
+    const [statusFilter, setStatusFilter] = useState('ALL Status');
 
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);
@@ -57,9 +59,18 @@ const AllUsersList = () => {
     // Admin Modal State
     const [adminModalState, setAdminModalState] = useState({
         isOpen: false,
-        mode: 'view', // 'view' | 'edit'
+        mode: 'view', // 'view' | 'edit' | 'create'
         adminData: null
     });
+
+    const [otherModalState, setOtherModalState] = useState({
+        isOpen: false,
+        mode: 'view',
+        userData: null
+    });
+    const [initialRole, setInitialRole] = useState(null);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [userToDelete, setUserToDelete] = useState(null);
 
     useEffect(() => {
         fetchUsers();
@@ -91,7 +102,9 @@ const AllUsersList = () => {
     // Prevent background scrolling when any modal is open
     useEffect(() => {
         const isAnyModalOpen = adminModalState.isOpen ||
-            [MODAL_TYPE.EDIT, MODAL_TYPE.VIEW, MODAL_TYPE.ADD].includes(facultyOps.modal.type);
+            otherModalState.isOpen ||
+            [MODAL_TYPE.EDIT, MODAL_TYPE.VIEW, MODAL_TYPE.ADD].includes(facultyOps.modal.type) ||
+            isDeleteModalOpen;
 
         if (isAnyModalOpen) {
             document.body.style.overflow = 'hidden';
@@ -102,15 +115,15 @@ const AllUsersList = () => {
         return () => {
             document.body.style.overflow = 'unset';
         };
-    }, [adminModalState.isOpen, facultyOps.modal.type]);
+    }, [adminModalState.isOpen, otherModalState.isOpen, facultyOps.modal.type, isDeleteModalOpen]);
 
     const fetchUsers = async () => {
         setLoading(true);
         try {
             // Build query string based on filters
             const params = new URLSearchParams();
-            if (roleFilter !== 'ALL') params.append('role', roleFilter);
-            if (statusFilter !== 'ALL') params.append('status', statusFilter);
+            if (roleFilter !== 'ALL Roles') params.append('role', roleFilter);
+            if (statusFilter !== 'ALL Status') params.append('status', statusFilter);
             if (searchTerm) params.append('search', searchTerm);
             console.log(params.toString());
 
@@ -149,12 +162,19 @@ const AllUsersList = () => {
         }
     };
 
-    const deleteUser = async (userId) => {
-        if (!window.confirm("Are you sure you want to completely remove this user from the system? This action cannot be undone.")) return;
+    const deleteUser = (user) => {
+        setUserToDelete(user);
+        setIsDeleteModalOpen(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!userToDelete) return;
         try {
-            await api.delete(`/users/${userId}`);
+            await api.delete(`/users/${userToDelete._id}`);
             toast.success("User deleted completely");
             fetchUsers();
+            setIsDeleteModalOpen(false);
+            setUserToDelete(null);
         } catch (err) {
             toast.error(err.response?.data?.message || "Failed to delete user");
         }
@@ -189,6 +209,13 @@ const AllUsersList = () => {
                     } else if (action === 'edit') {
                         facultyOps.handleEdit(profile);
                     }
+                } else {
+                    // Custom roles use specialized OtherUserModal
+                    setOtherModalState({
+                        isOpen: true,
+                        mode: action,
+                        userData: profile
+                    });
                 }
             }
         } catch (error) {
@@ -223,6 +250,30 @@ const AllUsersList = () => {
         }
     };
 
+    // Other User Submit Handler
+    const handleOtherSubmit = async (formData) => {
+        try {
+            const payload = { ...formData };
+            if (!payload.password) delete payload.password;
+            delete payload.confirmPassword;
+
+            if (otherModalState.mode === 'create') {
+                await api.post(`/other-users`, payload);
+                toast.success('Other user created successfully');
+            } else {
+                await api.put(`/other-users/${otherModalState.userData._id}`, payload);
+                toast.success('Other user updated successfully');
+            }
+
+            fetchUsers();
+            setOtherModalState({ isOpen: false, mode: 'view', userData: null });
+            return { success: true };
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Operation failed');
+            throw error;
+        }
+    };
+
     // Wrap Faculty Submit to refresh User list after completion
     const handleFacultySubmitWrap = async (e) => {
         await facultyOps.handleSubmit(e);
@@ -250,20 +301,20 @@ const AllUsersList = () => {
                     <div className="w-40 z-20 shadow-sm rounded-xl">
                         <CustomDropdown
                             name="roleFilter"
-                            options={['ALL', ...roles.map(r => r.name)]}
+                            options={['ALL Roles', ...roles.map(r => r.name)]}
                             value={roleFilter}
                             onChange={(e) => setRoleFilter(e.target.value)}
-                            placeholder="All Roles"
+                            placeholder="ALL Roles"
                         />
                     </div>
 
                     <div className="w-40 z-10 shadow-sm rounded-xl">
                         <CustomDropdown
                             name="statusFilter"
-                            options={['ALL', 'Active', 'Inactive']}
+                            options={['ALL Status', 'Active', 'Inactive']}
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
-                            placeholder="All Status"
+                            placeholder="ALL Status"
                         />
                     </div>
 
@@ -283,6 +334,7 @@ const AllUsersList = () => {
                                     <button
                                         onClick={() => {
                                             setShowAddMenu(false);
+                                            setInitialRole('ADMIN');
                                             setAdminModalState({ isOpen: true, mode: 'create', adminData: null });
                                         }}
                                         className="w-full text-left px-4 py-3 hover:bg-slate-50 flex items-center gap-3 border-b border-slate-50 transition-colors group"
@@ -303,6 +355,19 @@ const AllUsersList = () => {
                                             <User size={16} />
                                         </div>
                                         <span className="text-sm font-medium text-slate-700 group-hover:text-emerald-700">Faculty User</span>
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setShowAddMenu(false);
+                                            setInitialRole('OTHER');
+                                            setOtherModalState({ isOpen: true, mode: 'create', userData: null });
+                                        }}
+                                        className="w-full text-left px-4 py-3 hover:bg-slate-50 flex items-center gap-3 transition-colors group border-t border-slate-50"
+                                    >
+                                        <div className="bg-orange-50 p-1.5 rounded-lg text-orange-600 group-hover:bg-orange-100 transition-colors">
+                                            <Plus size={16} />
+                                        </div>
+                                        <span className="text-sm font-medium text-slate-700 group-hover:text-orange-700">Other User</span>
                                     </button>
                                 </div>
                             )}
@@ -405,7 +470,7 @@ const AllUsersList = () => {
                                                 )}
                                                 {hasPermission(loggedInUser, 'USER', 'delete') && (
                                                     <button
-                                                        onClick={() => deleteUser(user._id)}
+                                                        onClick={() => deleteUser(user)}
                                                         className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
                                                         title="Delete User completely"
                                                     >
@@ -441,10 +506,31 @@ const AllUsersList = () => {
                     isOpen={adminModalState.isOpen}
                     onClose={() => setAdminModalState({ isOpen: false, mode: 'view', adminData: null })}
                     mode={adminModalState.mode}
+                    initialRole={initialRole}
                     admin={adminModalState.adminData}
                     onSubmit={handleAdminSubmit}
                 />
             )}
+
+            {/* Other User Modal Integration */}
+            {otherModalState.isOpen && (
+                <OtherUserModal
+                    isOpen={otherModalState.isOpen}
+                    onClose={() => setOtherModalState({ isOpen: false, mode: 'view', userData: null })}
+                    mode={otherModalState.mode}
+                    initialRole={initialRole}
+                    user={otherModalState.userData}
+                    onSubmit={handleOtherSubmit}
+                />
+            )}
+
+            {/* Delete Confirmation Modal */}
+            <DeleteConfirmModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={handleConfirmDelete}
+                deleteRole={userToDelete?.role?.name || userToDelete?.role || "User"}
+            />
 
             {/* Faculty Modal Integration */}
             {[MODAL_TYPE.EDIT, MODAL_TYPE.VIEW, MODAL_TYPE.ADD].includes(facultyOps.modal.type) && (

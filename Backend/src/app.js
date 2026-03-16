@@ -12,11 +12,13 @@ const dashboardRoutes = require('./routes/dashboardRoutes');
 const facultyRoutes = require('./routes/facultyRoutes');
 const courseRoutes = require('./routes/courseRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const otherUserRoutes = require('./routes/otherUserRoutes');
 const eventRoutes = require('./routes/eventRoutes');
 const userRoutes = require('./routes/userRoutes');
 const roleRoutes = require('./routes/roleRoutes');
 const moduleRoutes = require('./routes/moduleRoutes');
 const examRoutes = require('./routes/examRoutes');
+const feeRoutes = require('./routes/feeRoutes');
 
 const app = express();
 
@@ -45,11 +47,13 @@ app.use('/api/v1/remarks', remarkRoutes);
 app.use('/api/v1/performance', performanceRoutes);
 app.use('/api/v1/dashboard', dashboardRoutes);
 app.use('/api/v1/admins', adminRoutes);
+app.use('/api/v1/other-users', otherUserRoutes);
 app.use('/api/v1/events', eventRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/roles', roleRoutes);
 app.use('/api/v1/modules', moduleRoutes);
 app.use('/api/v1/exams', examRoutes);
+app.use('/api/v1/fees', feeRoutes);
 
 // Error Handler (Must be last)
 app.use(errorHandler);

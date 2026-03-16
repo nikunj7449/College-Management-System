@@ -7,7 +7,6 @@ const PerformanceViewModal = ({ isOpen, onClose, data }) => {
     const totalObtained = data.subjects?.reduce((sum, s) => sum + (parseFloat(s.marksObtained) || 0), 0) || 0;
     const overallMax = data.subjects?.reduce((sum, s) => sum + (parseFloat(s.totalMarks) || 0), 0) || 0;
     const percentage = overallMax > 0 ? ((totalObtained / overallMax) * 100).toFixed(2) : 0;
-
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 font-sans backdrop-blur-sm">
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">

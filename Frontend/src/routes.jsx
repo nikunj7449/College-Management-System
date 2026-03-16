@@ -5,6 +5,7 @@ import Navbar from './components/common/core/Navbar';
 import Footer from './components/common/core/Footer';
 
 import AdminDashboard from './components/admin/dashboard/AdminDashboard';
+import AdminProfile from './components/admin/profile/AdminProfile';
 import AdminStudent from './components/admin/student/AdminStudent';
 import AdminFaculty from './components/admin/faculty/AdminFaculty';
 import AdminCourse from './components/admin/course/AdminCourse';
@@ -21,6 +22,7 @@ import FacultyStudent from './components/faculty/student/FacultyStudent';
 import FacultyCourse from './components/faculty/course/FacultyCourse';
 import FacultyAttendance from './components/faculty/attendance/FacultyAttendance';
 import FacultyPerformance from './components/faculty/performance/FacultyPerformance';
+import FacultyProfile from './components/faculty/profile/FacultyProfile';
 import RemarksManager from './components/common/remark/RemarksManager';
 import StudentDashboard from './components/student/dashboard/StudentDashboard';
 import StudentCourse from './components/student/course/StudentCourse';
@@ -29,6 +31,12 @@ import StudentAttendance from './components/student/attendance/StudentAttendance
 import StudentExams from './components/student/exams/StudentExams';
 import StudentEvents from './components/student/events/StudentEvents';
 import StudentProfile from './components/student/profile/StudentProfile';
+import FeeCategories from './components/admin/fees/FeeCategories';
+import FeeStructure from './components/admin/fees/FeeStructure';
+import StudentFees from './components/admin/fees/StudentFees';
+import FeeReports from './components/admin/fees/FeeReports';
+import StudentMyFees from './components/student/fees/StudentMyFees';
+
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 
@@ -54,6 +62,9 @@ const AppRoutes = () => {
           } />
           <Route path="/superadmin/dashboard" element={
             <ProtectedRoute roles={['SUPERADMIN']}><AdminDashboard /></ProtectedRoute>
+          } />
+          <Route path="/admin/profile" element={
+            <ProtectedRoute roles={['ADMIN', 'SUPERADMIN']}><AdminProfile /></ProtectedRoute>
           } />
           <Route path="/students" element={
             <ProtectedRoute requireModule="STUDENT" requireAction="read"><AdminStudent /></ProtectedRoute>
@@ -100,11 +111,28 @@ const AppRoutes = () => {
           <Route path="/faculty/attendance" element={
             <ProtectedRoute requireModule="ATTENDANCE" requireAction="read"><FacultyAttendance /></ProtectedRoute>
           } />
+          <Route path="/faculty/profile" element={
+            <ProtectedRoute roles={['FACULTY']}><FacultyProfile /></ProtectedRoute>
+          } />
           <Route path="/performance" element={
             <ProtectedRoute requireModule="PERFORMANCE" requireAction="read"><FacultyPerformance /></ProtectedRoute>
           } />
           <Route path="/remarks" element={
             <ProtectedRoute requireModule="REMARK" requireAction="read"><RemarksManager /></ProtectedRoute>
+          } />
+          
+          {/* Fee Management Routes */}
+          <Route path="/fees/categories" element={
+            <ProtectedRoute requireModule="FEE" requireAction="read"><FeeCategories /></ProtectedRoute>
+          } />
+          <Route path="/fees/structures" element={
+            <ProtectedRoute requireModule="FEE" requireAction="read"><FeeStructure /></ProtectedRoute>
+          } />
+          <Route path="/fees/students" element={
+            <ProtectedRoute requireModule="FEE" requireAction="read"><StudentFees /></ProtectedRoute>
+          } />
+          <Route path="/fees/reports" element={
+            <ProtectedRoute requireModule="FEE" requireAction="read"><FeeReports /></ProtectedRoute>
           } />
           
           {/* Student Dedicated Routes */}
@@ -128,6 +156,9 @@ const AppRoutes = () => {
           } />
           <Route path="/student/profile" element={
             <ProtectedRoute roles={['STUDENT']}><StudentProfile /></ProtectedRoute>
+          } />
+          <Route path="/student/fees" element={
+            <ProtectedRoute roles={['STUDENT']}><StudentMyFees /></ProtectedRoute>
           } />
 
           {/* Default Redirect */}

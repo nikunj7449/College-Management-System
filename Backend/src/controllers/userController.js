@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const Admin = require('../models/Admin');
 const Faculty = require('../models/faculty');
+const OtherUser = require('../models/OtherUser');
 const Role = require('../models/Role');
 
 // @desc    Get All Users (Excluding Students)
@@ -104,7 +105,9 @@ exports.deleteUser = async (req, res, next) => {
             await Admin.findOneAndDelete({ user: user._id });
         } else if (user.role?.name === 'FACULTY') {
             await Faculty.findOneAndDelete({ user: user._id });
-            // Optional: you can delete Remarks here or trigger a hook
+        } else {
+            // For custom roles
+            await OtherUser.findOneAndDelete({ user: user._id });
         }
 
         // Delete the underlying User Auth account
@@ -135,6 +138,9 @@ exports.getUserProfile = async (req, res, next) => {
             profile = await Admin.findOne({ user: user._id });
         } else if (user.role?.name === 'FACULTY') {
             profile = await Faculty.findOne({ user: user._id });
+        } else {
+            // Check for custom/other role profiles
+            profile = await OtherUser.findOne({ user: user._id });
         }
 
         if (!profile) {

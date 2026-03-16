@@ -8,7 +8,7 @@ const Footer = () => {
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center space-x-2">
             <span className="text-sm text-slate-500">
-              © {new Date().getFullYear()} SmartSMS. All rights reserved.
+              © {new Date().getFullYear()} SmartCMS. All rights reserved.
             </span>
           </div>
           

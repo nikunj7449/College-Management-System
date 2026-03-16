@@ -1,5 +1,5 @@
 const getWelcomeEmailTemplate = (name, role, username, password, loginUrl) => {
-  const collegeName = process.env.COLLEGE_NAME || "College Management System";
+  const collegeName = process.env.COLLEGE_NAME || "SmartCMS College Management";
   const collegeLogo =
     process.env.COLLEGE_LOGO ||
     "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/graduation-cap.svg";
@@ -184,7 +184,7 @@ const getWelcomeEmailTemplate = (name, role, username, password, loginUrl) => {
 };
 
 const getOtpEmailTemplate = (otp, targetName) => {
-  const collegeName = process.env.COLLEGE_NAME || "College Management System";
+  const collegeName = process.env.COLLEGE_NAME || "SmartCMS College Management";
   const collegeLogo =
     process.env.COLLEGE_LOGO ||
     "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/graduation-cap.svg";
@@ -308,7 +308,7 @@ const getOtpEmailTemplate = (otp, targetName) => {
 };
 
 const getResetLinkEmailTemplate = (name, resetUrl) => {
-  const collegeName = process.env.COLLEGE_NAME || "College Management System";
+  const collegeName = process.env.COLLEGE_NAME || "SmartCMS College Management";
   const collegeLogo =
     process.env.COLLEGE_LOGO ||
     "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/graduation-cap.svg";

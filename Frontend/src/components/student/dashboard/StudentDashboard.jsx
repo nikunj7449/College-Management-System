@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useStudentDashboard } from '../../../hooks/student/useStudentDashboard';
-import { BookOpen, UserCheck, CalendarDays, MessageSquare, Award, ArrowRight } from 'lucide-react';
+import { BookOpen, UserCheck, CalendarDays, MessageSquare, Award, ArrowRight, IndianRupee } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import StudentDashboardSkeleton from '../../common/student/StudentDashboardSkeleton';
+import PerformanceDetailModal from '../exams/PerformanceDetailModal';
 
 const StatCard = ({ title, value, icon: Icon, iconBg, iconColor, accentColor, subtext, badge }) => (
   <div className={`bg-white rounded-3xl border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group relative flex flex-col`}>
@@ -31,6 +32,13 @@ const StatCard = ({ title, value, icon: Icon, iconBg, iconColor, accentColor, su
 
 const StudentDashboard = () => {
   const { data, loading, error } = useStudentDashboard();
+  const [selectedPerformance, setSelectedPerformance] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleViewPerformance = (perf) => {
+    setSelectedPerformance(perf);
+    setIsModalOpen(true);
+  };
 
   if (loading) return <StudentDashboardSkeleton />;
 
@@ -96,15 +104,6 @@ const StudentDashboard = () => {
                 subtext={`Out of ${attendance.totalClasses} total`}
               />
               <StatCard 
-                title="Recent Grades" 
-                value={recentPerformances?.length || 0} 
-                icon={BookOpen} 
-                iconBg="bg-indigo-50"
-                iconColor="text-indigo-600"
-                accentColor="bg-gradient-to-r from-indigo-400 to-violet-500"
-                subtext="Last 5 records available"
-              />
-              <StatCard 
                 title="Faculty Remarks" 
                 value={recentRemarks?.length || 0} 
                 icon={MessageSquare} 
@@ -112,6 +111,16 @@ const StudentDashboard = () => {
                 iconColor="text-amber-600"
                 accentColor="bg-gradient-to-r from-amber-400 to-orange-500"
                 subtext="Latest academic feedback"
+              />
+              <StatCard 
+                title="Pending Fees" 
+                value={`₹${(data.totalPendingFees || 0).toLocaleString()}`} 
+                icon={IndianRupee} 
+                iconBg="bg-rose-50"
+                iconColor="text-rose-600"
+                accentColor="bg-gradient-to-r from-rose-400 to-pink-500"
+                subtext="Total outstanding balance"
+                badge={data.totalPendingFees > 0 ? 'Due' : 'Cleared'}
               />
             </div>
 
@@ -130,14 +139,18 @@ const StudentDashboard = () => {
                 {recentPerformances && recentPerformances.length > 0 ? (
                   <div className="space-y-4">
                     {recentPerformances.map((perf) => (
-                      <div key={perf._id} className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100/50 hover:bg-slate-100 transition-colors">
+                      <div 
+                        key={perf._id} 
+                        onClick={() => handleViewPerformance(perf)}
+                        className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100/50 hover:bg-slate-100 transition-colors cursor-pointer group/item"
+                      >
                         <div>
-                          <p className="font-semibold text-slate-800">{perf.exam?.name || 'Unknown Exam'}</p>
+                          <p className="font-semibold text-slate-800 group-hover/item:text-indigo-600 transition-colors">{perf.exam?.name || 'Unknown Exam'}</p>
                           <p className="text-xs text-slate-500 mt-0.5">{new Date(perf.createdAt).toLocaleDateString()}</p>
                         </div>
                         <div className="flex items-center gap-4">
                           <div className="text-right hidden sm:block">
-                            <p className="text-xs font-medium text-slate-600">Subjects Validated: <span className="font-bold">{perf.subjects?.length || 0}</span></p>
+                            <p className="text-xs font-medium text-slate-600">Subjects: <span className="font-bold">{perf.subjects?.length || 0}</span></p>
                           </div>
                           <span className={`px-3 py-1.5 rounded-xl text-sm font-bold shadow-sm ${
                             perf.grade === 'A' ? 'bg-green-100 text-green-700 border border-green-200' :
@@ -214,6 +227,13 @@ const StudentDashboard = () => {
           </div>
         </div>
       </div>
+      
+      {/* Performance Detail Modal */}
+      <PerformanceDetailModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        data={selectedPerformance}
+      />
     </div>
   );
 };
