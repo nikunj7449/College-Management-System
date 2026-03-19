@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Trash2, Save } from 'lucide-react';
+import { X, Plus, Trash2, Save, AlertCircle } from 'lucide-react';
 import { toast } from 'react-toastify';
 import performanceService from '../../../services/performanceService';
 import examService from '../../../services/examService';
 import CustomDropdown from '../../custom/CustomDropdown';
 
-const PerformanceFormModal = ({ isOpen, onClose, initialData, isEdit, students, onSave }) => {
+const PerformanceFormModal = ({ isOpen, onClose, initialData, isEdit, students, facultyProfile, onSave }) => {
     const [formData, setFormData] = useState({
         studentId: '',
         exam: '',
@@ -96,6 +96,15 @@ const PerformanceFormModal = ({ isOpen, onClose, initialData, isEdit, students, 
             const cleanSubjects = formData.subjects.filter(s => s.subjectName.trim() !== '' && s.marksObtained !== '' && s.totalMarks !== '');
             if (cleanSubjects.length === 0) {
                 toast.error("At least one valid subject is required!");
+                setLoading(false);
+                return;
+            }
+
+            // Check for duplicate subjects
+            const subjectNames = cleanSubjects.map(s => s.subjectName.trim());
+            const uniqueSubjects = new Set(subjectNames);
+            if (uniqueSubjects.size !== subjectNames.length) {
+                toast.error("Duplicate subjects are not allowed in a single record!");
                 setLoading(false);
                 return;
             }
@@ -195,14 +204,47 @@ const PerformanceFormModal = ({ isOpen, onClose, initialData, isEdit, students, 
                                 </button>
                             </div>
 
-                            <div className="space-y-3">
-                                {formData.subjects.map((sub, idx) => (
-                                    <div key={idx} className="flex flex-col sm:flex-row gap-3 items-start sm:items-center bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
-                                        <div className="flex-1 w-full">
-                                            <input type="text" placeholder="Subject Name" required
-                                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-                                                value={sub.subjectName} onChange={(e) => handleSubjectChange(idx, 'subjectName', e.target.value)} />
+                            {/* Global Duplicate Warning */}
+                            {(() => {
+                                const subjectNames = formData.subjects.map(s => s.subjectName.trim()).filter(s => s !== '');
+                                const hasDuplicates = new Set(subjectNames).size !== subjectNames.length;
+                                if (hasDuplicates) {
+                                    return (
+                                        <div className="bg-red-50 border border-red-100 p-3 rounded-xl flex items-center gap-3 animate-pulse">
+                                            <div className="p-1.5 bg-red-100 rounded-lg text-red-600">
+                                                <AlertCircle size={18} />
+                                            </div>
+                                            <span className="text-xs font-bold text-red-700 uppercase tracking-tight">
+                                                Duplicate subjects detected! Please ensure each subject is unique.
+                                            </span>
                                         </div>
+                                    );
+                                }
+                                return null;
+                            })()}
+
+                            <div className="space-y-3">
+                                {formData.subjects.map((sub, idx) => {
+                                    const isDuplicate = sub.subjectName && formData.subjects.some((s, i) => i !== idx && s.subjectName.trim() === sub.subjectName.trim());
+                                    return (
+                                        <div key={idx} className={`flex flex-col sm:flex-row gap-3 items-start sm:items-center bg-white p-3 rounded-lg border shadow-sm transition-all ${isDuplicate ? 'border-red-200 ring-1 ring-red-100' : 'border-slate-200'}`}>
+                                            <div className="flex-1 w-full relative">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="flex-1">
+                                                        <CustomDropdown
+                                                            name="subjectName"
+                                                            value={sub.subjectName}
+                                                            onChange={(e) => handleSubjectChange(idx, 'subjectName', e.target.value)}
+                                                            options={facultyProfile?.subject ? facultyProfile.subject : []}
+                                                            placeholder="Subject"
+                                                            searchable={true}
+                                                        />
+                                                    </div>
+                                                    {isDuplicate && (
+                                                        <span className="text-xl" title="Duplicate Subject">🚨</span>
+                                                    )}
+                                                </div>
+                                            </div>
                                         <div className="w-full sm:w-32">
                                             <input type="number" placeholder="Marks" required min="0"
                                                 className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
@@ -218,8 +260,9 @@ const PerformanceFormModal = ({ isOpen, onClose, initialData, isEdit, students, 
                                                 <Trash2 size={18} />
                                             </button>
                                         )}
-                                    </div>
-                                ))}
+                                        </div>
+                                    );
+                                })}
                             </div>
 
                             {/* Auto Calculate Display */}

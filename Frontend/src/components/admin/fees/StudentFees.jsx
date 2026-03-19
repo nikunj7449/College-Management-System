@@ -3,11 +3,16 @@ import { Search, UserPlus, FileText, CreditCard, PlusCircle, AlertCircle, CheckC
 import feeService from '../../../services/feeService';
 import api from '../../../services/api';
 import { toast } from 'react-toastify';
+import CustomDropdown from '../../custom/CustomDropdown';
 import FeePaymentModal from './sub-components/FeePaymentModal';
 import ExtraFeeModal from './sub-components/ExtraFeeModal';
 import StudentFeeDetailModal from './sub-components/StudentFeeDetailModal';
 import FeeAssignmentMatrixModal from './sub-components/FeeAssignmentMatrixModal';
 import Pagination from '../../common/core/Pagination';
+import { Bell } from 'lucide-react';
+import { useContext } from 'react';
+import { AuthContext } from '../../../context/AuthContext';
+import FeeReminderModal from './sub-components/FeeReminderModal';
 
 const StudentFees = () => {
     const [studentFees, setStudentFees] = useState([]);
@@ -15,6 +20,12 @@ const StudentFees = () => {
     const [structures, setStructures] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    
+    // Filter States
+    const [courseFilter, setCourseFilter] = useState('ALL');
+    const [branchFilter, setBranchFilter] = useState('ALL');
+    const [semesterFilter, setSemesterFilter] = useState('ALL');
+    const [statusFilter, setStatusFilter] = useState('ALL');
     
     // Assignment Modal State
     const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
@@ -31,6 +42,10 @@ const StudentFees = () => {
     // Pagination State
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
+    const [isReminderModalOpen, setIsReminderModalOpen] = useState(false);
+    const [sendingReminders, setSendingReminders] = useState(false);
+    
+    const { user } = useContext(AuthContext);
 
     useEffect(() => {
         fetchData();
@@ -39,11 +54,15 @@ const StudentFees = () => {
     // Reset pagination to first page when searching
     useEffect(() => {
         setCurrentPage(1);
-    }, [searchTerm]);
+    }, [searchTerm, courseFilter, branchFilter, semesterFilter, statusFilter]);
+
+    useEffect(() => {
+        setBranchFilter('ALL');
+    }, [courseFilter]);
 
     // Lock body scroll when any modal is open
     useEffect(() => {
-        if (isAssignModalOpen || isPaymentModalOpen || isExtraModalOpen || isDetailModalOpen || isMatrixModalOpen) {
+        if (isAssignModalOpen || isPaymentModalOpen || isExtraModalOpen || isDetailModalOpen || isMatrixModalOpen || isReminderModalOpen) {
             document.body.style.overflow = 'hidden';
         } else {
             document.body.style.overflow = 'unset';
@@ -51,7 +70,7 @@ const StudentFees = () => {
         return () => {
             document.body.style.overflow = 'unset';
         };
-    }, [isAssignModalOpen, isPaymentModalOpen, isExtraModalOpen, isDetailModalOpen, isMatrixModalOpen]);
+    }, [isAssignModalOpen, isPaymentModalOpen, isExtraModalOpen, isDetailModalOpen, isMatrixModalOpen, isReminderModalOpen]);
 
     const fetchData = async () => {
         try {
@@ -84,6 +103,17 @@ const StudentFees = () => {
         }
     };
 
+    const handleSendReminders = async () => {
+        const pendingCount = studentFees.filter(f => f.pendingAmount > 0).length;
+        
+        if (pendingCount === 0) {
+            toast.info("No students with pending fees found.");
+            return;
+        }
+
+        setIsReminderModalOpen(true);
+    };
+
     const getStatusStyle = (status) => {
         switch(status) {
             case 'PAID': return 'bg-emerald-50 text-emerald-700 border-emerald-100';
@@ -92,10 +122,17 @@ const StudentFees = () => {
         }
     };
 
-    const filteredFees = studentFees.filter(record => 
-        record.student?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        record.student?.rollNum.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredFees = studentFees.filter(record => {
+        const matchesSearch = record.student?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            record.student?.rollNum.toLowerCase().includes(searchTerm.toLowerCase());
+        
+        const matchesCourse = courseFilter === 'ALL' || record.student?.course === courseFilter;
+        const matchesBranch = branchFilter === 'ALL' || record.student?.branch === branchFilter;
+        const matchesSemester = semesterFilter === 'ALL' || record.semester.toString() === semesterFilter;
+        const matchesStatus = statusFilter === 'ALL' || record.status === statusFilter;
+
+        return matchesSearch && matchesCourse && matchesBranch && matchesSemester && matchesStatus;
+    });
 
     return (
         <div className="p-4 md:p-8 bg-slate-50 min-h-screen font-sans">
@@ -105,7 +142,17 @@ const StudentFees = () => {
                     <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">Student Fees</h1>
                     <p className="text-slate-500 mt-1">Monitor payments, assign structures, and manage student accounts</p>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-3">
+                    {user?.role?.name === 'SUPERADMIN' && (
+                        <button 
+                            onClick={handleSendReminders}
+                            disabled={sendingReminders}
+                            className="flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 disabled:bg-amber-300 text-white px-5 py-2.5 rounded-xl transition-all shadow-lg shadow-amber-100 font-medium whitespace-nowrap"
+                        >
+                            <Bell size={20} />
+                            {sendingReminders ? 'Opening...' : 'Reminder'}
+                        </button>
+                    )}
                     <button 
                         onClick={() => setIsMatrixModalOpen(true)}
                         className="flex items-center justify-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-5 py-2.5 rounded-xl transition-all shadow-sm font-medium whitespace-nowrap"
@@ -124,16 +171,62 @@ const StudentFees = () => {
             </div>
 
             {/* Search and Filters */}
-            <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-6 flex flex-col md:flex-row gap-4 items-center">
-                <div className="relative flex-1 w-full">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                    <input 
-                        type="text"
-                        placeholder="Search by student name or roll number..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-700"
-                    />
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 mb-6 space-y-4">
+                <div className="flex flex-col md:flex-row gap-4">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                        <input 
+                            type="text"
+                            placeholder="Search by name or roll number..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-700 font-medium"
+                        />
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-slate-50">
+                    <div>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Course</label>
+                        <CustomDropdown
+                            options={['ALL', ...courses.map(c => c.name)]}
+                            value={courseFilter}
+                            onChange={(e) => setCourseFilter(e.target.value)}
+                            placeholder="ALL Courses"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Branch</label>
+                        <CustomDropdown
+                            options={['ALL', ...(courses.find(c => c.name === courseFilter)?.branches.map(b => b.name) || [])]}
+                            value={branchFilter}
+                            disabled={courseFilter === 'ALL'}
+                            onChange={(e) => setBranchFilter(e.target.value)}
+                            placeholder="ALL Branches"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Semester</label>
+                        <CustomDropdown
+                            options={['ALL', '1', '2', '3', '4', '5', '6', '7', '8']}
+                            value={semesterFilter}
+                            onChange={(e) => setSemesterFilter(e.target.value)}
+                            placeholder="ALL Semesters"
+                            renderLabel={(opt) => opt === 'ALL' ? 'ALL Semesters' : `Sem ${opt}`}
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Payment Status</label>
+                        <CustomDropdown
+                            options={['ALL', 'PAID', 'PARTIAL', 'UNPAID']}
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            placeholder="ALL Status"
+                        />
+                    </div>
                 </div>
             </div>
 
@@ -330,6 +423,17 @@ const StudentFees = () => {
                     onClose={() => setIsMatrixModalOpen(false)}
                     courses={courses}
                     structures={structures}
+                />
+            )}
+
+            {/* Fee Reminder Modal */}
+            {isReminderModalOpen && (
+                <FeeReminderModal 
+                    isOpen={isReminderModalOpen}
+                    onClose={() => setIsReminderModalOpen(false)}
+                    pendingFees={studentFees.filter(f => f.pendingAmount > 0)}
+                    courses={courses}
+                    onSuccess={fetchData}
                 />
             )}
         </div>

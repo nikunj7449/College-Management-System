@@ -121,7 +121,7 @@ const RemarksManager = () => {
                                             <td className="p-4">
                                                 <div className="flex items-center gap-3">
                                                     <img
-                                                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(r.student?.name || 'Unknown')}&background=random&size=32`}
+                                                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(isStudent ? (r.faculty?.name || 'Faculty') : (r.student?.name || 'Student'))}&background=random&size=32`}
                                                         alt=""
                                                         className="w-8 h-8 rounded-full border border-slate-200"
                                                     />

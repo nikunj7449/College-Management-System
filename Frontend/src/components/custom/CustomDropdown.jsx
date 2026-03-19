@@ -9,7 +9,8 @@ const CustomDropdown = ({
   placeholder,
   disabled,
   renderLabel, // optional function to customize displayed label
-  searchable = false
+  searchable = false,
+  className = ''
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -57,7 +58,7 @@ const CustomDropdown = ({
         disabled={disabled}
         onClick={() => setIsOpen(!isOpen)}
         className={`w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-left flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 ${disabled ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'
-          }`}
+          } ${className}`}
       >
         <span className={`block truncate ${value ? 'text-slate-900' : 'text-slate-500'}`}>
           {getSelectedLabel()}

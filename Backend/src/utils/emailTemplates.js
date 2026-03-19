@@ -432,8 +432,79 @@ const getResetLinkEmailTemplate = (name, resetUrl) => {
   `;
 };
 
+const getFeeReminderTemplate = (name, amount, course, branch, semester) => {
+  const collegeName = process.env.COLLEGE_NAME || "SmartCMS College Management";
+  const collegeLogo =
+    process.env.COLLEGE_LOGO ||
+    "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/graduation-cap.svg";
+
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fee Payment Reminder - ${collegeName}</title>
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; color: #333333; }
+    .wrapper { padding: 40px 16px; }
+    .container { max-width: 560px; margin: 0 auto; background: #ffffff; border-radius: 6px; border: 1px solid #dedcff4a; box-shadow: 0 0 30px rgba(90,82,253,0.1); }
+    .header { background-color: #1a3a6b; padding: 24px 32px; text-align: center; border-radius: 6px 6px 0 0; }
+    .header img { height: 44px; filter: invert(1) brightness(2); margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto; }
+    .header h1 { color: #ffffff; margin: 0; font-size: 20px; font-weight: bold; }
+    .content { padding: 32px; }
+    .content h2 { font-size: 18px; color: #1a3a6b; margin-top: 0; margin-bottom: 12px; }
+    .content p { font-size: 14px; color: #555555; line-height: 1.6; margin: 0 0 20px; }
+    .amount-box { background-color: #fff9f9; border: 1px solid #ffdede; border-radius: 6px; padding: 20px; text-align: center; margin-bottom: 24px; }
+    .amount-label { font-size: 12px; color: #993333; text-transform: uppercase; font-weight: bold; margin-bottom: 4px; }
+    .amount-value { font-size: 28px; font-weight: bold; color: #cc0000; }
+    .details { background-color: #f9f9f9; padding: 16px; border-radius: 4px; margin-bottom: 24px; }
+    .details-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
+    .details-row span:first-child { color: #777777; }
+    .details-row span:last-child { font-weight: bold; color: #333333; }
+    .footer { background-color: #f4f4f4; padding: 18px 32px; text-align: center; border-top: 1px solid #dddddd; border-radius: 0 0 6px 6px; }
+    .footer p { margin: 0; font-size: 12px; color: #999999; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="container">
+      <div class="header">
+        <img src="${collegeLogo}" alt="${collegeName}">
+        <h1>${collegeName}</h1>
+      </div>
+      <div class="content">
+        <h2>Fee Payment Reminder</h2>
+        <p>Dear ${name},</p>
+        <p>This is a friendly reminder that you have a pending fee balance for the current academic session. Please ensure the payment is made at the earliest to avoid any inconvenience.</p>
+        
+        <div class="amount-box">
+          <div class="amount-label">Pending Balance</div>
+          <div class="amount-value">₹${amount.toLocaleString()}</div>
+        </div>
+
+        <div class="details">
+          <div class="details-row"><span>Course</span><span>${course}</span></div>
+          <div class="details-row"><span>Branch</span><span>${branch}</span></div>
+          <div class="details-row"><span>Semester</span><span>Sem ${semester}</span></div>
+        </div>
+
+        <p>You can pay your fees online through the student portal or at the college accounts office.</p>
+      </div>
+      <div class="footer">
+        <p>&copy; ${new Date().getFullYear()} ${collegeName}. All rights reserved.</p>
+        <p>This is an automated reminder. Please do not reply to this email.</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+  `;
+};
+
 module.exports = {
   getWelcomeEmailTemplate,
   getOtpEmailTemplate,
-  getResetLinkEmailTemplate
+  getResetLinkEmailTemplate,
+  getFeeReminderTemplate
 };

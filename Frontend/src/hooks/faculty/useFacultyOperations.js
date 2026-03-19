@@ -45,6 +45,8 @@ export const useFacultyOperations = () => {
         student: null
     });
 
+    const [facultyProfile, setFacultyProfile] = useState(null);
+
     const [formData, setFormData] = useState(INITIAL_FORM_STATE);
 
     // To get faculty user details for filtering:
@@ -98,6 +100,21 @@ export const useFacultyOperations = () => {
     useEffect(() => {
         fetchCourses();
     }, []);
+
+    useEffect(() => {
+        const fetchMe = async () => {
+            if (user?._id || user?.email) {
+                try {
+                    const flist = await api.get('/faculty');
+                    const me = flist.data.data.find(f => f.user === user._id || f.email === user.email);
+                    if (me) setFacultyProfile(me);
+                } catch (err) {
+                    console.error("Failed to fetch faculty profile", err);
+                }
+            }
+        };
+        fetchMe();
+    }, [user]);
 
     const handleChange = (e) => {
         if (e.target.name === 'documents') {
@@ -214,5 +231,6 @@ export const useFacultyOperations = () => {
         handleView,
         handleViewCourse,
         closeModal,
+        facultyProfile,
     };
 };

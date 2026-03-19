@@ -1,13 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../../services/api';
-import { Loader2, AlertCircle, Calendar, CalendarCheck, CalendarX, Clock, CalendarDays, UserSquare2 } from 'lucide-react';
+import { Search, Loader2, AlertCircle, Calendar, CalendarCheck, CalendarX, Clock, CalendarDays, UserSquare2, X } from 'lucide-react';
 import Pagination from '../../common/core/Pagination';
+import CustomDropdown from '../../custom/CustomDropdown';
 
 const StudentAttendance = () => {
   const [attendanceData, setAttendanceData] = useState([]);
   const [stats, setStats] = useState({ present: 0, absent: 0, late: 0, leave: 0, total: 0, percentage: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // Filter States
+  const [dateFilter, setDateFilter] = useState('');
+  const [subjectFilter, setSubjectFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('All');
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -50,7 +56,23 @@ const StudentAttendance = () => {
     setStats({ present: p, absent: a, late: l, leave: le, total, percentage });
   };
 
-  const currentRecords = attendanceData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const filteredData = attendanceData.filter(record => {
+    const recordDate = new Date(record.date).toISOString().split('T')[0];
+    const matchesDate = !dateFilter || recordDate === dateFilter;
+    const matchesSubject = subjectFilter === 'All' || record.subject === subjectFilter;
+    const matchesStatus = statusFilter === 'All' || record.status.toLowerCase() === statusFilter.toLowerCase();
+    return matchesDate && matchesSubject && matchesStatus;
+  });
+
+  // Unique subjects for filter
+  const subjectOptions = ['All', ...new Set(attendanceData.map(r => r.subject))];
+
+  // Reset page when filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [dateFilter, subjectFilter, statusFilter]);
+
+  const currentRecords = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const StatusIcon = ({ status }) => {
     switch (status.toLowerCase()) {
@@ -157,18 +179,71 @@ const StudentAttendance = () => {
 
        {/* Detailed Log Table */}
        <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
-           <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-             <h3 className="text-lg font-bold text-slate-800">Attendance Log</h3>
-             <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full uppercase tracking-wide">
-                Showing {currentRecords.length} of {attendanceData.length} records
-             </span>
+           <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/50">
+             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div>
+                   <h3 className="text-lg font-bold text-slate-800">Attendance Log</h3>
+                   <p className="text-xs font-medium text-slate-500 mt-0.5">Showing {currentRecords.length} of {filteredData.length} matches</p>
+                </div>
+                
+                <div className="flex flex-wrap items-center gap-6">
+                   {/* Date Filter */}
+                   <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Date</span>
+                      <div className="relative">
+                        <input 
+                            type="date"
+                            value={dateFilter}
+                            onChange={(e) => setDateFilter(e.target.value)}
+                            className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-hidden transition-all cursor-pointer"
+                        />
+                        {dateFilter && (
+                            <button 
+                                onClick={() => setDateFilter('')} 
+                                className="absolute -right-2 -top-2 w-5 h-5 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-400 hover:text-rose-500 shadow-sm transition-colors z-10"
+                            >
+                                <X size={12} />
+                            </button>
+                        )}
+                      </div>
+                   </div>
+
+                   {/* Subject Filter */}
+                   <div className="flex items-center gap-2 min-w-[200px]">
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider shrink-0">Subject</span>
+                      <div className="flex-1">
+                        <CustomDropdown 
+                            options={subjectOptions}
+                            value={subjectFilter}
+                            onChange={(e) => setSubjectFilter(e.target.value)}
+                            placeholder="Select Subject"
+                        />
+                      </div>
+                   </div>
+
+                   {/* Status Filter */}
+                   <div className="flex items-center gap-2 min-w-[150px]">
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider shrink-0">Status</span>
+                      <div className="flex-1">
+                        <CustomDropdown 
+                            options={['All', 'Present', 'Absent']}
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            placeholder="All Status"
+                        />
+                      </div>
+                   </div>
+                </div>
+             </div>
            </div>
 
-           {attendanceData.length === 0 ? (
+           {filteredData.length === 0 ? (
                <div className="p-12 text-center text-slate-500">
-                  <CalendarDays className="w-16 h-16 mx-auto text-slate-300 mb-4" />
-                  <p className="font-semibold text-lg text-slate-700">No Check-ins Found</p>
-                  <p className="text-sm mt-1">Faculty hasn't marked attendance for you yet.</p>
+                  <div className="bg-slate-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Search className="w-8 h-8 text-slate-300" />
+                  </div>
+                  <p className="font-semibold text-lg text-slate-700">No Records Match Filters</p>
+                  <p className="text-sm mt-1">Try adjusting your search or status selection.</p>
                </div>
            ) : (
              <div className="overflow-x-auto">
@@ -221,11 +296,11 @@ const StudentAttendance = () => {
            )}
 
            {/* Pagination */}
-           {attendanceData.length > itemsPerPage && (
+           {filteredData.length > itemsPerPage && (
              <div className="p-6 border-t border-slate-100 flex justify-center bg-white">
                  <Pagination
                     currentPage={currentPage}
-                    totalPages={Math.ceil(attendanceData.length / itemsPerPage)}
+                    totalPages={Math.ceil(filteredData.length / itemsPerPage)}
                     onPageChange={setCurrentPage}
                  />
              </div>

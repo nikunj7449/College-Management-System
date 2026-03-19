@@ -38,6 +38,14 @@ const EventViewModal = ({ isOpen, onClose, event }) => {
                             <span className="px-2.5 py-1 bg-white/20 backdrop-blur-md text-white border border-white/30 rounded-md text-[10px] uppercase font-bold tracking-wider shadow-sm">
                                 {event.type}
                             </span>
+                            {event.status && event.status !== 'Approved' && (
+                                <span className={`px-2.5 py-1 backdrop-blur-md border rounded-md text-[10px] uppercase font-bold tracking-wider shadow-sm ${
+                                    event.status === 'Pending' ? 'bg-amber-500/30 text-amber-200 border-amber-400/30' :
+                                    'bg-rose-500/30 text-rose-200 border-rose-400/30'
+                                }`}>
+                                    {event.status}
+                                </span>
+                            )}
                         </div>
                         <h2 className="text-2xl font-bold text-white leading-tight shadow-sm">
                             {event.title}

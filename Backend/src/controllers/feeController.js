@@ -5,6 +5,9 @@ const FeePayment = require('../models/FeePayment');
 const Student = require('../models/Student');
 const Course = require('../models/Course');
 const asyncHandler = require('express-async-handler');
+const sendEmail = require('../utils/sendEmail');
+const { getFeeReminderTemplate } = require('../utils/emailTemplates');
+const { sendNotification } = require('../utils/notificationUtils');
 
 // --- 1. Fee Categories ---
 
@@ -670,4 +673,106 @@ exports.getFeeReports = asyncHandler(async (req, res) => {
         .sort({ createdAt: -1 });
 
     res.status(200).json({ success: true, count: records.length, data: records });
+});
+
+// @desc    Send Internal System Notifications to students with pending fees
+// @route   POST /api/v1/fees/reminders
+// @access  Private (SuperAdmin)
+exports.sendFeeRemainder = asyncHandler(async (req, res) => {
+    const { notificationTypes = ['SYSTEM'], customMessage, studentFeeIds } = req.body;
+
+    let query = { pendingAmount: { $gt: 0 } };
+    
+    // If specific IDs are provided, filter by them
+    if (studentFeeIds && Array.isArray(studentFeeIds) && studentFeeIds.length > 0) {
+        query._id = { $in: studentFeeIds };
+    }
+
+    // 1. Find the student fee records
+    let feesToNotify;
+    if (notificationTypes.includes('EMAIL')) {
+        feesToNotify = await StudentFee.find(query)
+            .populate({
+                path: 'student',
+                select: 'name user course branch sem email personalEmail',
+                populate: {
+                    path: 'user',
+                    select: 'email'
+                }
+            });
+    } else {
+        feesToNotify = await StudentFee.find(query)
+            .populate('student', 'name user course branch sem');
+    }
+
+    if (!feesToNotify || feesToNotify.length === 0) {
+        return res.status(200).json({ 
+            success: true, 
+            message: 'No matching pending fees found. No notifications sent.',
+            sentCount: 0 
+        });
+    }
+
+    let sentCount = 0;
+    let emailSentCount = 0;
+
+    const processPromises = feesToNotify.map(async (record) => {
+        const student = record.student;
+        if (!student) return;
+
+        const defaultMessage = `Hello ${student.name}, you have a pending fee balance of ₹${record.pendingAmount.toLocaleString()} for Sem ${record.semester || 'N/A'}. Please clear it at the earliest.`;
+        const message = customMessage || defaultMessage;
+        
+        // 1. System Notification
+        if (notificationTypes.includes('SYSTEM') && student.user) {
+            try {
+                await sendNotification({
+                    recipient: student.user._id || student.user,
+                    sender: req.user.id,
+                    title: 'Fee Payment Reminder',
+                    message: message,
+                    type: 'FEE',
+                    priority: 'HIGH',
+                    link: '/student/fees'
+                });
+                sentCount++;
+            } catch (error) {
+                console.error(`[Fee Reminder Notification] Failed to send to user:`, error.message);
+            }
+        }
+
+        // 2. Email Notification
+        if (notificationTypes.includes('EMAIL')) {
+           // const emailAddress = student.email || (student.user && student.user.email);
+           const emailAddress = student.personalEmail;
+            if (emailAddress) {
+                try {
+                    console.log("Email Address: ", emailAddress);
+                    await sendEmail({
+                        email: emailAddress,
+                        subject: 'Fee Payment Reminder',
+                        html: `
+                            <div style="font-family: sans-serif; padding: 20px; color: #333;">
+                                <h2>Fee Payment Reminder</h2>
+                                <p>${message}</p>
+                                <hr />
+                                <p style="font-size: 0.8em; color: #666;">This is an automated reminder from the College Management System.</p>
+                            </div>
+                        `
+                    });
+                    emailSentCount++;
+                } catch (error) {
+                    console.error(`[Fee Reminder Email] Failed to send to ${emailAddress}:`, error.message);
+                }
+            }
+        }
+    });
+
+    await Promise.all(processPromises);
+
+    res.status(200).json({
+        success: true,
+        message: `Reminders sent: ${sentCount} System, ${emailSentCount} Alternative (Email).`,
+        data: { sentCount, emailSentCount }
+    });
 });

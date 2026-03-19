@@ -1,19 +1,19 @@
 import React from 'react';
 import MultiSelectDropdown from '../../../custom/MultiSelectDropdown';
 
-const FacultyFilterPanel = ({ 
-  filters, 
-  onFilterChange, 
+const FacultyFilterPanel = ({
+  filters,
+  onFilterChange,
   designationOptions,
-  courseOptions, 
-  branchOptions, 
+  courseOptions,
+  branchOptions,
   semOptions,
   subjectOptions
 }) => {
-  const hasActiveFilters = 
+  const hasActiveFilters =
     filters.designation.length > 0 ||
-    filters.course.length > 0 || 
-    filters.branch.length > 0 || 
+    filters.course.length > 0 ||
+    filters.branch.length > 0 ||
     filters.sem.length > 0 ||
     filters.subject.length > 0;
 
@@ -23,9 +23,9 @@ const FacultyFilterPanel = ({
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
+
     const newFilters = { ...filters, [name]: value };
-    
+
     // Reset dependent filters
     if (name === 'course') {
       newFilters.branch = [];
@@ -37,7 +37,7 @@ const FacultyFilterPanel = ({
     } else if (name === 'sem') {
       newFilters.subject = [];
     }
-    
+
     onFilterChange(newFilters);
   };
 
@@ -50,7 +50,7 @@ const FacultyFilterPanel = ({
           </label>
           <MultiSelectDropdown
             name="designation"
-            value={filters.designation} 
+            value={filters.designation}
             onChange={handleChange}
             options={designationOptions}
             placeholder="Select Designations"
@@ -63,7 +63,7 @@ const FacultyFilterPanel = ({
           </label>
           <MultiSelectDropdown
             name="course"
-            value={filters.course} 
+            value={filters.course}
             onChange={handleChange}
             options={courseOptions}
             placeholder="Select Courses"
@@ -76,7 +76,7 @@ const FacultyFilterPanel = ({
           </label>
           <MultiSelectDropdown
             name="branch"
-            value={filters.branch} 
+            value={filters.branch}
             onChange={handleChange}
             options={branchOptions}
             placeholder="Select Branches"
@@ -90,7 +90,7 @@ const FacultyFilterPanel = ({
           </label>
           <MultiSelectDropdown
             name="sem"
-            value={filters.sem} 
+            value={filters.sem}
             onChange={handleChange}
             options={semOptions}
             placeholder="Select Semesters"
@@ -104,7 +104,7 @@ const FacultyFilterPanel = ({
           </label>
           <MultiSelectDropdown
             name="subject"
-            value={filters.subject} 
+            value={filters.subject}
             onChange={handleChange}
             options={subjectOptions}
             placeholder="Select Subjects"
@@ -113,7 +113,7 @@ const FacultyFilterPanel = ({
         </div>
 
         {hasActiveFilters && (
-          <button 
+          <button
             onClick={handleClearFilters}
             className="w-full py-2 text-sm text-red-500 hover:bg-red-50 rounded-lg transition-colors"
           >

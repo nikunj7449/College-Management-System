@@ -1,4 +1,7 @@
 const Event = require('../models/Event');
+const Notification = require('../models/Notification');
+const User = require('../models/User');
+const Role = require('../models/Role');
 const cloudinary = require('cloudinary').v2;
 
 // @desc    Get all events
@@ -6,16 +9,38 @@ const cloudinary = require('cloudinary').v2;
 // @access  Public (or protected based on your auth logic)
 exports.getAllEvents = async (req, res) => {
     try {
-        // Find all events, sort by date ascending (closest first)
-        const events = await Event.find()
+        let query = {};
+        const userRole = req.user?.role?.name || req.user?.role;
+
+        // Filtering logic based on user role and permissions
+        if (userRole === 'ADMIN' || userRole === 'SUPERADMIN') {
+            // Admins can see all events in any status
+            query = {};
+        } else if (userRole === 'FACULTY') {
+            // Faculty can see all 'Approved' events OR events they created themselves (even if Pending/Rejected)
+            query = {
+                $or: [
+                    { status: 'Approved' },
+                    { createdBy: req.user._id }
+                ]
+            };
+        } else {
+            // Default (Students, Guests etc.) can ONLY see Approved events
+            query = { 
+                $or: [
+                    { status: 'Approved' },
+                    { status: { $exists: false } }
+                ]
+            };
+        }
+
+        const events = await Event.find(query)
             .populate('createdBy', 'name email role')
             .sort({ date: 1, startTime: 1 });
 
-        // Transform the '_id' to 'id' to match frontend expectations
         const transformedEvents = events.map(event => {
             const ev = event.toObject();
             ev.id = ev._id.toString();
-            // Optional: Format dates to YYYY-MM-DD strings to match frontend state if needed
             if (ev.date) {
                 ev.date = ev.date.toISOString().split('T')[0];
             }
@@ -78,6 +103,7 @@ exports.getEventById = async (req, res) => {
 exports.createEvent = async (req, res) => {
     try {
         let eventData = { ...req.body };
+        const userRole = req.user?.role?.name || req.user?.role;
 
         // If Multer processed a file, the Cloudinary URL is in req.file.path
         if (req.file) {
@@ -88,8 +114,42 @@ exports.createEvent = async (req, res) => {
         // Attach the ID of the logged-in user who represents the creator
         eventData.createdBy = req.user._id;
 
+        // Set initial status based on role
+        if (userRole === 'FACULTY') {
+            eventData.status = 'Pending';
+        } else {
+            eventData.status = 'Approved';
+        }
+
         const event = await Event.create(eventData);
         const savedEvent = await Event.findById(event._id).populate('createdBy', 'name email role');
+
+        // Notify Admins if it's a faculty creation
+        if (userRole === 'FACULTY') {
+            try {
+                // Find Admin and Superadmin roles
+                const adminRoles = await Role.find({ name: { $in: ['ADMIN', 'SUPERADMIN'] } });
+                const adminRoleIds = adminRoles.map(r => r._id);
+                
+                // Find all Admins/Superadmins
+                const admins = await User.find({ role: { $in: adminRoleIds } });
+
+                // Create a notification for each admin
+                const notifications = admins.map(admin => ({
+                    recipient: admin._id,
+                    sender: req.user._id,
+                    title: 'New Event Pending Approval',
+                    message: `Faculty member ${req.user.name} has created a new event "${event.title}" which requires your approval.`,
+                    type: 'EVENT',
+                    priority: 'MEDIUM',
+                    link: '/events' // Link to events manager
+                }));
+
+                await Notification.insertMany(notifications);
+            } catch (notifError) {
+                console.error('Error sending notifications to admins:', notifError);
+            }
+        }
 
         const ev = savedEvent.toObject();
         ev.id = ev._id.toString();
@@ -99,7 +159,6 @@ exports.createEvent = async (req, res) => {
             data: ev
         });
     } catch (error) {
-        // Handle Mongoose validation errors nicely
         if (error.name === 'ValidationError') {
             const messages = Object.values(error.errors).map(val => val.message);
             return res.status(400).json({
@@ -107,7 +166,6 @@ exports.createEvent = async (req, res) => {
                 message: messages.join(', ')
             });
         }
-
         res.status(500).json({
             success: false,
             message: 'Server Error in creating event',
@@ -183,6 +241,98 @@ exports.updateEvent = async (req, res) => {
     }
 };
 
+// @desc    Approve event
+// @route   PATCH /api/events/:id/approve
+// @access  Private (Admin/Superadmin only)
+exports.approveEvent = async (req, res) => {
+    try {
+        const event = await Event.findById(req.params.id);
+
+        if (!event) {
+            return res.status(404).json({
+                success: false,
+                message: 'Event not found'
+            });
+        }
+
+        event.status = 'Approved';
+        await event.save();
+
+        // Notify creator
+        try {
+            await Notification.create({
+                recipient: event.createdBy,
+                sender: req.user._id,
+                title: 'Event Approved',
+                message: `Your event "${event.title}" has been approved and is now visible to the campus.`,
+                type: 'EVENT',
+                priority: 'HIGH',
+                link: '/events'
+            });
+        } catch (notifError) {
+            console.error('Error notifying faculty of approval:', notifError);
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Event approved successfully',
+            data: event
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Server Error in approving event',
+            error: error.message
+        });
+    }
+};
+
+// @desc    Reject event
+// @route   PATCH /api/events/:id/reject
+// @access  Private (Admin/Superadmin only)
+exports.rejectEvent = async (req, res) => {
+    try {
+        const { reason } = req.body;
+        const event = await Event.findById(req.params.id);
+
+        if (!event) {
+            return res.status(404).json({
+                success: false,
+                message: 'Event not found'
+            });
+        }
+
+        event.status = 'Rejected';
+        await event.save();
+
+        // Notify creator
+        try {
+            await Notification.create({
+                recipient: event.createdBy,
+                sender: req.user._id,
+                title: 'Event Rejected',
+                message: `Your event "${event.title}" has been rejected.${reason ? ` Reason: ${reason}` : ''}`,
+                type: 'EVENT',
+                priority: 'HIGH',
+                link: '/events'
+            });
+        } catch (notifError) {
+            console.error('Error notifying faculty of rejection:', notifError);
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Event rejected successfully',
+            data: event
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Server Error in rejecting event',
+            error: error.message
+        });
+    }
+};
 // @desc    Delete event
 // @route   DELETE /api/events/:id
 // @access  Private
@@ -197,9 +347,11 @@ exports.deleteEvent = async (req, res) => {
             });
         }
 
+        const userRole = req.user?.role?.name || req.user?.role;
+
         // Ownership Check: 
         // If the user is FACULTY, they can only delete events they created themselves.
-        if (req.user.role === 'FACULTY' && event.createdBy.toString() !== req.user._id.toString()) {
+        if (userRole === 'FACULTY' && event.createdBy.toString() !== req.user._id.toString()) {
             return res.status(403).json({
                 success: false,
                 message: 'Forbidden: You do not have permission to delete this event.'

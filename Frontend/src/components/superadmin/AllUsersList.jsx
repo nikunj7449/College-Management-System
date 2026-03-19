@@ -8,6 +8,7 @@ import AdminModal from '../modals/AdminModal';
 import OtherUserModal from '../modals/OtherUserModal';
 import FacultyFormModal from '../modals/FacultyFormModal';
 import DeleteConfirmModal from '../modals/DeleteConfirmModal';
+import MultiSelectDropdown from '../custom/MultiSelectDropdown';
 import { useFacultyOperations, MODAL_TYPE } from '../../hooks/admin/useFacultyOperations';
 import {
     FACULTY_DESIGNATIONS,
@@ -29,6 +30,16 @@ const AllUsersList = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [roleFilter, setRoleFilter] = useState('ALL Roles');
     const [statusFilter, setStatusFilter] = useState('ALL Status');
+
+    // Faculty specific filters (popover)
+    const [facultyFilters, setFacultyFilters] = useState({
+        course: [],
+        branch: [],
+        designation: [],
+        sem: []
+    });
+    const [showFacultyFilters, setShowFacultyFilters] = useState(false);
+    const filterRef = useRef(null);
 
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);
@@ -76,7 +87,7 @@ const AllUsersList = () => {
         fetchUsers();
         fetchRoles();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [roleFilter, statusFilter, fetchRoles]);
+    }, [roleFilter, statusFilter, facultyFilters, fetchRoles]);
 
     useEffect(() => {
         // Reset page on search or filter change
@@ -89,15 +100,18 @@ const AllUsersList = () => {
             if (addMenuRef.current && !addMenuRef.current.contains(event.target)) {
                 setShowAddMenu(false);
             }
+            if (filterRef.current && !filterRef.current.contains(event.target)) {
+                setShowFacultyFilters(false);
+            }
         };
 
-        if (showAddMenu) {
+        if (showAddMenu || showFacultyFilters) {
             document.addEventListener('mousedown', handleClickOutside);
         }
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [showAddMenu]);
+    }, [showAddMenu, showFacultyFilters]);
 
     // Prevent background scrolling when any modal is open
     useEffect(() => {
@@ -124,6 +138,15 @@ const AllUsersList = () => {
             const params = new URLSearchParams();
             if (roleFilter !== 'ALL Roles') params.append('role', roleFilter);
             if (statusFilter !== 'ALL Status') params.append('status', statusFilter);
+            
+            // Add Faculty-specific filters if role is Faculty
+            if (roleFilter === 'FACULTY') {
+                if (facultyFilters.course.length > 0) params.append('course', facultyFilters.course.join(','));
+                if (facultyFilters.branch.length > 0) params.append('branch', facultyFilters.branch.join(','));
+                if (facultyFilters.designation.length > 0) params.append('designation', facultyFilters.designation.join(','));
+                if (facultyFilters.sem.length > 0) params.append('sem', facultyFilters.sem.join(','));
+            }
+
             if (searchTerm) params.append('search', searchTerm);
             console.log(params.toString());
 
@@ -281,9 +304,9 @@ const AllUsersList = () => {
     };
 
     return (
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden min-h-[500px]">
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm min-h-[500px]">
             {/* Toolbar */}
-            <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex flex-col md:flex-row gap-4 justify-between items-center">
+            <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex flex-col md:flex-row gap-4 justify-between items-center rounded-t-3xl">
                 {/* Search */}
                 <div className="relative flex-1 max-w-md w-full">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
@@ -303,30 +326,159 @@ const AllUsersList = () => {
                             name="roleFilter"
                             options={['ALL Roles', ...roles.map(r => r.name)]}
                             value={roleFilter}
-                            onChange={(e) => setRoleFilter(e.target.value)}
+                            onChange={(e) => {
+                                setRoleFilter(e.target.value);
+                                if (e.target.value !== 'FACULTY') {
+                                    setFacultyFilters({ course: [], branch: [], designation: [], sem: [] });
+                                }
+                            }}
                             placeholder="ALL Roles"
                         />
                     </div>
 
-                    <div className="w-40 z-10 shadow-sm rounded-xl">
-                        <CustomDropdown
-                            name="statusFilter"
-                            options={['ALL Status', 'Active', 'Inactive']}
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                            placeholder="ALL Status"
-                        />
-                    </div>
+                    {roleFilter !== 'FACULTY' && (
+                        <div className="w-40 z-10 shadow-sm rounded-xl">
+                            <CustomDropdown
+                                name="statusFilter"
+                                options={['ALL Status', 'Active', 'Inactive']}
+                                value={statusFilter}
+                                onChange={(e) => setStatusFilter(e.target.value)}
+                                placeholder="ALL Status"
+                            />
+                        </div>
+                    )}
+
+                    {/* Faculty Popover Filter Button */}
+                    {roleFilter === 'FACULTY' && (
+                        <div className="relative" ref={filterRef}>
+                            <button
+                                onClick={() => setShowFacultyFilters(!showFacultyFilters)}
+                                className={`flex items-center justify-center p-2.5 rounded-xl border transition-all ${showFacultyFilters
+                                    ? 'bg-indigo-50 border-indigo-200 text-indigo-600'
+                                    : 'bg-white border-slate-200 text-slate-400 hover:text-slate-600 shadow-sm'
+                                    }`}
+                            >
+                                <Filter size={24} />
+                            </button>
+
+                            {showFacultyFilters && (
+                                <div className="absolute right-0 mt-3 w-72 bg-white rounded-2xl shadow-2xl border border-slate-100 p-5 z-[100]">
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">
+                                                Course
+                                            </label>
+                                            <MultiSelectDropdown
+                                                name="course"
+                                                value={facultyFilters.course}
+                                                onChange={(e) => setFacultyFilters(prev => ({
+                                                    ...prev,
+                                                    course: e.target.value,
+                                                    branch: [], // Reset branch if course changes
+                                                    sem: []
+                                                }))}
+                                                options={courseOptions}
+                                                placeholder="Select Courses"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">
+                                                Branch
+                                            </label>
+                                            <MultiSelectDropdown
+                                                name="branch"
+                                                value={facultyFilters.branch}
+                                                onChange={(e) => setFacultyFilters(prev => ({
+                                                    ...prev,
+                                                    branch: e.target.value,
+                                                    sem: []
+                                                }))}
+                                                options={facultyFilters.course.length > 0 ? Array.from(new Set(
+                                                    facultyOps.coursesData
+                                                        .filter(c => facultyFilters.course.includes(c.name))
+                                                        .flatMap(c => c.branches.map(b => b.name))
+                                                )) : []}
+                                                placeholder="Select Branches"
+                                                disabled={facultyFilters.course.length === 0}
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">
+                                                Semester
+                                            </label>
+                                            <MultiSelectDropdown
+                                                name="sem"
+                                                value={facultyFilters.sem}
+                                                onChange={(e) => setFacultyFilters(prev => ({
+                                                    ...prev,
+                                                    sem: e.target.value
+                                                }))}
+                                                options={facultyFilters.course.length > 0 ? Array.from({
+                                                    length: Math.max(...facultyOps.coursesData
+                                                        .filter(c => facultyFilters.course.includes(c.name))
+                                                        .map(c => (c.duration || 4) * 2))
+                                                }, (_, i) => (i + 1).toString()) : []}
+                                                placeholder="Select Semesters"
+                                                disabled={facultyFilters.course.length === 0}
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">
+                                                Designation
+                                            </label>
+                                            <MultiSelectDropdown
+                                                name="designation"
+                                                value={facultyFilters.designation}
+                                                onChange={(e) => setFacultyFilters(prev => ({
+                                                    ...prev,
+                                                    designation: e.target.value
+                                                }))}
+                                                options={FACULTY_DESIGNATIONS}
+                                                placeholder="Select Designations"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">
+                                                Status
+                                            </label>
+                                            <CustomDropdown
+                                                name="statusFilter"
+                                                options={['ALL Status', 'Active', 'Inactive']}
+                                                value={statusFilter}
+                                                onChange={(e) => setStatusFilter(e.target.value)}
+                                                placeholder="ALL Status"
+                                            />
+                                        </div>
+
+                                        <button
+                                            onClick={() => {
+                                                setFacultyFilters({ course: [], branch: [], designation: [], sem: [] });
+                                                setStatusFilter('ALL Status');
+                                                setShowFacultyFilters(false);
+                                            }}
+                                            className="w-full py-2 text-xs font-medium text-red-500 hover:bg-red-50 rounded-xl transition-colors border border-dashed border-red-100 mt-2"
+                                        >
+                                            Clear All Filters
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {/* Add User Button */}
                     {hasPermission(loggedInUser, 'USER', 'create') && (
                         <div className="relative z-30 ml-auto md:ml-4" ref={addMenuRef}>
                             <button
                                 onClick={() => setShowAddMenu(!showAddMenu)}
-                                className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                                className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 active:scale-95 group font-medium"
                             >
-                                <UserPlus size={18} />
-                                <span className="font-medium">Add User</span>
+                                <Plus size={20} className={`transition-transform duration-300 ${showAddMenu ? 'rotate-45' : ''}`} />
+                                <span className="hidden sm:inline">Add User</span>
                             </button>
 
                             {showAddMenu && (
@@ -487,7 +639,7 @@ const AllUsersList = () => {
 
                     {/* Pagination */}
                     {filteredUsers.length > itemsPerPage && (
-                        <div className="p-4 border-t border-slate-100">
+                        <div className="p-4 border-t border-slate-100 bg-slate-50/30 rounded-b-3xl">
                             <Pagination
                                 currentPage={currentPage}
                                 totalPages={totalPages}

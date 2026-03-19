@@ -70,6 +70,18 @@ const FeeStructure = () => {
         return () => clearTimeout(timeoutId);
     }, [searchTerm, filters]);
 
+    // Lock body scroll when delete modal is open
+    useEffect(() => {
+        if (isDeleteModalOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [isDeleteModalOpen]);
+
     const handleAddFeeRow = () => {
         setFormData({
             ...formData,

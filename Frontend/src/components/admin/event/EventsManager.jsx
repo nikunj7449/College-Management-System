@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useContext } from 'react';
 import {
   Plus, Search, Edit, Trash2, X, Calendar, MapPin, AlignLeft,
   Loader2, Save, LayoutGrid, List, MoreVertical, Eye, Clock, FileText,
-  Image as ImageIcon, Users, Link as LinkIcon
+  Image as ImageIcon, Users, Link as LinkIcon, CheckCircle, XCircle, Info
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import api from '../../../services/api';
@@ -13,6 +13,7 @@ import EventCardSkeleton from '../../common/event/EventCardSkeleton';
 import EventViewModal from '../../modals/EventViewModal';
 import { hasPermission } from '../../../utils/permissionUtils';
 import { AuthContext } from '../../../context/AuthContext';
+import RejectionReasonModal from '../../custom/RejectionReasonModal';
 
 const getEventStatus = (dateStr, startStr, endStr) => {
   if (!dateStr || !startStr) return 'Upcoming';
@@ -27,7 +28,7 @@ const getEventStatus = (dateStr, startStr, endStr) => {
 
 // Removed MOCK_EVENTS array
 
-const EventCard = ({ event, onEdit, onDelete, onView }) => {
+const EventCard = ({ event, onEdit, onDelete, onView, onApprove, onReject, userRole }) => {
   const [showActions, setShowActions] = useState(false);
   const timeoutRef = useRef(null);
 
@@ -61,6 +62,12 @@ const EventCard = ({ event, onEdit, onDelete, onView }) => {
     'Ongoing': 'bg-emerald-100/90 text-emerald-700',
     'Completed': 'bg-slate-100/90 text-slate-700',
   };
+
+  const approvalStatusColors = {
+    'Pending': 'bg-amber-100/90 text-amber-700 ring-amber-200/50',
+    'Approved': 'bg-emerald-100/90 text-emerald-700 ring-emerald-200/50',
+    'Rejected': 'bg-rose-100/90 text-rose-700 ring-rose-200/50',
+  };
   const badgeColor = statusColors[status] || statusColors['Upcoming'];
 
   return (
@@ -77,11 +84,16 @@ const EventCard = ({ event, onEdit, onDelete, onView }) => {
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none"></div>
 
-        {/* Status Badge */}
-        <div className="absolute top-3 left-3">
+        {/* Status Badges */}
+        <div className="absolute top-3 left-3 flex flex-col gap-1.5 items-start">
           <span className={`px-2.5 py-1 rounded-md text-[10px] uppercase font-bold tracking-wider backdrop-blur-sm shadow-sm ${badgeColor}`}>
             {status}
           </span>
+          {event.status && event.status !== 'Approved' && (
+            <span className={`px-2.5 py-1 rounded-md text-[10px] uppercase font-bold tracking-wider backdrop-blur-sm shadow-sm ring-1 ${approvalStatusColors[event.status]}`}>
+              {event.status}
+            </span>
+          )}
         </div>
 
         {/* Date Badge */}
@@ -118,6 +130,18 @@ const EventCard = ({ event, onEdit, onDelete, onView }) => {
                 </button>
               )}
             </div>
+            
+            {(userRole === 'ADMIN' || userRole === 'SUPERADMIN') && event.status === 'Pending' && (
+              <div className="flex justify-center space-x-1.5 pt-1 border-t border-white/20">
+                <button onClick={() => onApprove(event)} className="p-2 text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors" title="Approve">
+                  <CheckCircle size={16} />
+                </button>
+                <button onClick={() => onReject(event)} className="p-2 text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg transition-colors" title="Reject">
+                  <XCircle size={16} />
+                </button>
+              </div>
+            )}
+
             <div className="flex justify-center space-x-1.5">
               <button onClick={() => onView(event)} className="p-2 text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors w-full flex justify-center" title="View Details">
                 <Eye size={16} />
@@ -170,6 +194,7 @@ const EventsManager = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [viewType, setViewType] = useState('grid');
+  const [activeTab, setActiveTab] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(8);
 
@@ -179,6 +204,7 @@ const EventsManager = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRejectionModalOpen, setIsRejectionModalOpen] = useState(false);
 
   useEffect(() => {
     if (fetchLatestRole) {
@@ -195,7 +221,7 @@ const EventsManager = () => {
   }, [searchTerm]);
 
   useEffect(() => {
-    if (isModalOpen || isDeleteModalOpen) {
+    if (isModalOpen || isDeleteModalOpen || isRejectionModalOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
@@ -203,7 +229,7 @@ const EventsManager = () => {
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [isModalOpen, isDeleteModalOpen]);
+  }, [isModalOpen, isDeleteModalOpen, isRejectionModalOpen]);
 
   const fetchEvents = async () => {
     try {
@@ -247,15 +273,55 @@ const EventsManager = () => {
     setIsDeleteModalOpen(true);
   };
 
+  const handleApprove = async (event) => {
+    try {
+      setIsSubmitting(true);
+      await api.patch(`/events/${event.id}/approve`);
+      toast.success('Event approved successfully');
+      fetchEvents();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Error approving event');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleReject = (event) => {
+    setSelectedEvent(event);
+    setIsRejectionModalOpen(true);
+  };
+
+  const confirmRejection = async (reason) => {
+    try {
+      setIsSubmitting(true);
+      await api.patch(`/events/${selectedEvent.id}/reject`, { reason });
+      toast.success('Event rejected successfully');
+      setIsRejectionModalOpen(false);
+      setSelectedEvent(null);
+      fetchEvents();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Error rejecting event');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedEvent(null);
   };
 
-  const filteredEvents = events.filter(event =>
-    event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (event.location && event.location.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredEvents = events.filter(event => {
+    const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (event.location && event.location.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    const matchesTab = activeTab === 'all' || 
+      (activeTab === 'pending' && event.status === 'Pending') ||
+      (activeTab === 'approved' && (event.status === 'Approved' || !event.status)) ||
+      (activeTab === 'rejected' && event.status === 'Rejected');
+
+    return matchesSearch && matchesTab;
+  });
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -312,6 +378,30 @@ const EventsManager = () => {
         </div>
       </div>
 
+      {/* Tabs */}
+      {(loggedInUser?.role?.name === 'ADMIN' || loggedInUser?.role?.name === 'SUPERADMIN' || loggedInUser?.role === 'ADMIN' || loggedInUser?.role === 'SUPERADMIN') && (
+        <div className="flex border-b border-slate-200 mb-6 overflow-x-auto">
+          {['all', 'pending', 'approved', 'rejected'].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => { setActiveTab(tab); setCurrentPage(1); }}
+              className={`px-6 py-3 border-b-2 font-medium text-sm transition-all whitespace-nowrap ${
+                activeTab === tab
+                  ? 'border-indigo-600 text-indigo-600'
+                  : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+              }`}
+            >
+              <span className="capitalize">{tab}</span>
+              {tab === 'pending' && events.filter(e => e.status === 'Pending').length > 0 && (
+                <span className="ml-2 px-1.5 py-0.5 bg-rose-100 text-rose-600 text-[10px] rounded-full font-bold">
+                  {events.filter(e => e.status === 'Pending').length}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Content */}
       {loading ? (
         viewType === 'grid' ? (
@@ -343,6 +433,9 @@ const EventsManager = () => {
                 setSelectedEvent(event);
                 setIsModalOpen(true);
               }}
+              onApprove={handleApprove}
+              onReject={handleReject}
+              userRole={loggedInUser?.role?.name || loggedInUser?.role}
             />
           ))}
         </div>
@@ -396,10 +489,28 @@ const EventsManager = () => {
                           <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider border ${badgeColor}`}>
                             {status}
                           </span>
+                          {event.status && event.status !== 'Approved' && (
+                            <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider border ${
+                              event.status === 'Pending' ? 'bg-amber-100 text-amber-700 border-amber-200' :
+                              'bg-rose-100 text-rose-700 border-rose-200'
+                            }`}>
+                              {event.status}
+                            </span>
+                          )}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end gap-2">
+                          {(loggedInUser?.role?.name === 'ADMIN' || loggedInUser?.role?.name === 'SUPERADMIN' || loggedInUser?.role === 'ADMIN' || loggedInUser?.role === 'SUPERADMIN') && event.status === 'Pending' && (
+                            <>
+                              <button onClick={() => handleApprove(event)} className="p-2 text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors" title="Approve">
+                                <CheckCircle size={18} />
+                              </button>
+                              <button onClick={() => handleReject(event)} className="p-2 text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg transition-colors" title="Reject">
+                                <XCircle size={18} />
+                              </button>
+                            </>
+                          )}
                           <button onClick={() => {
                             setSelectedEvent(event);
                             setIsModalOpen(true);
@@ -458,6 +569,17 @@ const EventsManager = () => {
           />
         )
       }
+
+      {/* Custom Rejection Reason Modal */}
+      <RejectionReasonModal
+        isOpen={isRejectionModalOpen}
+        onClose={() => {
+          setIsRejectionModalOpen(false);
+          setSelectedEvent(null);
+        }}
+        onConfirm={confirmRejection}
+        eventTitle={selectedEvent?.title}
+      />
     </div >
   );
 };

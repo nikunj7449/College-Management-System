@@ -4,12 +4,13 @@ const {
     getEventById,
     createEvent,
     updateEvent,
-    deleteEvent
+    deleteEvent,
+    approveEvent,
+    rejectEvent
 } = require('../controllers/eventController');
 
-// You can add your authentication middleware here if needed
 const { protect } = require('../middleware/authMiddleware');
-const { requirePermission } = require('../middleware/roleMiddleware');
+const { requirePermission, authorize } = require('../middleware/roleMiddleware');
 const upload = require('../middleware/uploadMiddleware');
 
 const router = express.Router();
@@ -20,6 +21,14 @@ router
     .route('/')
     .get(requirePermission('EVENT', 'read'), getAllEvents)
     .post(requirePermission('EVENT', 'create'), upload.single('imageURL'), createEvent);
+
+router
+    .route('/:id/approve')
+    .patch(authorize('ADMIN', 'SUPERADMIN'), approveEvent);
+
+router
+    .route('/:id/reject')
+    .patch(authorize('ADMIN', 'SUPERADMIN'), rejectEvent);
 
 router
     .route('/:id')

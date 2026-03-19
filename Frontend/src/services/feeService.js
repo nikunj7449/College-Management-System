@@ -30,6 +30,9 @@ const feeService = {
 
     // Student Specific
     getMyFees: () => api.get('/fees/my-fees'),
+
+    // Reminders
+    sendReminders: (data) => api.post('/fees/reminders', data),
 };
 
 export default feeService;

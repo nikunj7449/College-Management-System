@@ -14,7 +14,7 @@ export const getShortBranch = (name) => {
   if (!name) return '';
   // If it's already short, return as is
   if (name.length <= 10) return name.toUpperCase();
-  
+
   // Dynamic acronym generation
   const stopWords = ['of', 'and', '&', 'in', 'the', 'for'];
   return name
@@ -72,17 +72,17 @@ export const getSemOptions = (coursesData, courseName) => {
 export const getSubjectOptions = (coursesData, course, branch, semesters) => {
   const selectedCourse = coursesData.find(c => c.name === course);
   if (!selectedCourse) return [];
-  
+
   const selectedBranch = selectedCourse.branches.find(b => b.name === branch);
   if (!selectedBranch) return [];
-  
+
   // If no semester selected, show nothing
   if (!semesters || semesters.length === 0) return [];
 
-  const relevantSubjects = selectedBranch.subjects.filter(sub => 
+  const relevantSubjects = selectedBranch.subjects.filter(sub =>
     semesters.includes(sub.semester?.toString())
   );
-  
+
   return relevantSubjects.map(s => s.name);
 };
 
@@ -124,13 +124,13 @@ export const getFilterSubjectOptions = (coursesData, selectedCourses, selectedBr
   if (selectedCourses.length === 0 || selectedBranches.length === 0 || selectedSems.length === 0) {
     return [];
   }
-  
+
   const courses = coursesData.filter(c => selectedCourses.includes(c.name));
   const relevantBranches = courses.flatMap(c => c.branches).filter(b => selectedBranches.includes(b.name));
-  const relevantSubjects = relevantBranches.flatMap(b => b.subjects).filter(sub => 
+  const relevantSubjects = relevantBranches.flatMap(b => b.subjects).filter(sub =>
     selectedSems.includes(sub.semester?.toString())
   );
-  
+
   return Array.from(new Set(relevantSubjects.map(s => s.name)));
 };
 
@@ -159,21 +159,21 @@ export const validateFileUpload = (files, maxFiles = 3) => {
  */
 export const buildQueryParams = (searchTerm, filters) => {
   const params = { search: searchTerm };
-  
+
   // Common filters
   if (filters.course?.length > 0) params.course = filters.course.join(',');
   if (filters.branch?.length > 0) params.branch = filters.branch.join(',');
   if (filters.sem?.length > 0) params.sem = filters.sem.join(',');
-  
+
   // Student-specific filters
   if (filters.isActive !== undefined && filters.isActive !== '') {
     params.isActive = filters.isActive;
   }
-  
+
   // Faculty-specific filters
   if (filters.designation?.length > 0) params.designation = filters.designation.join(',');
   if (filters.subject?.length > 0) params.subject = filters.subject.join(',');
-  
+
   return params;
 };
 

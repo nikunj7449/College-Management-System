@@ -13,8 +13,8 @@ const FacultyPerformance = () => {
     const { user } = useContext(AuthContext);
     const [performances, setPerformances] = useState([]);
 
-    // Fetch filtered students via custom hook
-    const { students } = useFacultyOperations();
+    // Fetch filtered students and faculty profile via custom hook
+    const { students, facultyProfile } = useFacultyOperations();
 
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -213,6 +213,7 @@ const FacultyPerformance = () => {
                     initialData={formModal.data}
                     isEdit={formModal.isEdit}
                     students={students}
+                    facultyProfile={facultyProfile}
                     onSave={onFormSave}
                 />
             )}

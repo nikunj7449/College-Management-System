@@ -98,17 +98,17 @@ exports.addFaculty = async (req, res, next) => {
     try {
       const loginUrl = process.env.FRONTEND_URL || 'http://localhost:5173/login';
       const emailHtml = getWelcomeEmailTemplate(
-          name, 
-          'Faculty', 
-          loginEmail, 
-          formattedPassword, 
-          loginUrl
+        name,
+        'Faculty',
+        loginEmail,
+        formattedPassword,
+        loginUrl
       );
 
       await sendEmail({
-          email: personalEmail,
-          subject: `Welcome to ${process.env.COLLEGE_NAME || 'College'} - Your Faculty Portal Credentials`,
-          html: emailHtml
+        email: personalEmail,
+        subject: `Welcome to ${process.env.COLLEGE_NAME || 'College'} - Your Faculty Portal Credentials`,
+        html: emailHtml
       });
       console.log(`Welcome email sent to faculty ${facultyId} at ${personalEmail}`);
     } catch (emailError) {
@@ -307,7 +307,7 @@ exports.getAllFaculty = async (req, res, next) => {
 exports.getMyFaculty = async (req, res, next) => {
   try {
     const studentUser = req.user.id;
-    
+
     // 1. Get the current logged in student's details
     const student = await Student.findOne({ user: studentUser });
     if (!student) {
@@ -319,10 +319,10 @@ exports.getMyFaculty = async (req, res, next) => {
       .select('name facultyId personalEmail email phone designation subject qualification course branch joiningDate')
       .sort({ name: 1 });
 
-    res.status(200).json({ 
-      success: true, 
+    res.status(200).json({
+      success: true,
       count: faculties.length,
-      data: faculties 
+      data: faculties
     });
   } catch (error) { next(error); }
 };
@@ -475,4 +475,4 @@ exports.updateMyProfile = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-};
+};

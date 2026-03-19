@@ -36,6 +36,7 @@ import FeeStructure from './components/admin/fees/FeeStructure';
 import StudentFees from './components/admin/fees/StudentFees';
 import FeeReports from './components/admin/fees/FeeReports';
 import StudentMyFees from './components/student/fees/StudentMyFees';
+import MyNotifications from './components/common/notifications/MyNotifications';
 
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
@@ -134,8 +135,9 @@ const AppRoutes = () => {
           <Route path="/fees/reports" element={
             <ProtectedRoute requireModule="FEE" requireAction="read"><FeeReports /></ProtectedRoute>
           } />
-          
-          {/* Student Dedicated Routes */}
+          <Route path="/notifications" element={
+            <ProtectedRoute><MyNotifications /></ProtectedRoute>
+          } />
           <Route path="/student/dashboard" element={
             <ProtectedRoute roles={['STUDENT']}><StudentDashboard /></ProtectedRoute>
           } />
@@ -159,6 +161,9 @@ const AppRoutes = () => {
           } />
           <Route path="/student/fees" element={
             <ProtectedRoute roles={['STUDENT']}><StudentMyFees /></ProtectedRoute>
+          } />
+          <Route path="/student/remarks" element={
+            <ProtectedRoute roles={['STUDENT']}><RemarksManager /></ProtectedRoute>
           } />
 
           {/* Default Redirect */}

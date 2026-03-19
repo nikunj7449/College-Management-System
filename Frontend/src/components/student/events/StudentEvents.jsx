@@ -14,34 +14,55 @@ const StudentEvents = () => {
         fetchEvents();
     }, []);
 
+    useEffect(() => {
+        if (isModalOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [isModalOpen]);
+
     const fetchEvents = async () => {
         try {
             const response = await api.get('/events');
             if (response.data.success) {
+                // 1. All events returned are Approved (filtered by backend)
+                const allApprovedEvents = response.data.data;
                 
-                // 1. Filter globally for Student Audience
-                const studentEvents = response.data.data.filter(e => {
-                     return e.audience && e.audience.some(aud => 
-                         aud.toLowerCase() === 'student' || aud.toLowerCase() === 'all' || aud.toLowerCase() === 'students'
-                     );
+                // 2. Filter for Student targeted events first
+                const studentTargeted = allApprovedEvents.filter(e => {
+                     // Show if audience is not defined, or if it matches student keywords
+                     if (!e.audience || e.audience.length === 0) return true;
+                     return e.audience.some(aud => {
+                         const a = aud.toLowerCase();
+                         return a === 'student' || a === 'students' || a === 'all';
+                     });
                 });
 
-                // 2. Filter for Upcoming Student Events 
+                // 3. From those, get Upcoming events
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
                 
-                const upcoming = studentEvents.filter(e => {
+                const upcoming = studentTargeted.filter(e => {
                      if (!e.date) return false;
                      const eventDate = new Date(e.date);
                      eventDate.setHours(0, 0, 0, 0);
                      return eventDate >= today;
                 });
                 
-                // Temporarily show ALL student events if upcoming is empty
-                if (upcoming.length === 0 && studentEvents.length > 0) {
-                     setEvents(studentEvents);
-                } else {
+                // Final selection:
+                // Priority 1: Upcoming targeted events
+                // Priority 2: All targeted events (if no upcoming)
+                // Priority 3: All approved events (if nothing targeted was found)
+                if (upcoming.length > 0) {
                      setEvents(upcoming);
+                } else if (studentTargeted.length > 0) {
+                     setEvents(studentTargeted);
+                } else {
+                     setEvents(allApprovedEvents);
                 }
                 
             } else {

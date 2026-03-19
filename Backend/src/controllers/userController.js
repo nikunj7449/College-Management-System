@@ -9,36 +9,73 @@ const Role = require('../models/Role');
 // @access  Private (SuperAdmin)
 exports.getAllUsers = async (req, res, next) => {
     try {
-        const { search, role, status } = req.query;
+        const { search, role, status, course, branch, designation, sem, subject } = req.query;
 
-        // Base query: Exclude students
+        // Base query: Exclude students (unless specifically requested by role filter if needed, but default is exclude)
         let query = {};
         const studentRole = await Role.findOne({ name: 'STUDENT' });
-        if (studentRole) {
+        if (studentRole && (role !== 'STUDENT')) {
             query.role = { $ne: studentRole._id };
         }
 
-        // Strict Filter by Role
-        if (role && role !== 'ALL') {
+        // 1. Strict Filter by Role
+        if (role && role !== 'ALL' && role !== 'ALL Roles') {
             const filterRole = await Role.findOne({ name: role });
             if (filterRole) {
                 query.role = filterRole._id;
             } else {
-                // If role name not found, force empty result
                 query.role = null;
             }
         }
 
-        // Strict Filter by Status
-        if (status && status !== 'ALL') {
+        // 2. Faculty Specific Filters (Course, Branch, Designation, etc.)
+        // These filters only make sense if the role is Faculty or ALL Staff
+        if (course || branch || designation || sem || subject) {
+            const facultyQuery = {};
+            
+            const addMultiFilter = (field, value) => {
+                if (!value) return;
+                if (Array.isArray(value)) {
+                    facultyQuery[field] = { $in: value };
+                } else if (typeof value === 'string' && value.includes(',')) {
+                    facultyQuery[field] = { $in: value.split(',') };
+                } else {
+                    facultyQuery[field] = value;
+                }
+            };
+
+            addMultiFilter('course', course);
+            addMultiFilter('branch', branch);
+            addMultiFilter('designation', designation);
+            addMultiFilter('sem', sem);
+            addMultiFilter('subject', subject);
+
+            const matchingFaculty = await Faculty.find(facultyQuery).select('user');
+            const matchingUserIds = matchingFaculty.map(f => f.user);
+            
+            // Add to main query
+            if (query._id) {
+                query._id = { $and: [{ _id: query._id }, { _id: { $in: matchingUserIds } }] };
+            } else {
+                query._id = { $in: matchingUserIds };
+            }
+        }
+
+        // 3. Strict Filter by Status
+        if (status && status !== 'ALL' && status !== 'ALL Status') {
             query.status = status;
         }
 
-        // Search by Name or Email
+        // 4. Search by Name or Email
         if (search && search.trim() !== '') {
-            query.$or = [
-                { name: { $regex: search, $options: 'i' } },
-                { email: { $regex: search, $options: 'i' } }
+            query.$and = [
+                ...(query.$and || []),
+                {
+                    $or: [
+                        { name: { $regex: search, $options: 'i' } },
+                        { email: { $regex: search, $options: 'i' } }
+                    ]
+                }
             ];
         }
 

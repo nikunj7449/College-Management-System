@@ -21,6 +21,18 @@ const FeeCategories = () => {
         fetchCategories();
     }, []);
 
+    // Lock body scroll when any modal is open
+    useEffect(() => {
+        if (isModalOpen || isDeleteModalOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [isModalOpen, isDeleteModalOpen]);
+
     const fetchCategories = async () => {
         try {
             setLoading(true);

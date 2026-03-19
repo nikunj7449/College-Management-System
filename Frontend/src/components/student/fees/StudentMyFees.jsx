@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CreditCard, History, CheckCircle, Clock, AlertCircle, FileText, Download, Circle  } from 'lucide-react';
+import { CreditCard, History, CheckCircle, Clock, AlertCircle, FileText, Download, Circle } from 'lucide-react';
 import feeService from '../../../services/feeService';
 import { toast } from 'react-toastify';
 import StudentPaymentModal from './sub-components/StudentPaymentModal';
@@ -75,7 +75,7 @@ const StudentMyFees = () => {
     const handleActualPrint = () => {
         if (!tempReceiptData) return;
         const { structure, payments } = tempReceiptData;
-        
+
         // Calculate the latest payment for details
         const latestPayment = payments[0] || {}; // History is sorted by date desc
         const installmentNum = payments.length;
@@ -148,7 +148,7 @@ const StudentMyFees = () => {
                     <div class="header">
                         <div class="logo-box">S</div>
                         <div class="college-info">
-                            <h1>SMART SMS UNIVERSITY</h1>
+                            <h1>SMART CMS UNIVERSITY</h1>
                             <p>Global Academic Excellence • Affiliated to State University • Accredited A+</p>
                             <p style="text-transform: none; margin-top: 4px;">Academic Block 4, Knowledge City, Sector 12B</p>
                         </div>
@@ -212,7 +212,7 @@ const StudentMyFees = () => {
                         <tfoot>
                             <tr class="total-row">
                                 <td class="total-label" style="text-align: right; padding-right: 20px;">Total Owed Amount (Net)</td>
-                                <td class="amt-cell total-amt">₹${(structure.totalFee + (structure.extraFees?.reduce((s,f)=>s+f.amount,0)||0)).toLocaleString()}</td>
+                                <td class="amt-cell total-amt">₹${(structure.totalFee + (structure.extraFees?.reduce((s, f) => s + f.amount, 0) || 0)).toLocaleString()}</td>
                             </tr>
                         </tfoot>
                     </table>
@@ -254,7 +254,7 @@ const StudentMyFees = () => {
 
                     <div class="footer">
                         <div class="disclaimer">
-                            <strong>Note:</strong> This is a computer-generated receipt issued by SMART SMS ERP System. No physical seal is required. Please keep this document for future academic reference. Any discrepancies should be reported to the accounts department within 7 working days.
+                            <strong>Note:</strong> This is a computer-generated receipt issued by SMART  ERP System. No physical seal is required. Please keep this document for future academic reference. Any discrepancies should be reported to the accounts department within 7 working days.
                         </div>
                         <div class="sig-area">
                             <div class="sig-line">Authorized Registrar</div>
@@ -277,7 +277,7 @@ const StudentMyFees = () => {
     };
 
     const getStatusInfo = (status) => {
-        switch(status) {
+        switch (status) {
             case 'PAID': return { label: 'Fully Paid', color: 'text-emerald-600', bg: 'bg-emerald-50', icon: <CheckCircle size={14} /> };
             case 'PARTIAL': return { label: 'Partially Paid', color: 'text-amber-600', bg: 'bg-amber-50', icon: <Clock size={14} /> };
             default: return { label: 'Unpaid', color: 'text-rose-600', bg: 'bg-rose-50', icon: <AlertCircle size={14} /> };
@@ -310,16 +310,14 @@ const StudentMyFees = () => {
                                 <button
                                     key={fee._id}
                                     onClick={() => handleSelectFee(fee)}
-                                    className={`w-full text-left p-6 rounded-3xl border transition-all duration-300 ${
-                                        selectedStructure?._id === fee._id 
-                                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-xl shadow-indigo-100 scale-[1.02]' 
-                                        : 'bg-white text-slate-600 border-slate-100 hover:border-indigo-200 shadow-sm'
-                                    }`}
+                                    className={`w-full text-left p-6 rounded-3xl border transition-all duration-300 ${selectedStructure?._id === fee._id
+                                            ? 'bg-indigo-600 text-white border-indigo-600 shadow-xl shadow-indigo-100 scale-[1.02]'
+                                            : 'bg-white text-slate-600 border-slate-100 hover:border-indigo-200 shadow-sm'
+                                        }`}
                                 >
                                     <div className="flex justify-between items-start mb-2">
-                                        <span className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg ${
-                                            selectedStructure?._id === fee._id ? 'bg-white/20' : 'bg-slate-100'
-                                        }`}>
+                                        <span className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg ${selectedStructure?._id === fee._id ? 'bg-white/20' : 'bg-slate-100'
+                                            }`}>
                                             Sem {fee.semester}
                                         </span>
                                         {selectedStructure?._id === fee._id && <div className="p-1.5 bg-white/20 rounded-full"><FileText size={14} /></div>}
@@ -328,11 +326,10 @@ const StudentMyFees = () => {
                                     <p className={`text-sm mb-4 font-medium ${selectedStructure?._id === fee._id ? 'text-indigo-100' : 'text-slate-400'}`}>
                                         Pending: ₹{fee.pendingAmount.toLocaleString()}
                                     </p>
-                                    <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase ${
-                                        selectedStructure?._id === fee._id 
-                                        ? 'bg-white/20 text-white' 
-                                        : getStatusInfo(fee.status).bg + ' ' + getStatusInfo(fee.status).color
-                                    }`}>
+                                    <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase ${selectedStructure?._id === fee._id
+                                            ? 'bg-white/20 text-white'
+                                            : getStatusInfo(fee.status).bg + ' ' + getStatusInfo(fee.status).color
+                                        }`}>
                                         {getStatusInfo(fee.status).icon}
                                         {getStatusInfo(fee.status).label}
                                     </div>
@@ -356,7 +353,7 @@ const StudentMyFees = () => {
                                                     </div>
                                                 </div>
                                                 <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-                                                    <button 
+                                                    <button
                                                         onClick={handleDownloadReceipt}
                                                         className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-5 py-3.5 rounded-2xl transition-all shadow-lg font-bold text-sm group"
                                                     >
@@ -364,7 +361,7 @@ const StudentMyFees = () => {
                                                         Download Receipt
                                                     </button>
                                                     {selectedStructure.pendingAmount > 0 && (
-                                                        <button 
+                                                        <button
                                                             onClick={() => setIsPaymentModalOpen(true)}
                                                             className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3.5 rounded-2xl transition-all shadow-lg font-bold text-sm shadow-indigo-100 group"
                                                         >
@@ -372,7 +369,7 @@ const StudentMyFees = () => {
                                                             Pay Fee Online
                                                         </button>
                                                     )}
-                                                    <button 
+                                                    <button
                                                         onClick={() => setIsStructureModalOpen(true)}
                                                         className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-white border-2 border-slate-100 hover:border-indigo-100 hover:bg-indigo-50/30 text-slate-700 px-5 py-3.5 rounded-2xl transition-all shadow-sm font-bold text-sm group"
                                                     >
@@ -488,7 +485,7 @@ const StudentMyFees = () => {
                                 <XCircle size={24} />
                             </button>
                         </div>
-                        
+
                         <div id="receipt-content" className="p-10 overflow-y-auto bg-white flex-1 custom-scrollbar">
                             <div className="border-[3px] border-slate-900 p-8 relative">
                                 {/* Watermark or Logo background effect could go here */}
@@ -496,7 +493,7 @@ const StudentMyFees = () => {
 
                                 <div className="flex justify-between items-start mb-10 border-b-2 border-slate-100 pb-8">
                                     <div className="space-y-1">
-                                        <h2 className="text-2xl font-black text-slate-900 italic tracking-tighter">SMART SMS</h2>
+                                        <h2 className="text-2xl font-black text-slate-900 italic tracking-tighter">SMART CMS</h2>
                                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Academic Institution Receipt</p>
                                     </div>
                                     <div className="text-right">
@@ -579,13 +576,13 @@ const StudentMyFees = () => {
                         </div>
 
                         <div className="px-10 py-8 bg-slate-50 border-t border-slate-100 flex gap-4 print-hide">
-                            <button 
+                            <button
                                 onClick={() => setIsReceiptModalOpen(false)}
                                 className="flex-1 px-6 py-3.5 border border-slate-200 text-slate-600 font-bold rounded-2xl hover:bg-white transition-all shadow-sm"
                             >
                                 Back to Portal
                             </button>
-                            <button 
+                            <button
                                 onClick={handleActualPrint}
                                 className="flex-1 px-8 py-3.5 bg-slate-900 text-white font-bold rounded-2xl hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 flex items-center justify-center gap-2"
                             >
@@ -599,7 +596,7 @@ const StudentMyFees = () => {
 
             {/* Online Payment Modal */}
             {isPaymentModalOpen && selectedStructure && (
-                <StudentPaymentModal 
+                <StudentPaymentModal
                     isOpen={isPaymentModalOpen}
                     onClose={() => setIsPaymentModalOpen(false)}
                     feeRecord={selectedStructure}
@@ -612,7 +609,7 @@ const StudentMyFees = () => {
 
             {/* Fee Structure Detail Modal */}
             {isStructureModalOpen && selectedStructure && (
-                <FeeStructureDetailModal 
+                <FeeStructureDetailModal
                     isOpen={isStructureModalOpen}
                     onClose={() => setIsStructureModalOpen(false)}
                     feeRecord={selectedStructure}
@@ -633,7 +630,7 @@ document.head.appendChild(style);
 
 const XCircle = ({ size, className }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <circle cx="12" cy="12" r="10" /><path d="m15 9-6 6" /><path d="m9 9 6 6" />
+        <circle cx="12" cy="12" r="10" /><path d="m15 9-6 6" /><path d="m9 9 6 6" />
     </svg>
 );
 

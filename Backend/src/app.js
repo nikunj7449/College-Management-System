@@ -19,6 +19,7 @@ const roleRoutes = require('./routes/roleRoutes');
 const moduleRoutes = require('./routes/moduleRoutes');
 const examRoutes = require('./routes/examRoutes');
 const feeRoutes = require('./routes/feeRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 
 const app = express();
 
@@ -54,6 +55,7 @@ app.use('/api/v1/roles', roleRoutes);
 app.use('/api/v1/modules', moduleRoutes);
 app.use('/api/v1/exams', examRoutes);
 app.use('/api/v1/fees', feeRoutes);
+app.use('/api/v1/notifications', notificationRoutes);
 
 // Error Handler (Must be last)
 app.use(errorHandler);

@@ -7,8 +7,9 @@ import {
   LayoutDashboard, Users, GraduationCap, BookOpen, Award, Calendar, Settings, Shield, MessageSquare, IndianRupee
 } from 'lucide-react';
 
-import { ChevronDown, Circle } from 'lucide-react';
+import { ChevronDown, Circle, Check } from 'lucide-react';
 import { hasPermission } from '../../../utils/permissionUtils';
+import useNotifications from '../../../hooks/useNotifications';
 
 const SidebarItem = ({ icon: Icon, label, to, active, badge, onClick, children, isSidebarOpen, toggleSidebar }) => {
   const location = useLocation();
@@ -111,11 +112,11 @@ const SidebarItem = ({ icon: Icon, label, to, active, badge, onClick, children, 
                     key={idx}
                     to={child.path}
                     onClick={(e) => {
-                        if (child.label === 'Edit Event' && child.path === '/events') {
-                            e.preventDefault();
-                            toast.warning('Please select an event to edit from the list');
-                        }
-                        onClick?.();
+                      if (child.label === 'Edit Event' && child.path === '/events') {
+                        e.preventDefault();
+                        toast.warning('Please select an event to edit from the list');
+                      }
+                      onClick?.();
                     }}
                     className={`
                       group/child flex items-center py-2 pr-4 pl-9 rounded-xl text-sm font-medium transition-all duration-300
@@ -159,6 +160,8 @@ const Navbar = () => {
   const { isAuthenticated, user, logout, message, clearMessage, error, clearError } = useContext(AuthContext);
   const navigate = useNavigate();
   const location = useLocation();
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications(isAuthenticated);
+  const [showNotifications, setShowNotifications] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
     const authPaths = ['/login', '/forgot-password', '/reset-password'];
     if (authPaths.includes(location.pathname)) return false;
@@ -267,13 +270,13 @@ const Navbar = () => {
       if (key === 'EVENT_UPDATE') {
         const isEditing = location.pathname.startsWith("/events/edit/");
         if (!isEditing) {
-            // If we're not already editing, we can return a "dummy" path or handle it via onClick
-            return "/events"; 
+          // If we're not already editing, we can return a "dummy" path or handle it via onClick
+          return "/events";
         }
         return location.pathname;
       }
       if (key === 'EXAMS') return "/exams";
-      if (key === 'REMARKS') return "/remarks";
+      if (key === 'REMARKS') return roleName === 'STUDENT' ? "/student/remarks" : "/remarks";
       if (key === 'FEE_CATEGORIES') return "/fees/categories";
       if (key === 'FEE_STRUCTURE') return "/fees/structures";
       if (key === 'STUDENT_FEES') return "/fees/students";
@@ -322,7 +325,10 @@ const Navbar = () => {
       if (item.key !== 'DASHBOARD' && (!item.children || item.children.length === 0)) {
         const permModule = moduleMapping[item.key];
         if (permModule && !hasPermission(user, permModule, 'read')) {
-          return;
+          // Special exception: Students can always read their own remarks regardless of module permission
+          if (!(roleName === 'STUDENT' && item.key === 'REMARKS')) {
+            return;
+          }
         }
       }
 
@@ -364,6 +370,10 @@ const Navbar = () => {
       }
     });
 
+    if (roleName === 'STUDENT' && !links.find(l => l.label.toUpperCase().includes('REMARK'))) {
+      links.push({ icon: MessageSquare, label: "My Remarks", path: "/student/remarks" });
+    }
+
     if (roleName === 'ADMIN' || roleName === 'SUPERADMIN') {
       links.push({ icon: Settings, label: "Settings", path: "/settings" });
     }
@@ -403,10 +413,97 @@ const Navbar = () => {
             {isAuthenticated ? (
               <>
                 {/* Notification Bell */}
-                <button className="relative p-2.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all">
-                  <Bell size={20} />
-                  <span className="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
-                </button>
+                <div className="relative">
+                  <button
+                    onClick={() => setShowNotifications(!showNotifications)}
+                    className={`relative p-2.5 rounded-xl transition-all ${showNotifications ? 'text-indigo-600 bg-indigo-50 shadow-inner' : 'text-slate-500 hover:text-indigo-600 hover:bg-indigo-50'}`}
+                  >
+                    <Bell size={20} />
+                    {unreadCount > 0 && (
+                      <span className="absolute top-2 right-2 h-4 min-w-4 flex items-center justify-center bg-rose-500 text-[10px] font-bold text-white rounded-full border-2 border-white px-0.5 transform translate-x-1.5 -translate-y-1.5 shadow-sm">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </button>
+
+                  {/* Notification Dropdown */}
+                  {showNotifications && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-50 pointer-events-auto"
+                        onClick={() => setShowNotifications(false)}
+                      />
+                      <div className="absolute right-0 mt-3 w-80 md:w-96 bg-white rounded-2xl shadow-2xl border border-slate-100 z-[51] overflow-hidden animate-in fade-in slide-in-from-top-3 duration-200">
+                        <div className="px-5 py-4 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between">
+                          <h3 className="text-sm font-bold text-slate-800">Notifications</h3>
+                          {unreadCount > 0 && (
+                            <button
+                              onClick={() => { markAllAsRead(); setShowNotifications(false); }}
+                              className="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 uppercase tracking-wider"
+                            >
+                              Mark all as read
+                            </button>
+                          )}
+                        </div>
+                        <div className="max-h-[min(400px,70vh)] overflow-y-auto scrollbar-thin">
+                          {notifications.length === 0 ? (
+                            <div className="px-6 py-10 text-center">
+                              <Bell size={32} className="mx-auto text-slate-200 mb-3" />
+                              <p className="text-slate-400 text-sm">No notifications yet</p>
+                            </div>
+                          ) : (
+                            <div className="divide-y divide-slate-50">
+                              {notifications.slice(0, 3).map((notif) => (
+                                <div
+                                  key={notif._id}
+                                  onClick={() => {
+                                    if (!notif.isRead) markAsRead(notif._id);
+                                    if (notif.link) {
+                                      navigate(notif.link);
+                                      setShowNotifications(false);
+                                    }
+                                  }}
+                                  className={`px-5 py-4 cursor-pointer transition-all hover:bg-slate-50/80 flex gap-3 ${!notif.isRead ? 'bg-indigo-50/30' : ''}`}
+                                >
+                                  <div className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${notif.type === 'FEE' ? 'bg-amber-100 text-amber-600' :
+                                      notif.type === 'EXAM' ? 'bg-purple-100 text-purple-600' :
+                                        notif.type === 'URGENT' ? 'bg-rose-100 text-rose-600' :
+                                          'bg-slate-100 text-slate-600'
+                                    }`}>
+                                    {notif.type === 'FEE' ? <IndianRupee size={18} /> :
+                                      notif.type === 'EXAM' ? <Award size={18} /> :
+                                        <Bell size={18} />}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-start justify-between gap-2">
+                                      <p className={`text-xs font-bold truncate ${notif.isRead ? 'text-slate-600' : 'text-slate-900'}`}>{notif.title}</p>
+                                      {!notif.isRead && <div className="shrink-0 w-2 h-2 bg-indigo-500 rounded-full mt-1"></div>}
+                                    </div>
+                                    <p className="text-[11px] text-slate-500 line-clamp-2 mt-0.5 leading-relaxed">{notif.message}</p>
+                                    <div className="flex items-center mt-2 gap-2">
+                                      <span className="text-[10px] text-slate-400 font-medium">{new Date(notif.createdAt).toLocaleDateString()}</span>
+                                      {notif.priority === 'HIGH' && <span className="text-[9px] font-black text-amber-600 uppercase tracking-tighter">Priority</span>}
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        {notifications.length > 0 && (
+                          <div className="px-5 py-3 bg-slate-50/50 border-t border-slate-100 text-center">
+                            <button
+                              onClick={() => { navigate('/notifications'); setShowNotifications(false); }}
+                              className="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 uppercase tracking-wider"
+                            >
+                              View All Notifications
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
 
                 {/* Divider */}
                 <div className={`hidden md:block w-px bg-slate-200 transition-all duration-300 ${isSidebarOpen ? 'h-0 opacity-0' : 'h-8 opacity-100'}`}></div>

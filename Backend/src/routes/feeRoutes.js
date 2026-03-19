@@ -20,7 +20,8 @@ const {
     bulkCreateStructures,
     payMyFees,
     createPaymentIntent,
-    syncAllStudentFees
+    syncAllStudentFees,
+    sendFeeRemainder
 } = require('../controllers/feeController');
 const { protect } = require('../middleware/authMiddleware');
 const { requirePermission } = require('../middleware/roleMiddleware');
@@ -67,5 +68,8 @@ router.post('/create-payment-intent', requirePermission('FEE', 'read'), createPa
 
 // Reports
 router.get('/reports', requirePermission('FEE', 'read'), getFeeReports);
+
+// Reminders
+router.post('/reminders', requirePermission('FEE', 'update'), sendFeeRemainder);
 
 module.exports = router;
