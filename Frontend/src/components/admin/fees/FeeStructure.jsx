@@ -254,36 +254,26 @@ const FeeStructure = () => {
                                         <BookOpen size={16} className="text-indigo-500" />
                                         Select Course
                                     </label>
-                                    <select
+                                    <CustomDropdown
                                         value={formData.courseId}
                                         onChange={(e) => setFormData({ ...formData, courseId: e.target.value, branchId: '' })}
-                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium disabled:opacity-70 disabled:bg-slate-100"
-                                        required
+                                        options={courses.map(c => ({ label: c.name, value: c._id }))}
+                                        placeholder="Choose a course..."
                                         disabled={isViewMode}
-                                    >
-                                        <option value="">Choose a course...</option>
-                                        {courses.map(c => (
-                                            <option key={c._id} value={c._id}>{c.name}</option>
-                                        ))}
-                                    </select>
+                                    />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-2">
                                         <Layers size={16} className="text-indigo-500" />
                                         Branch
                                     </label>
-                                    <select
+                                    <CustomDropdown
                                         value={formData.branchId}
                                         onChange={(e) => setFormData({ ...formData, branchId: e.target.value })}
-                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium disabled:opacity-70 disabled:bg-slate-100"
-                                        required
+                                        options={courses.find(c => c._id === formData.courseId)?.branches.map(b => ({ label: b.name, value: b._id })) || []}
+                                        placeholder="Select Branch..."
                                         disabled={!formData.courseId || isViewMode}
-                                    >
-                                        <option value="">Select Branch...</option>
-                                        {courses.find(c => c._id === formData.courseId)?.branches.map((b, idx) => (
-                                            <option key={idx} value={b._id}>{b.name}</option>
-                                        ))}
-                                    </select>
+                                    />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-2">
@@ -322,21 +312,17 @@ const FeeStructure = () => {
                                     <div key={index} className="flex gap-3 items-end group animate-in slide-in-from-right-2 duration-200">
                                         <div className="flex-1">
                                             {index === 0 && <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Category</label>}
-                                            <select
+                                            <CustomDropdown
                                                 value={fee.categoryId}
                                                 onChange={(e) => handleFeeChange(index, 'categoryId', e.target.value)}
-                                                className={`w-full px-4 py-2.5 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all disabled:opacity-70 disabled:bg-slate-100 ${fee.categoryId && formData.fees.filter(f => f.categoryId === fee.categoryId).length > 1
-                                                        ? 'border-rose-500 text-rose-600 ring-2 ring-rose-500/10'
-                                                        : 'border-slate-200 text-slate-700'
-                                                    }`}
-                                                required
+                                                options={categories.map(c => ({ label: c.name, value: c._id }))}
+                                                placeholder="Select Category"
                                                 disabled={isViewMode}
-                                            >
-                                                <option value="">Select Category</option>
-                                                {categories.map(c => (
-                                                    <option key={c._id} value={c._id}>{c.name}</option>
-                                                ))}
-                                            </select>
+                                                className={fee.categoryId && formData.fees.filter(f => f.categoryId === fee.categoryId).length > 1
+                                                    ? 'border-rose-500 text-rose-600 ring-2 ring-rose-500/10'
+                                                    : 'border-slate-200'
+                                                }
+                                            />
                                             {fee.categoryId && formData.fees.filter(f => f.categoryId === fee.categoryId).length > 1 && (
                                                 <p className="text-[10px] text-rose-500 font-bold mt-1 ml-1 flex items-center gap-1">
                                                     <AlertCircle size={10} /> Duplicate Category

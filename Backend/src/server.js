@@ -16,6 +16,7 @@ process.on('uncaughtException', (err) => {
 
 const connectDB = require('./config/db');
 const app = require('./app');
+const { initCronJobs } = require('./utils/cronJobs');
 
 // Connect to database
 connectDB().then(async () => {
@@ -129,6 +130,9 @@ const PORT = process.env.PORT || 5000;
 
 const server = app.listen(PORT, () => {
   console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on http://localhost:${PORT}`);
+  
+  // Initialize Cron Jobs
+  initCronJobs();
 });
 
 // 3. Handle Unhandled Promise Rejections (Async Errors like DB connection failure)

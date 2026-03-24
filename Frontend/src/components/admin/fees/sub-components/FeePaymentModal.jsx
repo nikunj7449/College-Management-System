@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, CreditCard, Calendar, Hash, Tag, Save } from 'lucide-react';
 import feeService from '../../../../services/feeService';
 import { toast } from 'react-toastify';
+import CustomDropdown from '../../../custom/CustomDropdown';
 
 const FeePaymentModal = ({ isOpen, onClose, feeRecord, onSuccess }) => {
     const [loading, setLoading] = useState(false);
@@ -84,16 +85,17 @@ const FeePaymentModal = ({ isOpen, onClose, feeRecord, onSuccess }) => {
                                     <CreditCard size={14} className="text-indigo-500" />
                                     Mode
                                 </label>
-                                <select 
+                                <CustomDropdown
                                     value={formData.paymentMode}
                                     onChange={(e) => setFormData({ ...formData, paymentMode: e.target.value })}
-                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none font-semibold text-slate-700"
-                                >
-                                    <option value="UPI">UPI / GPay</option>
-                                    <option value="Cash">Cash</option>
-                                    <option value="Card">Debit/Credit Card</option>
-                                    <option value="Net Banking">Net Banking</option>
-                                </select>
+                                    options={[
+                                        { label: 'UPI / GPay', value: 'UPI' },
+                                        { label: 'Cash', value: 'Cash' },
+                                        { label: 'Debit/Credit Card', value: 'Card' },
+                                        { label: 'Net Banking', value: 'Net Banking' }
+                                    ]}
+                                    placeholder="Select Mode"
+                                />
                             </div>
                         </div>
 

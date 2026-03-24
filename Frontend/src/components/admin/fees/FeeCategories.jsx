@@ -3,6 +3,7 @@ import { Plus, Search, Filter, MoreVertical, Edit2, Trash2, CheckCircle, XCircle
 import feeService from '../../../services/feeService';
 import { toast } from 'react-toastify';
 import DeleteConfirmModal from '../../modals/DeleteConfirmModal';
+import CustomDropdown from '../../custom/CustomDropdown';
 
 const FeeCategories = () => {
     const [categories, setCategories] = useState([]);
@@ -260,14 +261,15 @@ const FeeCategories = () => {
                             </div>
                             <div>
                                 <label className="block text-sm font-semibold text-slate-700 mb-1.5">Initial Status</label>
-                                <select 
+                                <CustomDropdown
                                     value={formData.status}
                                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
-                                >
-                                    <option value="ACTIVE">Active</option>
-                                    <option value="INACTIVE">Inactive</option>
-                                </select>
+                                    placeholder="Select Status"
+                                    options={[
+                                        { label: 'Active', value: 'ACTIVE' },
+                                        { label: 'Inactive', value: 'INACTIVE' }
+                                    ]}
+                                />
                             </div>
                             <div className="pt-4 flex gap-3">
                                 <button 

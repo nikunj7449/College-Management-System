@@ -1,5 +1,6 @@
 import React from 'react';
 import MultiSelectDropdown from '../../../custom/MultiSelectDropdown';
+import CustomDropdown from '../../../custom/CustomDropdown';
 
 const FilterPanel = ({ 
   filters, 
@@ -66,15 +67,16 @@ const FilterPanel = ({
           <label className="text-xs font-semibold text-slate-500 uppercase mb-1 block">
             Status
           </label>
-          <select 
+          <CustomDropdown
             value={filters.isActive} 
             onChange={(e) => onFilterChange({ ...filters, isActive: e.target.value })}
-            className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500"
-          >
-            <option value="">All Status</option>
-            <option value="true">Active</option>
-            <option value="false">Inactive</option>
-          </select>
+            options={[
+              { label: 'All Status', value: '' },
+              { label: 'Active', value: 'true' },
+              { label: 'Inactive', value: 'false' }
+            ]}
+            placeholder="Select Status"
+          />
         </div>
 
         {hasActiveFilters && (

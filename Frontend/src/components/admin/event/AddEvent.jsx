@@ -8,7 +8,20 @@ import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import api from '../../../services/api';
 
+import CustomDropdown from '../../custom/CustomDropdown';
+
 const ALL_AUDIENCES = ['Students', 'Faculty', 'Staff', 'Alumni', 'All'];
+const EVENT_TYPES = [
+    { value: 'Seminar', label: 'Seminar' },
+    { value: 'Workshop', label: 'Workshop' },
+    { value: 'Webinar', label: 'Webinar' },
+    { value: 'Cultural', label: 'Cultural' },
+    { value: 'Sports', label: 'Sports' },
+    { value: 'Conference', label: 'Conference' },
+    { value: 'Guest Lecture', label: 'Guest Lecture' },
+    { value: 'Hackathon', label: 'Hackathon' },
+    { value: 'Other', label: 'Other' }
+];
 
 const initialFormState = {
     imageURL: '',
@@ -303,22 +316,13 @@ const AddEvent = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label className="block text-sm font-semibold text-slate-700 mb-2">Event Type <span className="text-red-500">*</span></label>
-                                    <select
+                                    <CustomDropdown
                                         name="type"
                                         value={formData.type}
                                         onChange={handleInputChange}
-                                        className="w-full px-4 py-3 text-base border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all bg-white hover:border-slate-300 cursor-pointer"
-                                    >
-                                        <option value="Seminar">Seminar</option>
-                                        <option value="Workshop">Workshop</option>
-                                        <option value="Webinar">Webinar</option>
-                                        <option value="Cultural">Cultural</option>
-                                        <option value="Sports">Sports</option>
-                                        <option value="Conference">Conference</option>
-                                        <option value="Guest Lecture">Guest Lecture</option>
-                                        <option value="Hackathon">Hackathon</option>
-                                        <option value="Other">Other</option>
-                                    </select>
+                                        options={EVENT_TYPES}
+                                        placeholder="Select Event Type"
+                                    />
                                     {formErrors.type && <p className="text-red-500 text-sm mt-2 font-medium">{formErrors.type}</p>}
                                 </div>
                                 <div>

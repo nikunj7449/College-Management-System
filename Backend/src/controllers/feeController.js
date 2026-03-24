@@ -4,6 +4,7 @@ const StudentFee = require('../models/StudentFee');
 const FeePayment = require('../models/FeePayment');
 const Student = require('../models/Student');
 const Course = require('../models/Course');
+const ScheduledReminder = require('../models/ScheduledReminder');
 const asyncHandler = require('express-async-handler');
 const sendEmail = require('../utils/sendEmail');
 const { getFeeReminderTemplate } = require('../utils/emailTemplates');
@@ -16,7 +17,7 @@ const { sendNotification } = require('../utils/notificationUtils');
 // @access  Private (Admin/SuperAdmin)
 exports.createCategory = asyncHandler(async (req, res) => {
     const { name, description, status } = req.body;
-    
+
     const category = await FeeCategory.create({
         name,
         description,
@@ -45,10 +46,10 @@ exports.bulkCreateCategories = asyncHandler(async (req, res) => {
 
     const result = await FeeCategory.insertMany(processedCategories);
 
-    res.status(201).json({ 
-        success: true, 
+    res.status(201).json({
+        success: true,
         count: result.length,
-        data: result 
+        data: result
     });
 });
 
@@ -65,7 +66,7 @@ exports.getCategories = asyncHandler(async (req, res) => {
 // @access  Private (Admin/SuperAdmin)
 exports.updateCategory = asyncHandler(async (req, res) => {
     const { name, description, status } = req.body;
-    
+
     let category = await FeeCategory.findById(req.params.id);
     if (!category) {
         res.status(404);
@@ -108,7 +109,7 @@ exports.deleteCategory = asyncHandler(async (req, res) => {
 // @access  Private (Admin/SuperAdmin)
 exports.createStructure = asyncHandler(async (req, res) => {
     const { courseId, branchId, semester, fees } = req.body;
-    
+
     console.log('[FeeController] Creating structure:', { courseId, branchId, semester, feesCount: fees?.length });
 
     try {
@@ -157,10 +158,10 @@ exports.bulkCreateStructures = asyncHandler(async (req, res) => {
 
     const result = await FeeStructure.insertMany(processedStructures);
 
-    res.status(201).json({ 
-        success: true, 
+    res.status(201).json({
+        success: true,
         count: result.length,
-        data: result 
+        data: result
     });
 });
 
@@ -169,7 +170,7 @@ exports.bulkCreateStructures = asyncHandler(async (req, res) => {
 // @access  Private (Admin/SuperAdmin)
 exports.updateStructure = asyncHandler(async (req, res) => {
     const { courseId, branchId, semester, fees } = req.body;
-    
+
     let structure = await FeeStructure.findById(req.params.id);
 
     if (!structure) {
@@ -180,7 +181,7 @@ exports.updateStructure = asyncHandler(async (req, res) => {
     structure.courseId = courseId || structure.courseId;
     structure.branchId = branchId || structure.branchId;
     structure.semester = semester || structure.semester;
-    
+
     if (fees) {
         // Enforce unique categories
         const categories = fees.map(f => f.categoryId.toString());
@@ -279,13 +280,13 @@ const autoAssignStudentFees = async (student) => {
     if (!student.course || !student.branch || !student.sem) return null;
 
     // 1. Find course document to get IDs
-    const courseDoc = await Course.findOne({ 
-        name: { $regex: new RegExp(`^${student.course}$`, 'i') } 
+    const courseDoc = await Course.findOne({
+        name: { $regex: new RegExp(`^${student.course}$`, 'i') }
     });
     if (!courseDoc) return null;
 
     // 2. Find branch ID
-    const branchDoc = courseDoc.branches.find(b => 
+    const branchDoc = courseDoc.branches.find(b =>
         new RegExp(`^${student.branch}$`, 'i').test(b.name)
     );
     if (!branchDoc) return null;
@@ -350,7 +351,7 @@ exports.assignFeeBulk = asyncHandler(async (req, res) => {
 
     // Find all active students in that course and branch (using names as Student model stores names)
     const students = await Student.find({ course: courseDoc.name, branch: branchName, isActive: true });
-    
+
     if (students.length === 0) {
         res.status(404);
         throw new Error(`No students found for ${courseDoc.name} - ${branchName}`);
@@ -361,9 +362,9 @@ exports.assignFeeBulk = asyncHandler(async (req, res) => {
 
     for (const student of students) {
         // Check if already assigned for this semester
-        const existing = await StudentFee.findOne({ 
-            student: student._id, 
-            semester: structure.semester 
+        const existing = await StudentFee.findOne({
+            student: student._id,
+            semester: structure.semester
         });
 
         if (existing) {
@@ -381,8 +382,8 @@ exports.assignFeeBulk = asyncHandler(async (req, res) => {
         assignedCount++;
     }
 
-    res.status(201).json({ 
-        success: true, 
+    res.status(201).json({
+        success: true,
         message: `Assigned to ${assignedCount} students. Skipped ${skippedCount} items.`,
         data: { assignedCount, skippedCount }
     });
@@ -393,7 +394,7 @@ exports.assignFeeBulk = asyncHandler(async (req, res) => {
 // @access  Private (Admin/SuperAdmin)
 exports.syncAllStudentFees = asyncHandler(async (req, res) => {
     const students = await Student.find({ isActive: true });
-    
+
     let assignedCount = 0;
     let alreadyExistedCount = 0;
     let noMatchCount = 0;
@@ -406,9 +407,9 @@ exports.syncAllStudentFees = asyncHandler(async (req, res) => {
         }
 
         // 1. Check if fee record already exists for this semester
-        const existing = await StudentFee.findOne({ 
-            student: student._id, 
-            semester: semesterNum 
+        const existing = await StudentFee.findOne({
+            student: student._id,
+            semester: semesterNum
         });
 
         if (existing) {
@@ -428,8 +429,8 @@ exports.syncAllStudentFees = asyncHandler(async (req, res) => {
     res.status(200).json({
         success: true,
         message: `Sync complete. Created ${assignedCount} new records.`,
-        data: { 
-            totalStudents: students.length, 
+        data: {
+            totalStudents: students.length,
             newlyAssigned: assignedCount,
             alreadyExisted: alreadyExistedCount,
             failedToMatch: noMatchCount
@@ -490,7 +491,7 @@ exports.addExtraFee = asyncHandler(async (req, res) => {
     }
 
     studentFee.extraFees.push({ amount, remark, date: Date.now() });
-    
+
     // Save will trigger the hook to update pendingAmount and status
     await studentFee.save();
 
@@ -566,9 +567,9 @@ exports.createPaymentIntent = asyncHandler(async (req, res) => {
             amount: Math.round(amount * 100), // Stripe expects amount in paise (for INR)
             currency: 'inr',
             description: `Fee Payment for ${req.user.name || 'Student'} (ID: ${req.user.id})`,
-            metadata: { 
+            metadata: {
                 userId: req.user.id,
-                studentName: req.user.name 
+                studentName: req.user.name
             },
             automatic_payment_methods: {
                 enabled: true,
@@ -637,7 +638,7 @@ exports.getPaymentHistory = asyncHandler(async (req, res) => {
 // @access  Private (Admin/SuperAdmin)
 exports.getFeeReports = asyncHandler(async (req, res) => {
     const { semester, status, course, branch, year, search } = req.query;
-    
+
     let query = {};
     if (semester) query.semester = semester;
     if (status) query.status = status;
@@ -682,7 +683,7 @@ exports.sendFeeRemainder = asyncHandler(async (req, res) => {
     const { notificationTypes = ['SYSTEM'], customMessage, studentFeeIds } = req.body;
 
     let query = { pendingAmount: { $gt: 0 } };
-    
+
     // If specific IDs are provided, filter by them
     if (studentFeeIds && Array.isArray(studentFeeIds) && studentFeeIds.length > 0) {
         query._id = { $in: studentFeeIds };
@@ -706,73 +707,171 @@ exports.sendFeeRemainder = asyncHandler(async (req, res) => {
     }
 
     if (!feesToNotify || feesToNotify.length === 0) {
-        return res.status(200).json({ 
-            success: true, 
+        return res.status(200).json({
+            success: true,
             message: 'No matching pending fees found. No notifications sent.',
-            sentCount: 0 
+            sentCount: 0
         });
     }
 
-    let sentCount = 0;
-    let emailSentCount = 0;
-
-    const processPromises = feesToNotify.map(async (record) => {
-        const student = record.student;
-        if (!student) return;
-
-        const defaultMessage = `Hello ${student.name}, you have a pending fee balance of ₹${record.pendingAmount.toLocaleString()} for Sem ${record.semester || 'N/A'}. Please clear it at the earliest.`;
-        const message = customMessage || defaultMessage;
-        
-        // 1. System Notification
-        if (notificationTypes.includes('SYSTEM') && student.user) {
-            try {
-                await sendNotification({
-                    recipient: student.user._id || student.user,
-                    sender: req.user.id,
-                    title: 'Fee Payment Reminder',
-                    message: message,
-                    type: 'FEE',
-                    priority: 'HIGH',
-                    link: '/student/fees'
-                });
-                sentCount++;
-            } catch (error) {
-                console.error(`[Fee Reminder Notification] Failed to send to user:`, error.message);
-            }
-        }
-
-        // 2. Email Notification
-        if (notificationTypes.includes('EMAIL')) {
-           // const emailAddress = student.email || (student.user && student.user.email);
-           const emailAddress = student.personalEmail;
-            if (emailAddress) {
-                try {
-                    console.log("Email Address: ", emailAddress);
-                    await sendEmail({
-                        email: emailAddress,
-                        subject: 'Fee Payment Reminder',
-                        html: `
-                            <div style="font-family: sans-serif; padding: 20px; color: #333;">
-                                <h2>Fee Payment Reminder</h2>
-                                <p>${message}</p>
-                                <hr />
-                                <p style="font-size: 0.8em; color: #666;">This is an automated reminder from the College Management System.</p>
-                            </div>
-                        `
-                    });
-                    emailSentCount++;
-                } catch (error) {
-                    console.error(`[Fee Reminder Email] Failed to send to ${emailAddress}:`, error.message);
-                }
-            }
-        }
-    });
-
-    await Promise.all(processPromises);
-
+    // Return response immediately so the frontend doesn't hang
     res.status(200).json({
         success: true,
-        message: `Reminders sent: ${sentCount} System, ${emailSentCount} Alternative (Email).`,
-        data: { sentCount, emailSentCount }
+        message: `Processing ${feesToNotify.length} reminders in the background...`,
+        data: { totalToProcess: feesToNotify.length }
+    });
+
+    // Helper function to delay execution
+    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+    // Run the batch processing in the background asynchronously
+    (async () => {
+        let sentCount = 0;
+        let emailSentCount = 0;
+
+        // Define batch size (e.g., send to 5 students at once, pause, then do the next 5)
+        const BATCH_SIZE = 5;
+        const DELAY_BETWEEN_BATCHES_MS = 1500; // 1.5 seconds
+
+        for (let i = 0; i < feesToNotify.length; i += BATCH_SIZE) {
+            const batch = feesToNotify.slice(i, i + BATCH_SIZE);
+
+            console.log(`[Fee Reminders] Processing batch ${Math.floor(i / BATCH_SIZE) + 1} of ${Math.ceil(feesToNotify.length / BATCH_SIZE)}`);
+
+            // Process current batch concurrently
+            const batchPromises = batch.map(async (record) => {
+                const student = record.student;
+                if (!student) return;
+
+                const defaultMessage = `Hello ${student.name}, you have a pending fee balance of ₹${record.pendingAmount.toLocaleString()} for Sem ${record.semester || 'N/A'}. Please clear it at the earliest.`;
+                const message = customMessage || defaultMessage;
+
+                // 1. System Notification
+                if (notificationTypes.includes('SYSTEM') && student.user) {
+                    try {
+                        await sendNotification({
+                            recipient: student.user._id || student.user,
+                            sender: req.user.id,
+                            title: 'Fee Payment Reminder',
+                            message: message,
+                            type: 'FEE',
+                            priority: 'HIGH',
+                            link: '/student/fees'
+                        });
+                        sentCount++;
+                    } catch (error) {
+                        console.error(`[Fee Reminder Notification] Failed to send to ${student.name}:`, error.message);
+                    }
+                }
+
+                // 2. Email Notification
+                if (notificationTypes.includes('EMAIL')) {
+                    const emailAddress = student.personalEmail;
+                    if (emailAddress) {
+                        try {
+                            console.log(`[Email] Sending to ${student.name}: ${emailAddress}`);
+                            await sendEmail({
+                                email: emailAddress,
+                                subject: 'Fee Payment Reminder',
+                                html: `
+                                    <div style="font-family: sans-serif; padding: 20px; color: #333;">
+                                        <h2>Fee Payment Reminder</h2>
+                                        <p>${message}</p>
+                                        <hr />
+                                        <p style="font-size: 0.8em; color: #666;">This is an automated reminder from the College Management System.</p>
+                                    </div>
+                                `
+                            });
+                            emailSentCount++;
+                        } catch (error) {
+                            console.error(`[Fee Reminder Email] Failed to send to ${emailAddress}:`, error.message);
+                        }
+                    }
+                }
+            });
+
+            // Wait for the entire batch of 5 to finish sending
+            await Promise.all(batchPromises);
+
+            // Imbue a delay between batches (skip delay if this is the last batch)
+            if (i + BATCH_SIZE < feesToNotify.length) {
+                console.log(`[Fee Reminders] Waiting ${DELAY_BETWEEN_BATCHES_MS / 1000}s before next batch...`);
+                await delay(DELAY_BETWEEN_BATCHES_MS);
+            }
+        }
+
+        console.log(`[Fee Reminders Background Task] Complete. Notifications: ${sentCount}, Emails: ${emailSentCount}`);
+
+        // Notify the admin/user who initiated the request
+        try {
+            await sendNotification({
+                recipient: req.user.id,
+                sender: req.user.id, // Or null if you want it explicitly from "System"
+                title: 'Bulk Reminders Complete',
+                message: `Successfully processed ${feesToNotify.length} pending fee records. Sent ${emailSentCount} emails and ${sentCount} system notifications.`,
+                type: 'GENERAL',
+                priority: 'MEDIUM',
+                link: '/fees/students' // Optional: redirect back to fees page
+            });
+        } catch (err) {
+            console.error('[Bulk Reminders] Failed to notify admin of completion:', err.message);
+        }
+    })();
+});
+
+// @desc    Schedule Internal System Notifications & Emails to students with pending fees
+// @route   POST /api/v1/fees/reminders/schedule
+// @access  Private (SuperAdmin)
+exports.scheduleFeeReminder = asyncHandler(async (req, res) => {
+    const { scheduleType, frequency, time, date, daysOfWeek, dayOfMonth, notificationTypes = ['SYSTEM'], customMessage, studentFeeIds } = req.body;
+
+    if (!scheduleType || !['ONE_TIME', 'RECURRING'].includes(scheduleType)) {
+        res.status(400);
+        throw new Error('Valid scheduleType (ONE_TIME or RECURRING) is required');
+    }
+
+    if (!time) {
+        res.status(400);
+        throw new Error('Time is required');
+    }
+
+    if (scheduleType === 'ONE_TIME' && !date) {
+        res.status(400);
+        throw new Error('Date is required for ONE_TIME schedule');
+    }
+
+    if (scheduleType === 'RECURRING') {
+        if (!frequency || !['DAILY', 'WEEKLY', 'MONTHLY'].includes(frequency)) {
+            res.status(400);
+            throw new Error('Valid frequency is required for RECURRING schedule');
+        }
+        if (frequency === 'WEEKLY' && (!daysOfWeek || !Array.isArray(daysOfWeek) || daysOfWeek.length === 0)) {
+            res.status(400);
+            throw new Error('daysOfWeek array is required for WEEKLY frequency');
+        }
+        if (frequency === 'MONTHLY' && !dayOfMonth) {
+            res.status(400);
+            throw new Error('dayOfMonth is required for MONTHLY frequency');
+        }
+    }
+
+    const reminder = await ScheduledReminder.create({
+        scheduleType,
+        frequency: scheduleType === 'RECURRING' ? frequency : undefined,
+        time,
+        date: scheduleType === 'ONE_TIME' ? date : undefined,
+        daysOfWeek: (scheduleType === 'RECURRING' && frequency === 'WEEKLY') ? daysOfWeek : undefined,
+        dayOfMonth: (scheduleType === 'RECURRING' && frequency === 'MONTHLY') ? dayOfMonth : undefined,
+        notificationTypes,
+        customMessage: customMessage || '',
+        studentFeeIds: studentFeeIds || [],
+        createdBy: req.user.id,
+        isActive: true
+    });
+
+    res.status(201).json({
+        success: true,
+        message: 'Fee reminder schedule created successfully',
+        data: reminder
     });
 });

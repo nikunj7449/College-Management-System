@@ -33,6 +33,7 @@ const feeService = {
 
     // Reminders
     sendReminders: (data) => api.post('/fees/reminders', data),
+    scheduleReminders: (data) => api.post('/fees/reminders/schedule', data),
 };
 
 export default feeService;

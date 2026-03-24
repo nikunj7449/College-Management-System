@@ -21,7 +21,8 @@ const {
     payMyFees,
     createPaymentIntent,
     syncAllStudentFees,
-    sendFeeRemainder
+    sendFeeRemainder,
+    scheduleFeeReminder
 } = require('../controllers/feeController');
 const { protect } = require('../middleware/authMiddleware');
 const { requirePermission } = require('../middleware/roleMiddleware');
@@ -71,5 +72,6 @@ router.get('/reports', requirePermission('FEE', 'read'), getFeeReports);
 
 // Reminders
 router.post('/reminders', requirePermission('FEE', 'update'), sendFeeRemainder);
+router.post('/reminders/schedule', requirePermission('FEE', 'update'), scheduleFeeReminder);
 
 module.exports = router;

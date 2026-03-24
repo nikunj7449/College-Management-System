@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, User, Shield, Mail, Phone, Calendar, Lock, Loader2, Save, Plus } from 'lucide-react';
 import { useRoles } from '../../hooks/useRoles';
+import CustomDropdown from '../custom/CustomDropdown';
 
 const OtherUserModal = ({ isOpen, onClose, mode, user, onSubmit, initialRole }) => {
   const initialFormState = {
@@ -126,15 +127,14 @@ const OtherUserModal = ({ isOpen, onClose, mode, user, onSubmit, initialRole }) 
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Role</label>
-            <div className="relative">
-              <Shield className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <select disabled={mode === 'view'} name="role" value={formData.role} onChange={handleInputChange} className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg outline-none appearance-none bg-white">
-                <option value="" disabled>Select Role</option>
-                {roles.filter(r => !['ADMIN', 'SUPERADMIN', 'FACULTY'].includes(r.name.toUpperCase())).map(role => (
-                  <option key={role._id} value={role.name}>{role.name}</option>
-                ))}
-              </select>
-            </div>
+              <CustomDropdown
+                disabled={mode === 'view'}
+                name="role"
+                value={formData.role}
+                onChange={handleInputChange}
+                options={roles.filter(r => !['ADMIN', 'SUPERADMIN', 'FACULTY'].includes(r.name.toUpperCase())).map(role => ({ label: role.name, value: role.name }))}
+                placeholder="Select Role"
+              />
           </div>
 
           <div className="space-y-3">

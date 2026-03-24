@@ -9,23 +9,27 @@ import {
   Legend
 } from 'recharts';
 
+import CustomDropdown from '../../../custom/CustomDropdown';
+
 const AttendanceChart = ({ data, filter, setFilter }) => {
   return (
-              <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
-                <div className="flex justify-between items-center mb-6">
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-800">Weekly Attendance</h3>
-                    <p className="text-sm text-slate-500 mt-1">Student presence tracking</p>
-                  </div>
-                  <select 
-                    value={filter}
-                    onChange={(e) => setFilter(e.target.value)}
-                    className="bg-slate-50 border border-slate-200 text-slate-600 text-sm rounded-xl px-4 py-2 outline-none hover:border-slate-300 transition-colors cursor-pointer"
-                  >
-                    <option>This Week</option>
-                    <option>Last Week</option>
-                  </select>
-                </div>
+    <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h3 className="text-lg font-bold text-slate-800">Weekly Attendance</h3>
+          <p className="text-sm text-slate-500 mt-1">Student presence tracking</p>
+        </div>
+        <div className="w-40">
+          <CustomDropdown
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            options={[
+              { label: 'This Week', value: 'This Week' },
+              { label: 'Last Week', value: 'Last Week' }
+            ]}
+          />
+        </div>
+      </div>
                 
                 <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%" debounce={300}>

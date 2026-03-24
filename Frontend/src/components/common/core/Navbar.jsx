@@ -4,7 +4,8 @@ import { toast } from 'react-toastify';
 import { AuthContext } from '../../../context/AuthContext';
 import {
   Bell, Search, LogOut, Menu, User,
-  LayoutDashboard, Users, GraduationCap, BookOpen, Award, Calendar, Settings, Shield, MessageSquare, IndianRupee
+  LayoutDashboard, Users, GraduationCap, BookOpen, Award, Calendar, Settings, Shield, MessageSquare, IndianRupee,
+  ClipboardCheck
 } from 'lucide-react';
 
 import { ChevronDown, Circle, Check } from 'lucide-react';
@@ -113,7 +114,6 @@ const SidebarItem = ({ icon: Icon, label, to, active, badge, onClick, children, 
                     to={child.path}
                     onClick={(e) => {
                       if (child.label === 'Edit Event' && child.path === '/events') {
-                        e.preventDefault();
                         toast.warning('Please select an event to edit from the list');
                       }
                       onClick?.();
@@ -244,7 +244,7 @@ const Navbar = () => {
       'ATTENDANCE': Calendar,
       'PERFORMANCE': Award,
       'EVENT': Calendar,
-      'EXAMS': BookOpen,
+      'EXAMS': ClipboardCheck,
       'REMARKS': MessageSquare,
       'FEE_MANAGEMENT': IndianRupee,
       'FEE': IndianRupee,
@@ -466,9 +466,9 @@ const Navbar = () => {
                                   className={`px-5 py-4 cursor-pointer transition-all hover:bg-slate-50/80 flex gap-3 ${!notif.isRead ? 'bg-indigo-50/30' : ''}`}
                                 >
                                   <div className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${notif.type === 'FEE' ? 'bg-amber-100 text-amber-600' :
-                                      notif.type === 'EXAM' ? 'bg-purple-100 text-purple-600' :
-                                        notif.type === 'URGENT' ? 'bg-rose-100 text-rose-600' :
-                                          'bg-slate-100 text-slate-600'
+                                    notif.type === 'EXAM' ? 'bg-purple-100 text-purple-600' :
+                                      notif.type === 'URGENT' ? 'bg-rose-100 text-rose-600' :
+                                        'bg-slate-100 text-slate-600'
                                     }`}>
                                     {notif.type === 'FEE' ? <IndianRupee size={18} /> :
                                       notif.type === 'EXAM' ? <Award size={18} /> :

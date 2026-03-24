@@ -232,18 +232,18 @@ const ExamFormModal = ({ isOpen, onClose, exam = null, onSave }) => {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div className="space-y-1.5">
                                     <label className="text-sm font-medium text-slate-700">Exam Type</label>
-                                    <select
+                                    <CustomDropdown
                                         name="type"
                                         value={formData.type}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm appearance-none"
-                                        required
-                                    >
-                                        <option value="Midterm">Midterm</option>
-                                        <option value="Final">Final</option>
-                                        <option value="Practical">Practical</option>
-                                        <option value="Viva">Viva</option>
-                                    </select>
+                                        placeholder="Select Exam Type"
+                                        options={[
+                                            { label: 'Midterm', value: 'Midterm' },
+                                            { label: 'Final', value: 'Final' },
+                                            { label: 'Practical', value: 'Practical' },
+                                            { label: 'Viva', value: 'Viva' }
+                                        ]}
+                                    />
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-sm font-medium text-slate-700">Total Marks</label>

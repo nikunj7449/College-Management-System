@@ -330,50 +330,35 @@ const StudentFees = () => {
                         <form onSubmit={handleAssignFee} className="p-8 space-y-5">
                             <div>
                                 <label className="block text-sm font-semibold text-slate-700 mb-1.5">Select Course</label>
-                                <select 
-                                    required
+                                <CustomDropdown
                                     value={assignData.courseId}
                                     onChange={(e) => setAssignData({ ...assignData, courseId: e.target.value, branchId: '', structureId: '' })}
-                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none"
-                                >
-                                    <option value="">Choose Course...</option>
-                                    {courses.map(c => (
-                                        <option key={c._id} value={c._id}>{c.name}</option>
-                                    ))}
-                                </select>
+                                    options={courses.map(c => ({ label: c.name, value: c._id }))}
+                                    placeholder="Choose Course..."
+                                />
                             </div>
                             <div>
                                 <label className="block text-sm font-semibold text-slate-700 mb-1.5">Select Branch</label>
-                                <select 
-                                    required
+                                <CustomDropdown
                                     disabled={!assignData.courseId}
                                     value={assignData.branchId}
                                     onChange={(e) => setAssignData({ ...assignData, branchId: e.target.value, structureId: '' })}
-                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none"
-                                >
-                                    <option value="">Choose Branch...</option>
-                                    {courses.find(c => c._id === assignData.courseId)?.branches.map((b, idx) => (
-                                        <option key={idx} value={b._id}>{b.name}</option>
-                                    ))}
-                                </select>
+                                    options={courses.find(c => c._id === assignData.courseId)?.branches.map(b => ({ label: b.name, value: b._id })) || []}
+                                    placeholder="Choose Branch..."
+                                />
                             </div>
                             <div>
                                 <label className="block text-sm font-semibold text-slate-700 mb-1.5">Select Fee Structure</label>
-                                <select 
-                                    required
+                                <CustomDropdown
                                     disabled={!assignData.branchId}
                                     value={assignData.structureId}
                                     onChange={(e) => setAssignData({ ...assignData, structureId: e.target.value })}
-                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none"
-                                >
-                                    <option value="">Select Structure...</option>
-                                    {structures
+                                    options={structures
                                         .filter(s => s.courseId?._id === assignData.courseId && s.branchId === assignData.branchId)
-                                        .map(st => (
-                                            <option key={st._id} value={st._id}>Sem {st.semester} (₹{st.totalAmount})</option>
-                                        ))
+                                        .map(st => ({ label: `Sem ${st.semester} (₹${st.totalAmount})`, value: st._id }))
                                     }
-                                </select>
+                                    placeholder="Select Structure..."
+                                />
                                 {assignData.branchId && structures.filter(s => s.courseId?._id === assignData.courseId && s.branchId === assignData.branchId).length === 0 && (
                                     <p className="text-xs text-rose-500 mt-1">No structures found for this selection.</p>
                                 )}

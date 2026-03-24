@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, User, Shield, Mail, Phone, Calendar, Lock, Loader2, Save } from 'lucide-react';
 import { useRoles } from '../../hooks/useRoles';
+import CustomDropdown from '../custom/CustomDropdown';
 
 const AdminModal = ({ isOpen, onClose, mode, admin, onSubmit, initialRole }) => {
   const initialFormState = {
@@ -113,11 +114,14 @@ const AdminModal = ({ isOpen, onClose, mode, admin, onSubmit, initialRole }) => 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Role</label>
-              <select disabled={mode === 'view'} name="role" value={formData.role} onChange={handleInputChange} className="w-full px-4 py-2 border border-slate-200 rounded-lg outline-none appearance-none bg-white">
-                {roles.filter(r => ['ADMIN', 'SUPERADMIN'].includes(r.name.toUpperCase())).map(role => (
-                  <option key={role._id} value={role.name}>{role.name}</option>
-                ))}
-              </select>
+              <CustomDropdown
+                disabled={mode === 'view'}
+                name="role"
+                value={formData.role}
+                onChange={handleInputChange}
+                options={roles.filter(r => ['ADMIN', 'SUPERADMIN'].includes(r.name.toUpperCase())).map(role => ({ label: role.name, value: role.name }))}
+                placeholder="Select Role"
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Joined Date</label>

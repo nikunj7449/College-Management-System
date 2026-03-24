@@ -1,5 +1,6 @@
 import React from 'react';
 import { X, Loader, Plus, Trash2, Book } from 'lucide-react';
+import CustomDropdown from '../custom/CustomDropdown';
 
 const CourseFormModal = ({
   isOpen,
@@ -133,19 +134,13 @@ const CourseFormModal = ({
                             />
                           </div>
                           <div className="col-span-3">
-                            <select
-                              className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded text-xs focus:outline-none focus:border-indigo-500"
+                            <CustomDropdown
                               value={subject.semester}
                               onChange={(e) => onUpdateSubject(bIdx, sIdx, 'semester', e.target.value)}
-                              required
-                            >
-                              <option value="">Sem</option>
-                              {[...Array(8)].map((_, i) => (
-                                <option key={i + 1} value={i + 1}>
-                                  {i + 1}
-                                </option>
-                              ))}
-                            </select>
+                              options={[...Array(8)].map((_, i) => ({ label: `Sem ${i + 1}`, value: i + 1 }))}
+                              placeholder="Sem"
+                              className="text-xs"
+                            />
                           </div>
                           <div className="col-span-1 flex justify-center">
                             <button
