@@ -4,7 +4,7 @@ const { addAdmin, getAllAdmins, updateAdmin, deleteAdmin, getMyProfile, updateMy
 const { protect } = require('../middleware/authMiddleware');
 const { authorize, requirePermission } = require('../middleware/roleMiddleware');
 
-router.use(protect);
+//router.use(protect);
 
 router.route('/profile/me')
   .get(getMyProfile)

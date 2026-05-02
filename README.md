@@ -1,7 +1,7 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/nikunj7449/College-Management-System/main/cms_hero_banner.png" alt="CMS Hero Banner" width="100%">
+  <img src="https://raw.githubusercontent.com/nikunj7449/CMS_Nikunj/main/cms_hero_banner.png" alt="CMS Hero Banner" width="100%">
   <br>
-  <img src="https://raw.githubusercontent.com/nikunj7449/College-Management-System/main/cms_animated_logo.svg?p=p" alt="CMS Animated Logo" height="120">
+  <img src="https://raw.githubusercontent.com/nikunj7449/CMS_Nikunj/main/cms_animated_logo.svg?p=p" alt="CMS Animated Logo" height="120">
 </p>
 
 <h1 align="center">🕵️‍♀️ College Management System</h1>
@@ -76,24 +76,36 @@ The system is built on a granular **RBAC (Role-Based Access Control)** system wi
 
 1. **Clone the Repository**
    ```bash
-   git clone https://github.com/nikunj7449/College-Management-System.git
-   cd College-Management-System
+   git clone https://github.com/nikunj7449/CMS_Nikunj.git
+   cd CMS_Nikunj
    ```
+
 
 2. **Backend Setup**
    ```bash
    cd Backend
    npm install
-   # Create a .env file based on the environment variables needed
-   npm start
+
+   # Setup Environment Variables
+   cp .env.example .env
+   # Open .env and fill in your credentials (MongoDB, JWT, Cloudinary, SMTP, Stripe)
+
+   npm run dev
    ```
+
 
 3. **Frontend Setup**
    ```bash
    cd ../Frontend
    npm install
+
+   # Setup Environment Variables
+   cp .env.example .env
+   # Open .env and update VITE_API_URL if your backend is running on a different port
+
    npm run dev
    ```
+
 
 ---
 

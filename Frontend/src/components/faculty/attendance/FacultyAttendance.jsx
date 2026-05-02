@@ -265,7 +265,7 @@ const FacultyAttendance = () => {
                                 value={date}
                                 onChange={(e) => setDate(e.target.value)}
                                 className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-                                max={new Date().toISOString().split('T')[0]} // Cannot mark future attendance
+                                max={new Date().toLocaleDateString('en-CA')}
                             />
                         </div>
                     </div>
